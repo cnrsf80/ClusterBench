@@ -4,6 +4,9 @@ pandas
 IPython
 ezvis3d
 networkx
+sklearn
 folium
 xlrd
 openpyxl
+sympy
+jupyter

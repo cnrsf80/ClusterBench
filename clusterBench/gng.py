@@ -68,7 +68,7 @@ class GrowingNeuralGas:
         # 1. iterate through the data
         sequence = 0
         for p in range(passes):
-            tools.progress(p, passes)
+            #tools.progress(p, passes)
             np.random.shuffle(self.data)
             steps = 0
             for observation in self.data:

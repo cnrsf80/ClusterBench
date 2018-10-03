@@ -193,20 +193,24 @@ class model:
 
         self.save_cluster()
 
+    #Execution de l'algorithme passé en argument (argo) avec les paramétres (params)
     def execute(self,algo_name,algo,params:dict):
         name=algo_name+" "
+
         for key in params.keys():
             value:str=str(params.get(key))
             if value.__contains__("000000000"):value=str(round(params.get(key)*100)/100)
             name=name+key+"="+value+" "
+
         self.setname(name)
         if not self.load_cluster():
             self.start_treatment()
             comp = algo(params).fit(self.mesures())
             self.end_treatment()
             self.clusters_from_labels(comp.labels_, algo_name)
+            print("Exécution de " + name + " Traitement " + str(self.delay) + " sec")
         else:
-            print("Chargement du cluster depuis fichier pour "+name)
+            print("Chargement du cluster depuis un préenregistrement pour "+name)
 
         return self
 
@@ -217,7 +221,6 @@ class model:
         clusters=np.asarray(np.zeros(len(self.data)),np.int8)
         next_cluster=0
         for k in range(len(self.data)):
-            print(len(self.data)-k)
             item=self.data[self.name_col][k]
             find=False
             for i in range(k):
@@ -234,7 +237,6 @@ class model:
     def setname(self, name:str="ALGO"):
         self.name=name
         self.type=name.split(" ")[0]
-        print(name)
 
     def clusters_from_real(self, data,name):
         if len(self.clusters)==0:
@@ -296,7 +298,7 @@ def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_to
                         l=100, a=0.5, d=0.995,
                         passes=passes, plot_evolution=False)
         model.end_treatment()
-        print('Found %d clusters.' % gng.number_of_clusters())
+        #print('Found %d clusters.' % gng.number_of_clusters())
         model.clusters_from_real(gng.cluster_data(), "NEURALGAS_")
 
     return model

@@ -2,6 +2,16 @@ import copy
 from clusterBench import tools
 import datetime
 import pandas as pd
+import algo
+
+def create_reference_model(data, col_name,n_mesures):
+    data["Ref"] = data.index
+    data.index = range(len(data))
+    mod = algo.model(data, col_name, range(1, n_mesures))
+    #mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))
+    true_labels = mod.ideal_matrix()  # Définition d'un clustering de référence pour les métriques
+    mod.clusters_from_labels(true_labels)
+    return mod
 
 
 class simulation:
@@ -108,27 +118,29 @@ class simulation:
 
 
 
-    def init_metrics(self, true_labels,filename="synthese.xlsx"):
+    def init_metrics(self, true_labels,showProgress=False):
         rc=""
-        metrics: pd.DataFrame = pd.DataFrame()
+        self.metrics: pd.DataFrame = pd.DataFrame()
         for i in range(len(self.models)):
-            tools.progress(i, len(self.models))
+            if showProgress:tools.progress(i, len(self.models))
             m=self.models[i]
             m.init_metrics(true_labels)
 
         self.models.sort(key=lambda x: x.score, reverse=True)
 
         for i in range(len(self.models)):
-            tools.progress(i, len(self.models))
+            if showProgress:tools.progress(i, len(self.models))
             m = self.models[i]
-            metrics = metrics.append(m.toDataframe(true_labels))
+            self.metrics = self.metrics.append(m.toDataframe(true_labels))
             rc=rc+m.print_perfs()
 
+        return rc
+
+    def create_synthese_file(self,filename="synthese.xlsx"):
         writer = pd.ExcelWriter("./metrics/" + filename)
-        metrics.to_excel(writer)
+        self.metrics.to_excel(writer)
         writer.save()
 
-        return rc
 
     def print_infos(self):
         return str(len(self.models))+" modeles calculés"
