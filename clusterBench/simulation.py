@@ -2,7 +2,7 @@ import copy
 from clusterBench import tools
 import datetime
 import pandas as pd
-import algo
+import clusterBench.algo as algo
 
 def create_reference_model(data, col_name,n_mesures):
     data["Ref"] = data.index
@@ -39,10 +39,16 @@ class simulation:
                 copy.deepcopy(self.ref_model).execute(algo_name, func,param)
             )
 
-
+    #Permet d'ajouter directement des modeles a la simulation (calculé ex-nihilo)
     def append_modeles(self, mod):
         self.models.append(mod)
 
+
+    def find(self,start:str):
+        rc=[]
+        for m in self.models:
+            if m.name.startswith(start):rc.append(m)
+        return rc
 
     def getOccurenceCluster(self,models, filter=""):
         occurence = []
@@ -74,8 +80,8 @@ class simulation:
 
         return rc
 
-    # Création des occurences
-    def create_occurence_file(self, name, filter=""):
+    # Création des occurences retournés dans un dataFrame
+    def create_occurence_file(self, filter=""):
         code = ""
         rc = self.getOccurenceCluster(self.models, filter)
         for r in range(len(rc)):
@@ -98,11 +104,7 @@ class simulation:
                 c = dfOccurences["Cluster"][i]
                 dfOccurences[item][i] = c.labels.count(item)
 
-        writer = pd.ExcelWriter("./saved/" + name + ".xlsx")
-        dfOccurences.to_excel(writer, "Sheet1")
-        writer.save()
-        return (name)
-
+        return dfOccurences
 
 
     def create_trace(self, url="http://f80.fr/cnrs", name="best_",limit=10000):

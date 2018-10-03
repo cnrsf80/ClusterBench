@@ -7,7 +7,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from networkx.algorithms import community
-
 from clusterBench.tools import tirage
 
 colors=[]
@@ -197,7 +196,7 @@ class model:
                 self.clusters[l].add_index(i, self.data, self.name_col)
             i = i + 1
 
-        self.save_cluster()
+
 
     #Execution de l'algorithme passé en argument (argo) avec les paramétres (params)
     def execute(self,algo_name,algo,params:dict):
@@ -215,6 +214,7 @@ class model:
             self.end_treatment()
             self.clusters_from_labels(comp.labels_, algo_name)
             print("Exécution de " + name + " Traitement " + str(self.delay) + " sec")
+            self.save_cluster()
         else:
             print("Chargement du cluster depuis un préenregistrement pour "+name)
 
@@ -308,8 +308,11 @@ def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_to
                         l=100, a=0.5, d=0.995,
                         passes=passes, plot_evolution=False)
         model.end_treatment()
-        #print('Found %d clusters.' % gng.number_of_clusters())
+        print('Found %d clusters.' % gng.number_of_clusters())
         model.clusters_from_real(gng.cluster_data(), "NEURALGAS_")
+        model.save_cluster()
+    else:
+        print("Chargement de "+model.name)
 
     return model
 

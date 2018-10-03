@@ -13,7 +13,8 @@
 #
 #     return M
 
-import tools
+import clusterBench.tools as tools
+
 tools.clear_dir("saved")
 col_name="id"
 
@@ -29,7 +30,7 @@ col_name="id"
 #G0=nx.from_numpy_matrix(M0)
 
 import pandas as pd
-import simulation
+import clusterBench.simulation as simulation
 
 ref_mod=simulation.create_reference_model(pd.read_excel("./datas/Pour clustering.xlsx"),"id",11)
 print(ref_mod.print_cluster("\n"))
@@ -68,16 +69,16 @@ s.execute("OPTICS",
 )
 
 
-# print("Neural Gas network************************************************************************************************")
-# import copy
-# import algo
-# for passes in range(10,90,20):
-#     for distance_toremove_edge in range(6,38,4):
-#         s.append_modeles(algo.create_cluster_from_neuralgasnetwork(
-#             copy.deepcopy(ref_mod),
-#             passes=passes,
-#             distance_toremove_edge=distance_toremove_edge)
-#         )
+print("Neural Gas network************************************************************************************************")
+import copy
+import clusterBench.algo as algo
+for passes in range(10,200,20):
+    for distance_toremove_edge in range(2,38,4):
+        s.append_modeles(algo.create_cluster_from_neuralgasnetwork(
+            copy.deepcopy(ref_mod),
+            passes=passes,
+            distance_toremove_edge=distance_toremove_edge)
+        )
 
 import datetime
 url_base="http://f80.fr/cnrs"
@@ -87,8 +88,14 @@ s.init_metrics(ref_mod.cluster_toarray(),True)
 s.create_trace(url_base,"best"+name)
 print(s.print_infos())
 
-print("Matrice d'occurence : "+url_base+"/"+s.create_occurence_file("occurencesOPTICS",filter="OPTICS")+".html")
-print("Matrice d'occurence : "+url_base+"/"+s.create_occurence_file("occurencesNEURALGAS",filter="NEURALGAS")+".html")
+m=s.find("OPTICS")[0]
+print(m.print_perfs())
+
+print("Matrice d'occurence : "
+      +url_base+"/"+tools.save(s.create_occurence_file(filter="OPTICS").to_excel(),"occurencesOPTICS.xlsx"))
+
+print("Matrice d'occurence : "
+      +url_base+"/"+tools.save(s.create_occurence_file(filter="NEURALGAS"),"occurencesNEURALGAS.xlsx"))
 
 exit(0)
 

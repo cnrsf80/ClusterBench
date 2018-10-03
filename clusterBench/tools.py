@@ -3,6 +3,7 @@ import random
 import shutil
 import os
 import sys
+import pandas
 
 #Permet l'affichage d'un barre de progression
 def progress(count, total, suffix=''):
@@ -50,3 +51,26 @@ def tirage(str):
 def clear_dir(name):
     shutil.rmtree("./"+name)
     os.mkdir("./"+name)
+
+
+def save(df,filename):
+    code=""
+    if df is str:code=df
+
+    if df is pandas.DataFrame:
+        if str(filename).endswith(".xlsx"):
+            writer = pandas.ExcelWriter("./saved/" + filename)
+            df.to_excel(writer, "Sheet1")
+            writer.save()
+
+        if str(filename).endswith("html"):
+            code=df.to_html()
+
+    if len(code)>0:
+        file = open("./saved/" + filename, "w")
+        code = code.replace("\n", "<br>")
+        file.write(code)
+        file.close()
+
+    return filename
+

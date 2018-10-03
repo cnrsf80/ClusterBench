@@ -3,7 +3,7 @@ import ezvis3d as v3d
 import pandas as pd
 import networkx as nx
 from matplotlib import colors as mcolors
-import numpy
+
 
 #Palette de couleurs
 def get_color(index):
