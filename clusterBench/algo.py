@@ -71,15 +71,21 @@ class model:
     def end_treatment(self):
         self.delay=round((time.time()-self.delay)*10)/10
 
+
     #Produit une réprésentation 3D et une représentation 2D des mesures
     #après PCA et coloration en fonction du cluster d'appartenance
     def trace(self,path,filename,label_col_name="",url_base=""):
-        title=self.print_perfs()+"\n"+self.print_cluster("<br>")
-        self.url= url_base +"/" + draw.trace_artefact_3d(
-            self.mesures(), self.clusters, path,filename,label_col_name,title
-        )
+
+        code=self.to3DHTML()
+
+        file = open(path + "/" + filename + ".html", "a")
+        file.write(code + "<p>" + self.print_perfs()+"\n"+self.print_cluster("<br>") + "</p>")
+        file.close()
+
+        self.url= url_base +"/" + filename + ".html"
+
         s="<a href='"+self.url+"'>représentation 3D</a>\n"
-        s= s + ("<a href='" + url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename, label_col_name)) + "'>représentation 2D</a>\n"
+        s= s + ("<a href='" + url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename)) + "'>représentation 2D</a>\n"
         return self.print_perfs()+"\n"+s+"\n"
 
     #Convertis les clusters en un vecteur simple
@@ -233,6 +239,10 @@ class model:
                 clusters[k]=next_cluster
 
         return clusters
+
+    def to3DHTML(self):
+        return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col)
+
 
     def setname(self, name:str="ALGO"):
         self.name=name

@@ -105,10 +105,10 @@ class simulation:
 
 
 
-    def create_trace(self, url="http://f80.fr/cnrs", name="best_"):
+    def create_trace(self, url="http://f80.fr/cnrs", name="best_",limit=10000):
         name = name.replace(" ", "_")
         code = "Calcul du " + str(datetime.datetime.now()) + "\n\n"
-        for i in range(0, len(self.models)):
+        for i in range(0, min(limit,len(self.models))):
             print("Trace du modele " + str(i))
             code = code + "\nPosition " + str(i + 1) + "<br>"
             code = code + self.models[i].trace("./saved", name + str(i), self.col_name, url)

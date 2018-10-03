@@ -68,17 +68,16 @@ s.execute("OPTICS",
 )
 
 
-print("Neural Gas network************************************************************************************************")
-
-import copy
-import algo
-for passes in range(10,90,20):
-    for distance_toremove_edge in range(6,38,4):
-        s.append_modeles(algo.create_cluster_from_neuralgasnetwork(
-            copy.deepcopy(ref_mod),
-            passes=passes,
-            distance_toremove_edge=distance_toremove_edge)
-        )
+# print("Neural Gas network************************************************************************************************")
+# import copy
+# import algo
+# for passes in range(10,90,20):
+#     for distance_toremove_edge in range(6,38,4):
+#         s.append_modeles(algo.create_cluster_from_neuralgasnetwork(
+#             copy.deepcopy(ref_mod),
+#             passes=passes,
+#             distance_toremove_edge=distance_toremove_edge)
+#         )
 
 import datetime
 url_base="http://f80.fr/cnrs"
