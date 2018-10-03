@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always">
+    <serverData>
+      <paths name="OrangePi">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="home">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/cnrs" local="$PROJECT_DIR$/saved" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="pihome">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="pihomefromoutside">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/cnrs" local="$PROJECT_DIR$/saved" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

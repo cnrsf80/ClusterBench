@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="6c78cc56-f1d9-4d86-8116-9f05ee78a4c6" name="OrangePi" url="http://78.192.162.111">
+        <fileTransfer host="78.192.162.111" port="22" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="86de8ed4-d443-492e-8b0c-11915d0bae02" name="home" url="">
+        <fileTransfer host="192.168.1.83" port="22" rootFolder="/var/www/html" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="0ab7dc05-c124-4a34-8029-33845e0a20b8" name="pihome" url="http://192.168.1.83">
+        <fileTransfer host="192.168.1.83" port="22" rootFolder="/var/www/html" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="d71b2ca1-f0de-49f9-8846-bc78e8922780" name="pihomefromoutside" url="http://85.169.55.216">
+        <fileTransfer host="85.169.55.216" port="22" rootFolder="/var/www/html" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
