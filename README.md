@@ -1,3 +1,8 @@
+#Pre-requis
+Une distribution, idéalement Linux et Python 3.6 installé
+l'utilitaire "pip3" également installé (https://pip.pypa.io/en/latest/installing/)
+
+
 #Installation
 Cloner le dépôt :<br> 
 _git clone https://github.com/cnrsf80/ClusterBench_
