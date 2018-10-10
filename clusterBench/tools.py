@@ -80,3 +80,10 @@ def save(df,filename):
 
     return filename
 
+
+def mkdir(dir_name):
+    if not os.listdir(".").__contains__(dir_name):
+        os.mkdir(dir_name)
+        return True
+    else:
+        return False

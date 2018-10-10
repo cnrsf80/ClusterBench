@@ -1,16 +1,18 @@
-# clusterBench
-
-# Installation
+#Installation
 Cloner le dépôt :<br> 
 _git clone https://github.com/cnrsf80/ClusterBench_
 
 Installer les librairies python nécéssaire au fonctionnement 
-_pip install -R ClusterBench/requirements.txt_
+_pip3 install -r ClusterBench/requirements.txt_
 
-# Lancement 
+#Execution 
 
 Ouvrir main.ipynb dans le notebook jupyter
+ou en ligne de commande executer :
+python3 main.py
 
+#Resultats
+Le répertoire 
 
 # Serveur Jupyter Notebook
 Installation depuis :

@@ -16,7 +16,6 @@
 import clusterBench.tools as tools
 
 tools.clear_dir("saved")
-col_name="id"
 
 # models=create_gaussian_mixture_model(mes,params=np.arange(1,30))
 # X=models[25].predict(data)
@@ -34,9 +33,20 @@ import clusterBench.simulation as simulation
 import clusterBench.algo as algo
 import copy
 
+tools.mkdir("clustering")
+tools.mkdir("metrics")
+tools.mkdir("saved")
+tools.mkdir("visualization")
+
+import sys
+source_file="./datas/Pour clustering.xlsx"
+if len(sys.argv)>1:source_file=sys.argv[1]
+
+col_name="id"
+if len(sys.argv)>2:col_name=sys.argv[2]
 
 
-ref_mod=simulation.create_reference_model(pd.read_excel("./datas/Pour clustering.xlsx"),"id",11)
+ref_mod=simulation.create_reference_model(pd.read_excel(source_file),col_name,11)
 print(ref_mod.print_cluster("\n\n"))
 
 import numpy as np

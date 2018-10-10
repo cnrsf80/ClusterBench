@@ -6,10 +6,16 @@ import clusterBench.algo as algo
 
 
 def create_reference_model(data, col_name,n_mesures):
+    print(str(len(data))+" mesures à traiter")
+    print("Colonne de utilisé pour le nom "+col_name)
+
     data["Ref"] = data.index
     data.index = range(len(data))
     mod = algo.model(data, col_name, range(1, n_mesures))
+
+    #Usage d'une autre fonction de distance que la distance euclidienne
     #mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))
+
     true_labels = mod.ideal_matrix()  # Définition d'un clustering de référence pour les métriques
     mod.clusters_from_labels(true_labels)
     return mod

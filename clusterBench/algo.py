@@ -251,7 +251,7 @@ class model:
 
 
     def ideal_matrix(self):
-        print("Fabrication de la matrice ideal")
+        print("Fabrication d'un cluster de référence pour les métriques")
         clusters=np.asarray(np.zeros(len(self.data)),np.int8)
         next_cluster=0
         for k in range(len(self.data)):
