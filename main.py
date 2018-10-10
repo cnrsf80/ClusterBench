@@ -45,6 +45,8 @@ if len(sys.argv)>1:source_file=sys.argv[1]
 col_name="id"
 if len(sys.argv)>2:col_name=sys.argv[2]
 
+algos:list=["HAC","DBSCAN","BIRCH","MEANSHIFT","NEURALGAS","SPECTRAL"]
+if len(sys.argv)>3:algos:list=sys.argv[3].split(",")
 
 ref_mod=simulation.create_reference_model(pd.read_excel(source_file),col_name,11)
 print(ref_mod.print_cluster("\n\n"))
@@ -74,43 +76,47 @@ s= simulation.simulation(ref_mod, col_name)
 # )
 
 
-s.execute("HAC","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html#sklearn.cluster.AgglomerativeClustering",
-          lambda x:
-            cl.AgglomerativeClustering(n_clusters=x["n_cluster"],affinity=x["method"]),
-          {"n_cluster":range(10,25),"method":["euclidean"]}
-          )
+if algos.__contains__("HAC"):
+    s.execute("HAC","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html#sklearn.cluster.AgglomerativeClustering",
+              lambda x:
+                cl.AgglomerativeClustering(n_clusters=x["n_cluster"],affinity=x["method"]),
+              {"n_cluster":range(10,25),"method":["euclidean"]}
+              )
 
-s.execute("DBSCAN","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html",
+if algos.__contains__("DBSCAN"):
+    s.execute("DBSCAN","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html",
             lambda x:
                 cl.DBSCAN(eps=x["eps"], min_samples=x["min_elements"],leaf_size=x["leaf_size"],n_jobs=4),
             {"eps": np.arange(0.1, 0.9, 0.1), "min_elements": range(2, 6),"leaf_size":range(10,60,20)})
 
-s.execute("BIRCH","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html#sklearn.cluster.Birch",
+if algos.__contains__("BIRCH"):
+    s.execute("BIRCH","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html#sklearn.cluster.Birch",
             lambda x:
                 cl.Birch(threshold=x["threshold"], n_clusters=x["n_clusters"],branching_factor=x["branching_factor"]),
             {"threshold": np.arange(0.1, 0.6, 0.1), "n_clusters": range(2, 25),"branching_factor":range(20,80,20)})
 
-s.execute("MEANSHIFT","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html#sklearn.cluster.MeanShift",
+if algos.__contains__("MEANSHIFT"):
+    s.execute("MEANSHIFT","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html#sklearn.cluster.MeanShift",
                 lambda x:
                     cl.MeanShift(bandwidth=x["bandwidth"],bin_seeding=False, cluster_all=True),
                 {"bandwidth": np.arange(1,5,0.5)})
 
-s.execute("SPECTRALCLUSTERING","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.SpectralClustering.html#sklearn.cluster.SpectralClustering",
+if algos.__contains__("SPECTRAL"):
+    s.execute("SPECTRAL","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.SpectralClustering.html#sklearn.cluster.SpectralClustering",
             lambda x: cl.SpectralClustering(n_clusters=x["n_cluster"],n_neighbors=x["n_neighbors"]),
             {"n_cluster": range(6,20), "n_neighbors": range(5,10)}
-)
+    )
 
-print("NEURALGAS")
-for passes in range(10,250,30):
-    for distance_toremove_edge in range(2,30,4):
-        m:algo.model=algo.create_cluster_from_neuralgasnetwork(
-            copy.deepcopy(ref_mod).clear_clusters(),
-            passes=passes,
-            distance_toremove_edge=distance_toremove_edge)
-        m.params=[passes,distance_toremove_edge,""]
-        m.help="https://github.com/AdrienGuille/GrowingNeuralGas"
-        s.append_modeles(m)
-
+if algos.__contains__("NEURALGAS"):
+    for passes in range(10,250,30):
+        for distance_toremove_edge in range(2,30,4):
+            m:algo.model=algo.create_cluster_from_neuralgasnetwork(
+                copy.deepcopy(ref_mod).clear_clusters(),
+                passes=passes,
+                distance_toremove_edge=distance_toremove_edge)
+            m.params=[passes,distance_toremove_edge,""]
+            m.help="https://github.com/AdrienGuille/GrowingNeuralGas"
+            s.append_modeles(m)
 
 import datetime
 url_base="http://f80.fr/cnrs"
