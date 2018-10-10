@@ -31,6 +31,10 @@ col_name="id"
 
 import pandas as pd
 import clusterBench.simulation as simulation
+import clusterBench.algo as algo
+import copy
+
+
 
 ref_mod=simulation.create_reference_model(pd.read_excel("./datas/Pour clustering.xlsx"),"id",11)
 print(ref_mod.print_cluster("\n\n"))
@@ -42,8 +46,6 @@ from sklearn import cluster as cl
 s= simulation.simulation(ref_mod, col_name)
 
 # print("OPTICS")
-# import copy
-# import clusterBench.algo as algo
 # for eps in np.arange(0.3,0.9,0.1):
 #     m:algo.modele=algo.create_cluster_from_optics(
 #         copy.deepcopy(ref_mod).clear_clusters(),
