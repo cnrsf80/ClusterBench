@@ -119,7 +119,7 @@ if algos.__contains__("NEURALGAS"):
             s.append_modeles(m)
 
 import datetime
-url_base="http://f80.fr/cnrs"
+
 
 
 s.init_metrics(ref_mod.cluster_toarray(),True) #une première fois pour le tri
@@ -127,6 +127,7 @@ s.init_metrics(ref_mod.cluster_toarray(),True) #une première fois pour le tri
 #post=str(datetime.datetime.now()).split(".")[0].replace(":","").replace("2018-","")
 post=""
 
+url_base="http://f80.fr/cnrs"
 s.create_trace(url_base,"best"+post,300,False)
 s.init_metrics(ref_mod.cluster_toarray(),True) #ajout des url de représentation
 

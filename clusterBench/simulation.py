@@ -132,7 +132,7 @@ class simulation:
 
 
     def create_trace(self, url="http://f80.fr/cnrs", name="best_",limit=10000,withPerf=False,):
-        print("Tracés 3D et 2D des résultats.")
+        print("\nTracés 3D et 2D des résultats.")
         name = name.replace(" ", "_")
         code = "Calcul du " + str(datetime.datetime.now()) + "\n\n"
         for i in range(0, min(limit,len(self.models))):
@@ -149,7 +149,7 @@ class simulation:
         rc=""
         self.metrics: pd.DataFrame = pd.DataFrame()
         print("Calcul des métriques")
-        print("Première passe\n")
+        print("\nPremière passe")
         for i in range(len(self.models)):
             if showProgress:tools.progress(i, len(self.models))
             m:algo.model=self.models[i]
@@ -158,7 +158,7 @@ class simulation:
         print("Tri des "+str(len(self.models))+" modeles")
         self.models.sort(key=lambda x: x.score, reverse=True)
 
-        print("2eme passe\n")
+        print("\n2eme passe")
         for i in range(len(self.models)):
             if showProgress:tools.progress(i, len(self.models))
             m = self.models[i]

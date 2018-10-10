@@ -182,21 +182,21 @@ class model:
 
         return self.print_perfs()
 
-    def print_perfs(self):
-        s=("<h2>Algorithme : %s</h2>" % self.name)+"\n"
-        s = s + ("Delay de traitement : %s sec" % self.delay) + "\n"
-        s=s+("Nombre de clusters : %s" % len(self.clusters))+"\n\n"
+    def print_perfs(self,endline="<br>"):
+        s=("<h2>Algorithme : %s</h2>" % self.name)+endline
+        s = s + ("Delay de traitement : %s sec" % self.delay) + endline
+        s=s+("Nombre de clusters : %s" % len(self.clusters))+endline+endline
 
         if len(self.clusters)>1:
             s=s+"<a href='http://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics.cluster'>Indicateurs de performance du clustering</a>\n"
-            s=s+("Silhouette score %s" % self.silhouette_score)+"\n"
-            s=s+"Rand_index %s" % self.rand_index+"\n"
+            s=s+("Silhouette score %s" % self.silhouette_score)+endline
+            s=s+"Rand_index %s" % self.rand_index+endline
             #s=s+"Information mutuelle (https://fr.wikipedia.org/wiki/Information_mutuelle) : %s" % self.adjusted_mutual_info_score+"\n"
-            s=s+"homogeneity_score %s" % self.homogeneity_score+"\n"
-            s=s+"v_measure_score %s" % self.homogeneity_score+"\n"
-            s=s+"completeness_score  %s" % self.completeness_score+"\n"
+            s=s+"homogeneity_score %s" % self.homogeneity_score+endline
+            s=s+"v_measure_score %s" % self.homogeneity_score+endline
+            s=s+"completeness_score  %s" % self.completeness_score+endline
 
-            s = s +("\n<h2>Score (silhouette sur 10 + rand,homogeneité, v_mesure et completness sur 2,5) <strong>%s / 20</strong></h2>" % self.score)
+            s = s +("<h2>Score (silhouette sur 10 + rand,homogeneité, v_mesure et completness sur 2,5) <strong>%s / 20</strong></h2>" % self.score)
         return s
 
 
