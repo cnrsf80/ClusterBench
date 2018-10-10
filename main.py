@@ -15,8 +15,6 @@
 
 import clusterBench.tools as tools
 
-tools.clear_dir("saved")
-
 # models=create_gaussian_mixture_model(mes,params=np.arange(1,30))
 # X=models[25].predict(data)
 # exit(0)
@@ -37,6 +35,9 @@ tools.mkdir("clustering")
 tools.mkdir("metrics")
 tools.mkdir("saved")
 tools.mkdir("visualization")
+
+print("Syntaxe: python3 main.py <Fichier excel a traiter> <colone de nom des mesures> <liste des algos a executer>")
+print("Exemple : python3 main.py './datas/Pour clustering.xlsx' 'id' 'HAC,DBSCAN,BIRCH,MEANSHIFT,NEURALGAS,SPECTRAL'")
 
 import sys
 source_file="./datas/Pour clustering.xlsx"
