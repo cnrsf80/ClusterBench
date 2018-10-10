@@ -1,18 +1,20 @@
-#Pre-requis
+<h1>Pre-requis</h1>
 Une distribution, idéalement Linux et Python 3.6 installé
 l'utilitaire "pip3" également installé (https://pip.pypa.io/en/latest/installing/)
 
 
-#Installation
+<h1>Première Installation</h1>
 Cloner le dépôt :<br> 
-_git clone https://github.com/cnrsf80/ClusterBench_
-
-Mise a jour du code :<br>
-_git pull origin master 
+git clone https://github.com/cnrsf80/ClusterBench
 
 Installer les librairies python nécéssaire au fonctionnement<br> 
-_pip3 install -r ClusterBench/requirements.txt_
+pip3 install -r ClusterBench/requirements.txt
 
+<h1>Mise a jour</h1>
+ou si déjà cloner, le mettre a jour :<br>
+
+cd ClusterBench
+git pull origin master 
 
 #Execution 
 Ouvrir main.ipynb dans le notebook jupyter
