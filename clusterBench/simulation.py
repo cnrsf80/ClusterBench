@@ -146,6 +146,8 @@ class simulation:
     def init_metrics(self, true_labels,showProgress=False):
         rc=""
         self.metrics: pd.DataFrame = pd.DataFrame()
+        print("Calcul des métriques")
+        print("")
         for i in range(len(self.models)):
             if showProgress:tools.progress(i, len(self.models))
             m:algo.model=self.models[i]

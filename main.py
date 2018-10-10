@@ -121,6 +121,7 @@ if algos.__contains__("NEURALGAS"):
 import datetime
 url_base="http://f80.fr/cnrs"
 
+
 s.init_metrics(ref_mod.cluster_toarray(),True) #une première fois pour le tri
 
 #post=str(datetime.datetime.now()).split(".")[0].replace(":","").replace("2018-","")
