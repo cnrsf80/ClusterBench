@@ -156,7 +156,7 @@ class simulation:
             m:algo.model=self.models[i]
             m.init_metrics(true_labels)
 
-        print("Tri des "+str(len(self.modeles))+" modeles")
+        print("Tri des "+str(len(self.models))+" modeles")
         self.models.sort(key=lambda x: x.score, reverse=True)
 
         print("2eme passe\n")
