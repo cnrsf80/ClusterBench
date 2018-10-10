@@ -4,6 +4,7 @@ import datetime
 import pandas as pd
 import clusterBench.algo as algo
 
+
 def create_reference_model(data, col_name,n_mesures):
     data["Ref"] = data.index
     data.index = range(len(data))
@@ -17,27 +18,38 @@ def create_reference_model(data, col_name,n_mesures):
 class simulation:
     models=[]
 
-    def __init__(self,model,col_name):
-        self.ref_model=model
-        self.col_name = col_name
+    def __init__(self,model:algo.model,col_name:str):
+        self.ref_model:algo.model=model
+        self.col_name :str= col_name
 
 
-    def convertParams(self,params):
+    def convertParams(self,ps):
+        ps["sup"]=[None]
+        ps["sup2"]=[None]
+
         rc=[]
-        keys=list(params.keys())
-        for i in range(0,len(params[keys[0]])):
-            for j in range(0, len(params[keys[1]])):
-                c1=params[keys[0]][i]
-                c2=params[keys[1]][j]
-                rc.append({keys[0]:c1,keys[1]:c2})
+        keys=list(ps.keys())
+
+        for i in range(0,len(ps[keys[0]])):
+            for j in range(0, len(ps[keys[1]])):
+                for k in range(0, len(ps[keys[2]])):
+                    c1=ps[keys[0]][i]
+                    c2=ps[keys[1]][j]
+                    c3=ps[keys[2]][k]
+                    if c3 is None:
+                        rc.append({keys[0]: c1, keys[1]: c2})
+                    else:
+                        rc.append({keys[0]:c1,keys[1]:c2,keys[2]:c3})
         return rc
 
-    def execute(self,algo_name,func,params:dict):
+    def execute(self,algo_name,url,func,ps:dict):
         print("Traitement de "+algo_name+" ********************************************************************")
-        for param in self.convertParams(params):
-            self.models.append(
-                copy.deepcopy(self.ref_model).execute(algo_name, func,param)
-            )
+        for p in self.convertParams(ps):
+            m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.ref_model.mesures_col)
+            m=m.execute(algo_name,url, func,p)
+            self.models.append(copy.copy(m))
+
+
 
     #Permet d'ajouter directement des modeles a la simulation (calculé ex-nihilo)
     def append_modeles(self, mod):
@@ -47,7 +59,8 @@ class simulation:
     def find(self,start:str):
         rc=[]
         for m in self.models:
-            if m.name.startswith(start):rc.append(m)
+            if m.name.startswith(start):
+                rc.append(m)
         return rc
 
     def getOccurenceCluster(self,models, filter=""):
@@ -55,6 +68,7 @@ class simulation:
         list_clusters = []
         list_model = []
         list_algo = []
+        list_composition=[]
         for m in models:
             if (len(filter) == 0 or m.type == filter):
                 for c in m.clusters:
@@ -64,14 +78,15 @@ class simulation:
                         list_model[k].append(m.name)
                         if not list_algo[k].__contains__(m.type): list_algo[k].append(m.type)
                     else:
-                        print("Ajout de " + c.name)
                         list_clusters.append(c)
+                        list_composition.append(c.print(self.ref_model.data,label_col=self.col_name,sep=" "))
                         occurence.append(1)
                         list_algo.append([m.type])
                         list_model.append([m.name])
 
         rc = pd.DataFrame(columns=["Occurence", "Cluster", "Model"])
         rc["Occurence"] = occurence
+        rc["Composition"]=list_composition
         rc["Cluster"] = list_clusters
         rc["Model"] = list_model
         rc["Algos"] = list_algo
@@ -85,38 +100,40 @@ class simulation:
         code = ""
         rc = self.getOccurenceCluster(self.models, filter)
         for r in range(len(rc)):
+            tools.progress(r,len(rc))
             code = code + "\n<h1>Cluster présent dans " + str(
                 round(100 * rc["Occurence"][r])) + "% des algos</h1>"
             c = rc["Cluster"][r]
             code = code + c.print(self.ref_model.data, self.col_name) + "\n"
             code = code + "\n présent dans " + ",".join(rc["Model"][r]) + "\n"
 
-        print(tools.create_html("occurences", code, "http://f80.fr/cnrs"))
+        #print(tools.create_html("occurences", code, "http://f80.fr/cnrs"))
 
         dfOccurences = pd.DataFrame(
-            data={"Cluster": rc["Cluster"], "Model": rc["Model"], "Algos": rc["Algos"], "Occurence": rc["Occurence"]})
+            data={"Cluster": rc["Cluster"], "Composition":rc["Composition"],"Model": rc["Model"], "Algos": rc["Algos"], "Occurence": rc["Occurence"]})
         l_items = list(set(self.ref_model.data[self.col_name].get_values()))
 
         for item in l_items:
             print(item)
             dfOccurences[item] = [0] * len(rc)
             for i in range(len(rc)):
+                tools.progress(i, len(rc))
                 c = dfOccurences["Cluster"][i]
                 dfOccurences[item][i] = c.labels.count(item)
 
         return dfOccurences
 
 
-    def create_trace(self, url="http://f80.fr/cnrs", name="best_",limit=10000):
+    def create_trace(self, url="http://f80.fr/cnrs", name="best_",limit=10000,withPerf=False,):
         name = name.replace(" ", "_")
         code = "Calcul du " + str(datetime.datetime.now()) + "\n\n"
         for i in range(0, min(limit,len(self.models))):
-            print("Trace du modele " + str(i))
+            tools.progress(i,min(limit,len(self.models)))
             code = code + "\nPosition " + str(i + 1) + "<br>"
             code = code + self.models[i].trace("./saved", name + str(i), self.col_name, url)
-            code = code + self.models[i].print_perfs()
+            if withPerf:code = code + self.models[i].print_perfs()
 
-        print(tools.create_html("index_" + name, code, url))
+        print("\n"+tools.create_html("index_" + name, code, url))
 
 
 
@@ -125,7 +142,7 @@ class simulation:
         self.metrics: pd.DataFrame = pd.DataFrame()
         for i in range(len(self.models)):
             if showProgress:tools.progress(i, len(self.models))
-            m=self.models[i]
+            m:algo.model=self.models[i]
             m.init_metrics(true_labels)
 
         self.models.sort(key=lambda x: x.score, reverse=True)
@@ -138,10 +155,10 @@ class simulation:
 
         return rc
 
-    def create_synthese_file(self,filename="synthese.xlsx"):
-        writer = pd.ExcelWriter("./metrics/" + filename)
-        self.metrics.to_excel(writer)
-        writer.save()
+    # def create_synthese_file(self,filename="synthese.xlsx"):
+    #     writer = pd.ExcelWriter("./metrics/" + filename)
+    #     self.metrics.to_excel(writer)
+    #     writer.save()
 
 
     def print_infos(self):

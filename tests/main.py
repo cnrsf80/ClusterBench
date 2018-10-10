@@ -33,71 +33,90 @@ import pandas as pd
 import clusterBench.simulation as simulation
 
 ref_mod=simulation.create_reference_model(pd.read_excel("./datas/Pour clustering.xlsx"),"id",11)
-print(ref_mod.print_cluster("\n"))
+print(ref_mod.print_cluster("\n\n"))
 
 import numpy as np
 from sklearn import cluster as cl
+# from sklearn.cluster import OPTICS
+
 s= simulation.simulation(ref_mod, col_name)
 
-s.execute("HAC",
+# print("OPTICS")
+# import copy
+# import clusterBench.algo as algo
+# for eps in np.arange(0.3,0.9,0.1):
+#     m:algo.modele=algo.create_cluster_from_optics(
+#         copy.deepcopy(ref_mod).clear_clusters(),
+#         eps=eps
+#     )
+#     m.params = [eps]
+#     m.help = "https://github.com/annoviko/pyclustering/blob/master/pyclustering/cluster/optics.py"
+#     s.append_modeles(m)
+
+
+# import hdbscan
+# s.execute("HDDBSCAN","hhttps://github.com/scikit-learn-contrib/hdbscan",
+#           lambda x:
+#             hdbscan.HDBSCAN(min_cluster_size=x['min_cluster_size']),
+#           {"min_cluster_size":range(2,25)}
+# )
+
+
+s.execute("HAC","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html#sklearn.cluster.AgglomerativeClustering",
           lambda x:
             cl.AgglomerativeClustering(n_clusters=x["n_cluster"],affinity=x["method"]),
           {"n_cluster":range(10,25),"method":["euclidean"]}
           )
 
-s.execute("DBSCAN",
+s.execute("DBSCAN","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html",
             lambda x:
-                cl.DBSCAN(eps=x["eps"], min_samples=x["min_elements"], n_jobs=4),
-            {"eps": np.arange(0.1, 0.9, 0.1), "min_elements": range(2, 6)})
+                cl.DBSCAN(eps=x["eps"], min_samples=x["min_elements"],leaf_size=x["leaf_size"],n_jobs=4),
+            {"eps": np.arange(0.1, 0.9, 0.1), "min_elements": range(2, 6),"leaf_size":range(10,60,20)})
 
-s.execute("MEANSHIFT",
+s.execute("BIRCH","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html#sklearn.cluster.Birch",
+            lambda x:
+                cl.Birch(threshold=x["threshold"], n_clusters=x["n_clusters"],branching_factor=x["branching_factor"]),
+            {"threshold": np.arange(0.1, 0.6, 0.1), "n_clusters": range(2, 25),"branching_factor":range(20,80,20)})
+
+s.execute("MEANSHIFT","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html#sklearn.cluster.MeanShift",
                 lambda x:
-                    cl.MeanShift(bandwidth=x["bandwidth"],min_bin_freq=x["min_bin_freq"]),
-                {"bandwidth": np.arange(0.1,0.9,0.1), "min_bin_freq": range(1,4)})
+                    cl.MeanShift(bandwidth=x["bandwidth"],bin_seeding=False, cluster_all=True),
+                {"bandwidth": np.arange(1,5,0.5)})
 
-s.execute("SPECTRALCLUSTERING",
+s.execute("SPECTRALCLUSTERING","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.SpectralClustering.html#sklearn.cluster.SpectralClustering",
             lambda x: cl.SpectralClustering(n_clusters=x["n_cluster"],n_neighbors=x["n_neighbors"]),
             {"n_cluster": range(6,20), "n_neighbors": range(5,10)}
 )
 
-s.execute("OPTICS",
-            lambda x:
-                cl.OPTICS(maxima_ratio=x["maxima_ratio"],
-                      rejection_ratio=x["rejection_ratio"], min_samples=3,
-                      n_jobs=-1),
-    {"maxima_ratio": np.arange(0.3,0.9,0.1), "rejection_ratio": np.arange(0.3,0.8,0.1)}
-)
-
-
-print("Neural Gas network************************************************************************************************")
-import copy
-import clusterBench.algo as algo
-for passes in range(10,200,20):
-    for distance_toremove_edge in range(2,38,4):
-        s.append_modeles(algo.create_cluster_from_neuralgasnetwork(
-            copy.deepcopy(ref_mod),
+print("NEURALGAS")
+for passes in range(10,250,30):
+    for distance_toremove_edge in range(2,30,4):
+        m:algo.model=algo.create_cluster_from_neuralgasnetwork(
+            copy.deepcopy(ref_mod).clear_clusters(),
             passes=passes,
             distance_toremove_edge=distance_toremove_edge)
-        )
+        m.params=[passes,distance_toremove_edge,""]
+        m.help="https://github.com/AdrienGuille/GrowingNeuralGas"
+        s.append_modeles(m)
+
 
 import datetime
 url_base="http://f80.fr/cnrs"
-name=str(datetime.datetime.now()).split(".")[0].replace(":","").replace("2018-","")
 
-s.init_metrics(ref_mod.cluster_toarray(),True)
-s.create_trace(url_base,"best"+name)
-print(s.print_infos())
+s.init_metrics(ref_mod.cluster_toarray(),True) #une première fois pour le tri
 
-m=s.find("OPTICS")[0]
-print(m.print_perfs())
+#post=str(datetime.datetime.now()).split(".")[0].replace(":","").replace("2018-","")
+post=""
 
-print("Matrice d'occurence : "
-      +url_base+"/"+tools.save(s.create_occurence_file(filter="OPTICS").to_excel(),"occurencesOPTICS.xlsx"))
+s.create_trace(url_base,"best"+post,300,False)
+s.init_metrics(ref_mod.cluster_toarray(),True) #ajout des url de représentation
 
-print("Matrice d'occurence : "
-      +url_base+"/"+tools.save(s.create_occurence_file(filter="NEURALGAS"),"occurencesNEURALGAS.xlsx"))
+tools.save(s.metrics,"./metrics/synthese.xlsx")
 
-exit(0)
+print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(),"./saved/occurences.xlsx"))
+# print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="BIRCH"),"occurencesBIRCH.xlsx"))
+# print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="NEURALGAS"),"occurencesNEURALGAS.xlsx"))
+
 
 #artefact_clusters=create_ncluster(G0,8);
 #artefact_clusters=create_clusters_from_girvannewman(G0);

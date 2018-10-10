@@ -205,7 +205,7 @@ class GrowingNeuralGas:
                 'label':"noeud"+str(i),
             })
 
-        draw.draw_3D(li_data, lines=li_lines)
+        draw.draw_3D(li_data, for_jupyter=False,lines=li_lines)
 
     def number_of_clusters(self):
         return nx.number_connected_components(self.network)

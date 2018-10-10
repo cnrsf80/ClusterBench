@@ -4,9 +4,10 @@ pandas
 IPython
 ezvis3d
 networkx
-sklearn
+scikit-learn
 folium
 xlrd
 openpyxl
 sympy
 jupyter
+Pyclustering

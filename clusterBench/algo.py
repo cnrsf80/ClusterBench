@@ -7,7 +7,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from networkx.algorithms import community
-from clusterBench.tools import tirage
+from clusterBench.tools import tirage,save
+
 
 colors=[]
 for i in range(200):colors.append(i)
@@ -20,7 +21,12 @@ class model:
     silhouette_score:int=0
     score:int=0
     url=""
-
+    url2d=""
+    help=""
+    rand_index = 0
+    homogeneity_score = 0
+    completeness_score = 0
+    v_measure_score = 0
 
     def __init__(self, data,name_col=0,mesures_col=range(1,5)):
         self.name_col=name_col
@@ -75,17 +81,16 @@ class model:
     #après PCA et coloration en fonction du cluster d'appartenance
     def trace(self,path,filename,label_col_name="",url_base=""):
 
-        code=self.to3DHTML()
+        code=self.to3DHTML(False)
 
-        file = open(path + "/" + filename + ".html", "a")
-        file.write(code + "<p>" + self.print_perfs()+"\n"+self.print_cluster("<br>") + "</p>")
-        file.close()
+        save(code+"<br><h2>Composition des clusters</h2>"+self.print_cluster("<br><br>"),path + "/" + filename + ".html")
 
         self.url= url_base +"/" + filename + ".html"
+        self.url2d = url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename)
 
         s="<a href='"+self.url+"'>représentation 3D</a>\n"
-        s= s + ("<a href='" + url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename)) + "'>représentation 2D</a>\n"
-        return self.print_perfs()+"\n"+s+"\n"
+        s= s + "<a href='" + self.url2d + "'>représentation 2D</a>\n"
+        return s+"\n"
 
     #Convertis les clusters en un vecteur simple
     #la position désigne la mesure
@@ -125,15 +130,25 @@ class model:
         obj={
             "Name":self.name,
             "Algo":self.type,
+            "Param1":str(self.params[0]),
+            "Param2":str(self.params[1]),
+            "Param3":str(self.params[2]),
             "nClusters":len(self.clusters),
             "delay (secondes)":self.delay,
             "URL":self.url,
+            "2D":self.url2d,
+            "Help":self.help,
             "Clusters":self.print_cluster(),
             "Score":[self.score],
             "Rand_index":[self.rand_index],
             "Silhouette":[self.silhouette_score],
             "V-mesure":[self.v_measure_score]
         }
+
+        v=self.cluster_toarray()
+        for i in range(len(v)):
+            obj[self.data[self.name_col][i]+"_"+str(i)]=v[i]
+
         rc=pd.DataFrame(data=obj)
 
         return rc
@@ -197,24 +212,37 @@ class model:
             i = i + 1
 
 
+    def clear_clusters(self):
+        self.clusters=[]
+        return self
 
     #Execution de l'algorithme passé en argument (argo) avec les paramétres (params)
-    def execute(self,algo_name,algo,params:dict):
+    def execute(self,algo_name,url,algo,p:dict):
         name=algo_name+" "
-
-        for key in params.keys():
-            value:str=str(params.get(key))
-            if value.__contains__("000000000"):value=str(round(params.get(key)*100)/100)
+        self.help=url
+        self.params=[None]*3
+        i=0
+        for key in p.keys():
+            value:str=str(p.get(key))
+            if value.__contains__("000000000"):value=str(round(p.get(key)*100)/100)
+            if(i<3):self.params[i] = str(value)
+            i = i + 1
             name=name+key+"="+value+" "
 
         self.setname(name)
         if not self.load_cluster():
             self.start_treatment()
-            comp = algo(params).fit(self.mesures())
-            self.end_treatment()
-            self.clusters_from_labels(comp.labels_, algo_name)
-            print("Exécution de " + name + " Traitement " + str(self.delay) + " sec")
-            self.save_cluster()
+            try:
+                comp = algo(p).fit(self.mesures())
+            except:
+                print("Exécution de " + name + " en echec")
+                comp = None
+
+            if comp != None:
+                self.end_treatment()
+                self.clusters_from_labels(comp.labels_, algo_name)
+                print("Exécution de " + name + " Traitement " + str(self.delay) + " sec")
+                self.save_cluster()
         else:
             print("Chargement du cluster depuis un préenregistrement pour "+name)
 
@@ -240,8 +268,8 @@ class model:
 
         return clusters
 
-    def to3DHTML(self):
-        return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col)
+    def to3DHTML(self,for_jupyter):
+        return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col,for_jupyter=for_jupyter)
 
 
     def setname(self, name:str="ALGO"):
@@ -284,9 +312,9 @@ class cluster:
             col=data[label_col]
             self.labels.append(col[index])
 
-    def print(self,data,label_col=""):
-        s=("Cluster:"+self.name+"=")
-        s=s+(" / ".join(data[label_col][self.index]))
+    def print(self,data,label_col="",sep=" / "):
+        s=("Cl:"+self.name+"=")
+        s=s+(sep.join(data[label_col][self.index]))
         return s
 
     def __eq__(self, other):
@@ -357,3 +385,8 @@ def create_clusters_from_asyncfluid(G,n_community):
         partition.append(cluster("asyncfluid",c))
     return partition
 
+
+# import pyclustering.cluster.optics as OPTICS
+# def create_cluster_from_optics(data, eps):
+#     cl=OPTICS.optics(data,eps).get_clusters()
+#     print(cl)

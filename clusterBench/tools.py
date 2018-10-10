@@ -49,26 +49,32 @@ def tirage(str):
 
 #effacement d'un répertoire
 def clear_dir(name):
-    shutil.rmtree("./"+name)
-    os.mkdir("./"+name)
+    try:
+        shutil.rmtree("./"+name)
+        os.mkdir("./"+name)
+        return True
+    except:
+        return False
 
 
 def save(df,filename):
     code=""
-    if df is str:code=df
+    if type(df) is str:code=df
 
-    if df is pandas.DataFrame:
+    if type(df) is pandas.DataFrame:
         if str(filename).endswith(".xlsx"):
-            writer = pandas.ExcelWriter("./saved/" + filename)
+            writer = pandas.ExcelWriter(filename)
             df.to_excel(writer, "Sheet1")
             writer.save()
+
+        if str(filename).endswith("html"):
+            code=df.to_csv()
 
         if str(filename).endswith("html"):
             code=df.to_html()
 
     if len(code)>0:
-        file = open("./saved/" + filename, "w")
-        code = code.replace("\n", "<br>")
+        file = open(filename, "w")
         file.write(code)
         file.close()
 

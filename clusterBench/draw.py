@@ -54,7 +54,7 @@ def drawOnPlot_3D(points,lines):
 
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
-def draw_3D(li_data,lines=None):
+def draw_3D(li_data,for_jupyter=False,lines=None):
     df_data = pd.DataFrame(li_data)
 
     g = v3d.Vis3d()
@@ -78,14 +78,15 @@ def draw_3D(li_data,lines=None):
         #g.style="line"
         #g.plot(df_line)
 
-    return g.html(df_data, center=True,save=False, dated=True,notebook=True)
+    code= g.html(df_data, center=for_jupyter,save=False, notebook=for_jupyter, dated=True)
+    return code
 
 
 
 
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
-def trace_artefact_3d(data, clusters, title="",label_col=""):
+def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False):
     pca = decomp.pca.PCA(n_components=3)
     pca.fit(data)
     newdata = pca.transform(data)
@@ -110,7 +111,7 @@ def trace_artefact_3d(data, clusters, title="",label_col=""):
     code=""
     if len(title)>0:code="<h1>"+title+"</h1>"
 
-    return code+draw_3D(li_data)
+    return code+draw_3D(li_data,for_jupyter=for_jupyter)
 
 
 
