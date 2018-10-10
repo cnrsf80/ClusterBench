@@ -103,6 +103,7 @@ class simulation:
 
     # Création des occurences retournés dans un dataFrame
     def create_occurence_file(self, filter=""):
+        print("Construction de la matrice d'occurence par cluster\n")
         code = ""
         rc = self.getOccurenceCluster(self.models, filter)
         for r in range(len(rc)):
@@ -122,6 +123,8 @@ class simulation:
         for item in l_items:
             print(item)
             dfOccurences[item] = [0] * len(rc)
+            print("Traitement de la mesure "+item)
+            print("")
             for i in range(len(rc)):
                 tools.progress(i, len(rc))
                 c = dfOccurences["Cluster"][i]
@@ -147,14 +150,16 @@ class simulation:
         rc=""
         self.metrics: pd.DataFrame = pd.DataFrame()
         print("Calcul des métriques")
-        print("")
+        print("Première passe\n")
         for i in range(len(self.models)):
             if showProgress:tools.progress(i, len(self.models))
             m:algo.model=self.models[i]
             m.init_metrics(true_labels)
 
+        print("Tri des "+str(len(self.modeles))+" modeles")
         self.models.sort(key=lambda x: x.score, reverse=True)
 
+        print("2eme passe\n")
         for i in range(len(self.models)):
             if showProgress:tools.progress(i, len(self.models))
             m = self.models[i]
