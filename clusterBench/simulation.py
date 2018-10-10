@@ -121,10 +121,8 @@ class simulation:
         l_items = list(set(self.ref_model.data[self.col_name].get_values()))
 
         for item in l_items:
-            print(item)
             dfOccurences[item] = [0] * len(rc)
-            print("Traitement de la mesure "+item)
-            print("")
+            print("\nTraitement de la mesure "+item)
             for i in range(len(rc)):
                 tools.progress(i, len(rc))
                 c = dfOccurences["Cluster"][i]
@@ -134,6 +132,7 @@ class simulation:
 
 
     def create_trace(self, url="http://f80.fr/cnrs", name="best_",limit=10000,withPerf=False,):
+        print("Tracés 3D et 2D des résultats.")
         name = name.replace(" ", "_")
         code = "Calcul du " + str(datetime.datetime.now()) + "\n\n"
         for i in range(0, min(limit,len(self.models))):
@@ -142,7 +141,7 @@ class simulation:
             code = code + self.models[i].trace("./saved", name + str(i), self.col_name, url)
             if withPerf:code = code + self.models[i].print_perfs()
 
-        print("\n"+tools.create_html("index_" + name, code, url))
+        tools.create_html("index_" + name, code, url)
 
 
 
