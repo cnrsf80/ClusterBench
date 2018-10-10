@@ -57,8 +57,8 @@ def clear_dir(name):
         return False
 
 
-def save(df,filename):
-    print("Enregistrement dans "+filename)
+def save(df,filename,_print=False):
+    if _print:print("Enregistrement dans "+filename)
     code=""
     if type(df) is str:code=df
 

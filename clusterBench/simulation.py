@@ -107,7 +107,7 @@ class simulation:
         code = ""
         rc = self.getOccurenceCluster(self.models, filter)
         for r in range(len(rc)):
-            tools.progress(r,len(rc))
+            tools.progress(r,len(rc)-1)
             code = code + "\n<h1>Cluster présent dans " + str(
                 round(100 * rc["Occurence"][r])) + "% des algos</h1>"
             c = rc["Cluster"][r]

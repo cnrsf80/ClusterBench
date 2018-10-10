@@ -130,9 +130,9 @@ post=""
 s.create_trace(url_base,"best"+post,300,False)
 s.init_metrics(ref_mod.cluster_toarray(),True) #ajout des url de représentation
 
-tools.save(s.metrics,"./metrics/synthese.xlsx")
+tools.save(s.metrics,"./metrics/synthese.xlsx",True)
 
-print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(),"./saved/occurences.xlsx"))
+print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(),"./saved/occurences.xlsx",True))
 # print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="BIRCH"),"occurencesBIRCH.xlsx"))
 # print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="NEURALGAS"),"occurencesNEURALGAS.xlsx"))
 
