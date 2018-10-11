@@ -41,18 +41,18 @@ Accès
     http://f80.fr:8888
     
 <h2>Server de calcul</h2>
-Installation d'un serveur Fedora serveur
+Installation d'un serveur Fedora serveur<br>
 puis installation de cuda :
- - dnf install http://developer.download.nvidia.com/compute/cuda/repos/fedora27/x86_64/cuda-repo-fedora27-9.2.148-1.x86_64.rpm
- - dnf clean all`
- - dnf install cuda
-Puis installation de pyCUDA :
+ - dnf install http://developer.download.nvidia.com/compute/cuda/repos/fedora27/x86_64/cuda-repo-fedora27-9.2.148-1.x86_64.rpm<br>
+ - dnf clean all`<br>
+ - dnf install cuda<br>
+<br>Puis installation de pyCUDA :
  - wget https://files.pythonhosted.org/packages/58/33/cced4891eddd1a3ac561ff99081019fddc7838a07cace272c941e3c2f915/pycuda-2018.1.1.tar.gz
  - tar xfz pycuda-2018.1.1.tar.gz<br>
  - cd pycuda-VERSION<br>
  - su -c "python distribute_setup.py" # this will install distribute
  - su -c "easy_install numpy" # this will install numpy using distribute
- puis test :
+ <br>puis test :
   - cd pycuda-VERSION/test
   - python test_driver.py
  
