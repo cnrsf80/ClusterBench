@@ -16,26 +16,46 @@ ou si déjà cloner, le mettre a jour :<br>
 cd ClusterBench
 git pull origin master 
 
-#Execution 
+<h1>Execution</h1> 
 Ouvrir main.ipynb dans le notebook jupyter
 ou en ligne de commande executer :
 python3 main.py
 
-#Resultats
+<h1>Resultats</h1>
 Les répertoires suivant contiennent :
  - "metrics", une synthese du clustering
  - "saved", l'ensemble des représentations 2D et 3D des modeles
  - "clustering", un cache du résultat de chaque calcul
 
-#Code
+<h1>Code</h1>
 Le code est principalement contenu dans le répertoire clusterBench. Il repose sur 3 classes :
  - "cluster" : contient le détail d'un cluster
  - "algo" : contient les paramétres d'un modele, et les clusters obtenus
  - "simulation" : contient une liste de modeles arpès éxécution 
 
-# Installation d'un Serveur Jupyter Notebook
+<h1>Infrastructure</h1>
 Installation depuis :
     https://github.com/movalex/rpi-jupyter-conda
     
 Accès 
     http://f80.fr:8888
+    
+<h2>Server de calcul</h2>
+Installation d'un serveur Fedora serveur
+puis installation de cuda :
+ - dnf install http://developer.download.nvidia.com/compute/cuda/repos/fedora27/x86_64/cuda-repo-fedora27-9.2.148-1.x86_64.rpm
+ - dnf clean all`
+ - dnf install cuda
+Puis installation de pyCUDA :
+ - wget https://files.pythonhosted.org/packages/58/33/cced4891eddd1a3ac561ff99081019fddc7838a07cace272c941e3c2f915/pycuda-2018.1.1.tar.gz
+ - tar xfz pycuda-2018.1.1.tar.gz<br>
+ - cd pycuda-VERSION<br>
+ - su -c "python distribute_setup.py" # this will install distribute
+ - su -c "easy_install numpy" # this will install numpy using distribute
+ puis test :
+  - cd pycuda-VERSION/test
+  - python test_driver.py
+ 
+ puis installation de PyCUDA:
+  - tar xfz pycuda-VERSION.tar.gz`
+    
