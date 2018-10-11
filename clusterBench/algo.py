@@ -329,6 +329,7 @@ def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_to
     model.setname("NEURALGAS distance_toremove="+str(distance_toremove_edge)+" passes="+str(passes))
 
     if not model.load_cluster():
+        print(model.name)
         model.start_treatment()
         gng = GrowingNeuralGas(data)
         gng.fit_network(e_b=0.05, e_n=0.006,

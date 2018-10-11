@@ -46,7 +46,7 @@ if len(sys.argv)>1:source_file=sys.argv[1]
 col_name="id"
 if len(sys.argv)>2:col_name=sys.argv[2]
 
-algos:list=["HAC","DBSCAN","BIRCH","MEANSHIFT","NEURALGAS","SPECTRAL"]
+algos:list=["HAC","DBSCAN","BIRCH","MEANSHIFT","HDBSCAN","NEURALGAS","SPECTRAL"]
 if len(sys.argv)>3:algos:list=sys.argv[3].split(",")
 
 ref_mod=simulation.create_reference_model(pd.read_excel(source_file),col_name,11)
@@ -90,6 +90,14 @@ if algos.__contains__("DBSCAN"):
                 cl.DBSCAN(eps=x["eps"], min_samples=x["min_elements"],leaf_size=x["leaf_size"],n_jobs=4),
             {"eps": np.arange(0.1, 0.9, 0.1), "min_elements": range(2, 6),"leaf_size":range(10,60,20)})
 
+import hdbscan
+if algos.__contains__("HDBSCAN"):
+    s.execute("HDBSCAN","https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
+            lambda x:
+                hdbscan.HDBSCAN(min_samples=x["min_elements"],leaf_size=x["leaf_size"],alpha=x["alpha"]),
+            {"min_elements": range(2, 10),"leaf_size":range(10,100,5),"alpha":np.arange(0.2,1.5,0.1)})
+
+
 if algos.__contains__("BIRCH"):
     s.execute("BIRCH","http://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html#sklearn.cluster.Birch",
             lambda x:
@@ -108,9 +116,12 @@ if algos.__contains__("SPECTRAL"):
             {"n_cluster": range(6,20), "n_neighbors": range(5,10)}
     )
 
+
+
+
 if algos.__contains__("NEURALGAS"):
-    for passes in range(10,250,30):
-        for distance_toremove_edge in range(2,30,4):
+    for passes in range(150,250,50):
+        for distance_toremove_edge in range(30,40,5):
             m:algo.model=algo.create_cluster_from_neuralgasnetwork(
                 copy.deepcopy(ref_mod).clear_clusters(),
                 passes=passes,

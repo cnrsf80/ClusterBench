@@ -10,4 +10,5 @@ xlrd
 openpyxl
 sympy
 jupyter
-Pyclustering
+hdbscan
+
