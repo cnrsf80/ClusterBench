@@ -121,7 +121,7 @@ if algos.__contains__("SPECTRAL"):
 
 if algos.__contains__("NEURALGAS"):
     for passes in range(150,250,50):
-        for distance_toremove_edge in range(30,40,5):
+        for distance_toremove_edge in range(60,120,30):
             m:algo.model=algo.create_cluster_from_neuralgasnetwork(
                 copy.deepcopy(ref_mod).clear_clusters(),
                 passes=passes,
