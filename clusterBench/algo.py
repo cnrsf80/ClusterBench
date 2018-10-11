@@ -334,7 +334,7 @@ def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_to
         gng = GrowingNeuralGas(data)
         gng.fit_network(e_b=0.05, e_n=0.006,
                         distance_toremove_edge=distance_toremove_edge,
-                        l=100, a=0.5, d=0.995,
+                        modulo_affichage=10, a=0.5, d=0.995,
                         passes=passes, plot_evolution=False)
         model.end_treatment()
         print('Found %d clusters.' % gng.number_of_clusters())

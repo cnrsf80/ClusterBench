@@ -47,7 +47,7 @@ class GrowingNeuralGas:
             if self.network.degree(u) == 0:
                 self.network.remove_node(u)
 
-    def fit_network(self, e_b, e_n, distance_toremove_edge, l, a, d, passes=1, plot_evolution=False):
+    def fit_network(self, e_b, e_n, distance_toremove_edge, modulo_affichage, a, d, passes=1, plot_evolution=False):
         # logging variables
         accumulated_local_error = []
         global_error = []
@@ -97,7 +97,8 @@ class GrowingNeuralGas:
                 self.prune_connections(distance_toremove_edge)
                 # 8. if the number of steps so far is an integer multiple of parameter l, insert a new unit
                 steps += 1
-                if steps % l == 0:
+                if steps % modulo_affichage == 0:
+                    tools.progress(p,passes)
                     if plot_evolution and len(self.network.nodes)>3:
                         self.plot_network2("pass"+str(sequence))
                     sequence += 1

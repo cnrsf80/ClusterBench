@@ -95,7 +95,7 @@ if algos.__contains__("HDBSCAN"):
     s.execute("HDBSCAN","https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
             lambda x:
                 hdbscan.HDBSCAN(min_samples=x["min_elements"],leaf_size=x["leaf_size"],alpha=x["alpha"]),
-            {"min_elements": range(2, 10),"leaf_size":range(10,100,5),"alpha":np.arange(0.2,1.5,0.1)})
+            {"min_elements": range(1, 10),"leaf_size":range(10,100,5),"alpha":np.arange(0.2,1.5,0.1)})
 
 
 if algos.__contains__("BIRCH"):
@@ -120,8 +120,8 @@ if algos.__contains__("SPECTRAL"):
 
 
 if algos.__contains__("NEURALGAS"):
-    for passes in range(150,250,50):
-        for distance_toremove_edge in range(60,120,30):
+    for passes in range(150,450,50):
+        for distance_toremove_edge in range(60,250,30):
             m:algo.model=algo.create_cluster_from_neuralgasnetwork(
                 copy.deepcopy(ref_mod).clear_clusters(),
                 passes=passes,
