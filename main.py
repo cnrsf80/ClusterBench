@@ -46,8 +46,8 @@ if len(sys.argv)>1:source_file=sys.argv[1]
 col_name="id"
 if len(sys.argv)>2:col_name=sys.argv[2]
 
-algos:list=["HAC","DBSCAN","BIRCH","MEANSHIFT","HDBSCAN","NEURALGAS","SPECTRAL"]
-if len(sys.argv)>3:algos:list=sys.argv[3].split(",")
+algos=["HAC","DBSCAN","BIRCH","MEANSHIFT","HDBSCAN","NEURALGAS","SPECTRAL"]
+if len(sys.argv)>3:algos=sys.argv[3].split(",")
 
 ref_mod=simulation.create_reference_model(pd.read_excel(source_file),col_name,11)
 print(ref_mod.print_cluster("\n\n"))
