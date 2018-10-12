@@ -8,7 +8,6 @@ scikit-learn
 folium
 xlrd
 openpyxl
-sympy
 jupyter
 hdbscan
 

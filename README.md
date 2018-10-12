@@ -8,7 +8,7 @@ Cloner le dépôt :<br>
 git clone https://github.com/cnrsf80/ClusterBench
 
 Installer les librairies python nécéssaire au fonctionnement<br> 
-pip3 install -r ClusterBench/requirements.txt
+pip3 install -r ./ClusterBench/requirements.txt
 
 <h1>Mise a jour</h1>
 ou si déjà cloner, le mettre a jour :<br>
@@ -19,7 +19,7 @@ git pull origin master
 <h1>Execution</h1> 
 Ouvrir main.ipynb dans le notebook jupyter
 ou en ligne de commande executer :
-python3 main.py
+python3 ./ClusterBench/main.py
 
 <h1>Resultats</h1>
 Les répertoires suivant contiennent :
