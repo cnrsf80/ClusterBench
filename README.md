@@ -1,7 +1,7 @@
 <h1>Pre-requis</h1>
 Une distribution, idéalement Linux et Python 3.6 installé
+Git installé pour récupérer le code (https://gist.github.com/derhuerst/1b15ff4652a867391f03)
 l'utilitaire "pip3" également installé (https://pip.pypa.io/en/latest/installing/)
-
 
 <h1>Première Installation</h1>
 Cloner le dépôt :<br> 
