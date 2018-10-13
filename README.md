@@ -8,7 +8,7 @@ Cloner le dépôt :<br>
 git clone https://github.com/cnrsf80/ClusterBench
 
 Installer les librairies python nécéssaire au fonctionnement<br> 
-pip3 install -r ./ClusterBench/requirements.txt
+pip3.7 install -r ./ClusterBench/requirements.txt
 
 <h1>Mise a jour</h1>
 ou si déjà cloner, le mettre a jour :<br>

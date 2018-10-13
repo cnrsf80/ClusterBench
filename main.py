@@ -122,7 +122,7 @@ if algos.__contains__("SPECTRAL"):
 if algos.__contains__("NEURALGAS"):
     for passes in range(150,450,50):
         for distance_toremove_edge in range(60,250,30):
-            m=algo.create_cluster_from_neuralgasnetwork(
+            m=algo. create_cluster_from_neuralgasnetwork(
                 copy.deepcopy(ref_mod).clear_clusters(),
                 passes=passes,
                 distance_toremove_edge=distance_toremove_edge)
@@ -145,8 +145,9 @@ s.init_metrics(ref_mod.cluster_toarray(),True) #ajout des url de représentation
 
 tools.save(s.metrics,"./metrics/synthese.xlsx",True)
 
-print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(),"./saved/occurences.xlsx",True))
-# print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="BIRCH"),"occurencesBIRCH.xlsx"))
+#print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(),"./saved/occurences.xlsx",True))
+#print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="BIRCH"),"occurencesBIRCH.xlsx"))
+print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="HDBSCAN"),"occurencesHDBSCAN.xlsx"))
 # print("Matrice d'occurence : "+url_base+"/"+tools.save(s.create_occurence_file(filter="NEURALGAS"),"occurencesNEURALGAS.xlsx"))
 
 
