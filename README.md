@@ -13,15 +13,16 @@ pip3.7 install -r ./ClusterBench/requirements.txt
 <h1>Mise a jour</h1>
 ou si déjà cloner, le mettre a jour :<br>
 
-cd ClusterBench
+cd ClusterBench<br>
 git pull origin master 
 
 <h1>Execution</h1> 
-Ouvrir main.ipynb dans le notebook jupyter
+Ouvrir main.ipynb dans le notebook jupyter<br>
+ou en ligne de commande executer :<br>
+cd ClusterBench<br>
+python3 main.py<br>
 
-ou en ligne de commande executer :
-cd ClusterBench
-python3 main.py
+ou bien lancer le serveur 
 
 <h1>Resultats</h1>
 Les répertoires suivant contiennent :
@@ -61,3 +62,6 @@ puis installation de cuda :
  puis installation de PyCUDA:
   - tar xfz pycuda-VERSION.tar.gz`
     
+#Fabrication de l'image docker
+build : docker build -t hhoareau/cluster_bench_server . 
+deploiement : docker push hhoareau/cluster_bench_server:latest

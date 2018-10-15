@@ -9,7 +9,7 @@ import hdbscan
 
 app = Flask(__name__)
 
-# url=http://f80.fr/cnrs/datas/PourClustering.xlsx
+# url=http://f80.fr/cnrs/datas/PourClustering.csv
 # http://127.0.0.1:5000/datasfromurl/id/11/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.xlxs
 # http://127.0.0.1:5000/datasfromurl/id/11/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.xlxs
 @app.route('/datasfromurl/<label_col>/<int:dimensions>/<path:url>', methods=['GET'])
@@ -24,7 +24,7 @@ def index():
     code="Exemple de commandes possible :<br>"
     code=code+tools.addlink("http://127.0.0.1:5000/algo/hdbscan/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/min_cluster_size=3")
     code=code+tools.addlink("http://127.0.0.1:5000/algo/hac/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/n_clusters=12,11,13")
-    code=code+tools.addlink("http://127.0.0.1:5000/algo/meanshift/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/bandwidth=5")
+    code=code+tools.addlink("http://127.0.0.1:5000/algo/meanshift/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/bandwidth=0.1,0.3,0.2")
     code=code+tools.addlink("http://127.0.0.1:5000/algo/hdbscan/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9")
     return code
 
@@ -94,4 +94,4 @@ def exec(algos:str):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0",port=5000)
