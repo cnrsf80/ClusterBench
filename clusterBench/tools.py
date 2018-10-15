@@ -96,18 +96,36 @@ def is_number(s):
     except ValueError:
         return False
 
+def convert_to_number(v):
+    if not is_number(v):
+        return v
+    else:
+        if v.__contains__("."):
+            return float(v)
+        else:
+            return int(v)
+
 #Construit un dictionnaire a partir de la syntaxe param1=value1,param2=value2
 def buildDict(params:str,rc=dict()):
     for s in params.split("&"):
         k=s.split("=")[0]
         v=s.split("=")[1]
-        if type(v)!="list":
-            if is_number(v) and type(v) is str:
-                v=[float(v)]
+        if not type(v) is list:
+            if v.__contains__(","):
+                tmp=[]
+                for vv in v.split(","):
+                    tmp.append(convert_to_number(vv))
+                v=tmp
             else:
-                v=[v]
+                if is_number(v) and type(v) is str:
+                    v=[convert_to_number(v)]
+                else:
+                    v=[v]
         rc[k]=v
 
     return rc
 
+def addlink(url,libele=""):
+    if libele=="":libele=url
+    return "<a target=_blank href='"+url+"'>"+libele+"</a><br>"
 
