@@ -21,7 +21,7 @@ def datasfromurl(label_col:str,dimensions:int,url):
 
 @app.route('/', methods=['GET'])
 def index():
-    code="Exemple de commandes :<br>"
+    code="Exemple de commandes possible :<br>"
     code=code+tools.addlink("http://127.0.0.1:5000/algo/hdbscan/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/min_cluster_size=3")
     code=code+tools.addlink("http://127.0.0.1:5000/algo/hac/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/n_clusters=12,11,13")
     code=code+tools.addlink("http://127.0.0.1:5000/algo/meanshift/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/bandwidth=5")
