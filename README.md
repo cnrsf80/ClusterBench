@@ -18,8 +18,10 @@ git pull origin master
 
 <h1>Execution</h1> 
 Ouvrir main.ipynb dans le notebook jupyter
+
 ou en ligne de commande executer :
-python3 ./ClusterBench/main.py
+cd ClusterBench
+python3 main.py
 
 <h1>Resultats</h1>
 Les répertoires suivant contiennent :
