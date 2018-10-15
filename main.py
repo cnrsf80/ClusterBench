@@ -32,18 +32,17 @@ import clusterBench.algo as algo
 import copy
 import numpy as np
 from sklearn import cluster as cl
-#from sklearn.cluster import OPTICS
 
 def exec_algos(algos: str, s: simulation):
-    if algos.__contains__("OPTICS"):
-        for eps in np.arange(0.3,0.9,0.1):
-            m:algo.modele=algo.create_cluster_from_optics(
-                copy.deepcopy(ref_mod).clear_clusters(),
-                eps=eps
-            )
-            m.params = [eps]
-            m.help = "https://github.com/annoviko/pyclustering/blob/master/pyclustering/cluster/optics.py"
-            s.append_modeles(m)
+    # if algos.__contains__("OPTICS"):
+    #     for eps in np.arange(0.3,0.9,0.1):
+    #         m:algo.modele=algo.create_cluster_from_optics(
+    #             copy.deepcopy(ref_mod).clear_clusters(),
+    #             eps=eps
+    #         )
+    #         m.params = [eps]
+    #         m.help = "https://github.com/annoviko/pyclustering/blob/master/pyclustering/cluster/optics.py"
+    #         s.append_modeles(m)
 
     if algos.__contains__("HAC"):
         s.execute("HAC",

@@ -81,7 +81,7 @@ class model:
 
     #Produit une réprésentation 3D et une représentation 2D des mesures
     #après PCA et coloration en fonction du cluster d'appartenance
-    def trace(self,path,filename,label_col_name="",url_base=""):
+    def trace(self,path:str,filename,url_base=""):
 
         code=self.to3DHTML(False)
 
@@ -239,18 +239,19 @@ class model:
         self.setname(name)
         if not self.load_cluster():
             self.start_treatment()
+            comp=None
             try:
                 mes=self.mesures()
-                comp = algo(p).fit(mes)
+                func=algo(p)
+                comp = func.fit(mes)
             except:
                 print("Exécution de " + name + " en echec")
-                comp = None
-
-            if comp != None:
-                self.end_treatment()
-                self.clusters_from_labels(comp.labels_, algo_name)
-                print("Exécution de " + name + " Traitement " + str(self.delay) + " sec")
-                self.save_cluster()
+            finally:
+                if not comp is None:
+                    self.end_treatment()
+                    self.clusters_from_labels(comp.labels_, algo_name)
+                    print("Exécution de " + name + " Traitement " + str(self.delay) + " sec")
+                    self.save_cluster()
         else:
             print("Chargement du cluster depuis un préenregistrement pour "+name)
 
@@ -261,23 +262,27 @@ class model:
     def ideal_matrix(self):
         print("Fabrication d'un cluster de référence pour les métriques")
         clusters=np.asarray(np.zeros(len(self.data)),np.int8)
-        next_cluster=0
+        d:dict={}
         for k in range(len(self.data)):
             item=self.data[self.name_col][k]
-            find=False
-            for i in range(k):
-                if item==self.data[self.name_col][i]:
-                    clusters[k]=clusters[i]
-                    find=True
-                    break
-            if not find:
-                next_cluster=next_cluster+1
-                clusters[k]=next_cluster
+            if d.get(item)==None:
+                d[item] = [k]
+            else:
+                d[item].append(k)
+
+        j=0
+        for k in d.keys():
+            for i in d.get(k):
+                clusters[i]=j
+            j=j+1
 
         return clusters
 
-    def to3DHTML(self,for_jupyter):
-        return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col,for_jupyter=for_jupyter)
+    def to3DHTML(self,for_jupyter,pca_offset=0):
+        if len(self.clusters)>0:
+            return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col,for_jupyter=for_jupyter,pca_offset=pca_offset)
+        else:
+            return "No cluster"
 
 
     def setname(self, name:str="ALGO"):

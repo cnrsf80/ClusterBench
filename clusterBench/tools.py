@@ -88,3 +88,26 @@ def mkdir(dir_name):
         return True
     else:
         return False
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+#Construit un dictionnaire a partir de la syntaxe param1=value1,param2=value2
+def buildDict(params:str,rc=dict()):
+    for s in params.split("&"):
+        k=s.split("=")[0]
+        v=s.split("=")[1]
+        if type(v)!="list":
+            if is_number(v) and type(v) is str:
+                v=[float(v)]
+            else:
+                v=[v]
+        rc[k]=v
+
+    return rc
+
+

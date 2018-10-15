@@ -142,7 +142,7 @@ class simulation:
         for i in range(0, min(limit,len(self.models))):
             tools.progress(i,min(limit,len(self.models)))
             code = code + "\nPosition " + str(i + 1) + "<br>"
-            code = code + self.models[i].trace("./saved", name + str(i), self.col_name, url)
+            code = code + self.models[i].trace("./saved", name + str(i), url)
             if withPerf:code = code + self.models[i].print_perfs()
 
         tools.create_html("index_" + name, code, url)
@@ -181,3 +181,15 @@ class simulation:
 
     def print_infos(self):
         return str(len(self.models))+" modeles calculés"
+
+    def get3d_html(self):
+        code=""
+        for i in range(0, len(self.models)):
+            m:algo.model=self.models[i]
+            code = code + m.to3DHTML(False)
+            code=code+"<br><br>"+m.print_cluster("<br>")+"<br><br>"+m.print_perfs("<br>")
+
+        return code
+
+    def raz(self):
+        self.models=[]
