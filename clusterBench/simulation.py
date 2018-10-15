@@ -5,28 +5,32 @@ import pandas as pd
 import clusterBench.algo as algo
 
 
-def create_reference_model(data, col_name,n_mesures):
-    print(str(len(data))+" mesures à traiter")
-    print("Colonne de utilisé pour le nom "+col_name)
-
-    data["Ref"] = data.index
-    data.index = range(len(data))
-    mod = algo.model(data, col_name, range(1, n_mesures))
-
-    #Usage d'une autre fonction de distance que la distance euclidienne
-    #mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))
-
-    true_labels = mod.ideal_matrix()  # Définition d'un clustering de référence pour les métriques
-    mod.clusters_from_labels(true_labels)
-    return mod
 
 
 class simulation:
     models=[]
 
-    def __init__(self,model:algo.model,col_name:str):
-        self.ref_model:algo.model=model
+    def init_reference_model(self,data:pd.DataFrame, col_name:str, n_mesures:int):
+        print(str(len(data)) + " mesures à traiter")
+        print("Colonne de utilisé pour le nom " + col_name)
+
+        data["Ref"] = data.index
+        data.index = range(len(data))
+        mod = algo.model(data, col_name, n_mesures)
+
+        # Usage d'une autre fonction de distance que la distance euclidienne
+        # mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))
+
+        true_labels = mod.ideal_matrix()  # Définition d'un clustering de référence pour les métriques
+        mod.clusters_from_labels(true_labels)
+        return mod
+
+    def __init__(self,data:pd.DataFrame,col_name:str,dimensions:int):
+        self.ref_model:algo.model=self.init_reference_model(data,col_name,dimensions)
+        self.ref_model.init_metrics(self.ref_model.cluster_toarray())
         self.col_name :str= col_name
+        self.dimensions=dimensions
+
 
 
     def convertParams(self,ps):
@@ -51,7 +55,7 @@ class simulation:
     def execute(self,algo_name,url,func,ps:dict):
         print("Traitement de "+algo_name+" ********************************************************************")
         for p in self.convertParams(ps):
-            m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.ref_model.mesures_col)
+            m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.dimensions)
             m=m.execute(algo_name,url, func,p)
             self.models.append(copy.copy(m))
 
@@ -145,11 +149,13 @@ class simulation:
 
 
 
-    def init_metrics(self, true_labels,showProgress=False):
+    def init_metrics(self,showProgress=False):
         rc=""
         self.metrics: pd.DataFrame = pd.DataFrame()
         print("Calcul des métriques")
         print("\nPremière passe")
+        true_labels=self.ref_model.cluster_toarray()
+
         for i in range(len(self.models)):
             if showProgress:tools.progress(i, len(self.models))
             m:algo.model=self.models[i]

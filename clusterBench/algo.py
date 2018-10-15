@@ -27,11 +27,13 @@ class model:
     homogeneity_score = 0
     completeness_score = 0
     v_measure_score = 0
+    data:pd.DataFrame=None
+    dimensions:int=0
 
-    def __init__(self, data,name_col=0,mesures_col=range(1,5)):
+    def __init__(self, data,name_col,dimensions):
         self.name_col=name_col
-        self.mesures_col=mesures_col
         self.clusters=[]
+        self.dimensions=dimensions
         self.data=data
 
     #Calcul de la matrice de distance
@@ -121,7 +123,12 @@ class model:
 
 
     def mesures(self):
-        return self.data.iloc[:,self.mesures_col]
+        rc=list(self.data.columns)
+        rc.remove(self.name_col)
+        assert(self.dimensions>0)
+        rc=rc[0:self.dimensions]
+        mes=self.data[rc]
+        return mes
 
     def toDataframe(self,labels_true=None):
         if self.score==0:
@@ -233,7 +240,8 @@ class model:
         if not self.load_cluster():
             self.start_treatment()
             try:
-                comp = algo(p).fit(self.mesures())
+                mes=self.mesures()
+                comp = algo(p).fit(mes)
             except:
                 print("Exécution de " + name + " en echec")
                 comp = None
