@@ -13,6 +13,7 @@
         <serverdata>
           <mappings>
             <mapping deploy="/cnrs" local="$PROJECT_DIR$/saved" web="/" />
+            <mapping deploy="/Projets/ClusterBench" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
