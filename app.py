@@ -87,7 +87,15 @@ def algo_func(url:str,params:str,name_algo:str):
 
     sim.init_metrics(False)
 
-    code=sim.print_infos()+"<br>"+sim.get3d_html()
+
+    code=sim.print_infos()+"<br>"
+
+    n_pca=1
+    if not request.form["pca"] is None:n_pca=request.form["pca"]
+
+    for pca_offset in range(0,n_pca-1):
+        code=code+sim.get3d_html()
+
     return code
 
 

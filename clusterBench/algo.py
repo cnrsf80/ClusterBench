@@ -83,12 +83,12 @@ class model:
     #après PCA et coloration en fonction du cluster d'appartenance
     def trace(self,path:str,filename,url_base=""):
 
-        code=self.to3DHTML(False)
+        code=self.to3DHTML(0,False)
 
         save(code+"<br><h2>Composition des clusters</h2>"+self.print_cluster("<br><br>"),path + "/" + filename + ".html")
 
         self.url= url_base +"/" + filename + ".html"
-        self.url2d = url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename)
+        #self.url2d = url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename)
 
         s="<a href='"+self.url+"'>représentation 3D</a>\n"
         s= s + "<a href='" + self.url2d + "'>représentation 2D</a>\n"
@@ -278,9 +278,11 @@ class model:
 
         return clusters
 
-    def to3DHTML(self,for_jupyter,pca_offset=0):
+    def to3DHTML(self,offset_pca=0,for_jupyter=False):
         if len(self.clusters)>0:
-            return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col,for_jupyter=for_jupyter,pca_offset=pca_offset)
+            return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col,
+                                          for_jupyter=for_jupyter,
+                                          pca_offset=pca_offset)
         else:
             return "No cluster"
 
