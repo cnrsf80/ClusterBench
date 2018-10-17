@@ -27,7 +27,7 @@ def index():
     code=code+tools.addlink("http://127.0.0.1:5000/algo/hac/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/n_clusters=12,11,13")
     code=code+tools.addlink("http://127.0.0.1:5000/algo/meanshift/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/bandwidth=0.1,0.3,0.2")
     code=code+tools.addlink("http://127.0.0.1:5000/algo/hdbscan/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9")
-    code=code+tools.addlink("http://127.0.0.1:5000/algo/neuralgas/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/passes=10,20,60,120&distance_toremove_edge=40")
+    code=code+tools.addlink("http://127.0.0.1:5000/algo/neuralgas/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/passes=20&distance_toremove_edge=40?pca=4")
     return code
 
 
@@ -48,11 +48,14 @@ def algo_func(url:str,params:str,name_algo:str):
     #parameters={"min_elements": [1], "leaf_size": [10], "alpha": [1]}
 
     if name_algo.upper().__contains__("HDBSCAN"):
-        parameters = tools.buildDict(params, {"min_cluster_size": [2], "leaf_size": [20], "alpha": [0.5]})
+        parameters = tools.buildDict(params, {"min_samples":[3],"min_cluster_size": [2], "leaf_size": [20], "alpha": [0.5]})
         sim.execute(algo_name="HDBSCAN",
                     url="https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
                     func=lambda x:
-                            hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"], leaf_size=x["leaf_size"], alpha=x["alpha"]),
+                            hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"],
+                                            leaf_size=x["leaf_size"],
+                                            min_samples=x["min_samples"],
+                                            alpha=x["alpha"]),
                     ps=parameters)
 
     if name_algo.upper().__contains__("MEANSHIFT"):
@@ -87,14 +90,14 @@ def algo_func(url:str,params:str,name_algo:str):
 
     sim.init_metrics(False)
 
-
     code=sim.print_infos()+"<br>"
 
-    n_pca=1
-    if not request.form["pca"] is None:n_pca=request.form["pca"]
+    try:
+        n_pca=int(request.args["pca"])
+    except:
+        n_pca=2
 
-    for pca_offset in range(0,n_pca-1):
-        code=code+sim.get3d_html()
+    code=code+sim.get3d_html(n_pca)
 
     return code
 

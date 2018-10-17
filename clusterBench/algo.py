@@ -2,6 +2,7 @@ from clusterBench.gng import GrowingNeuralGas
 import os
 from clusterBench import draw
 import time
+from threading import Thread
 import sklearn.metrics as metrics
 import networkx as nx
 import numpy as np
@@ -15,7 +16,7 @@ for i in range(200):colors.append(i)
 
 #Représente un model
 #un model est une liste de cluster après application d'un algorithme de clustering
-class model:
+class model(Thread):
     name=""
     delay:int=0 #delay en secondes
     silhouette_score:int=0
@@ -31,6 +32,7 @@ class model:
     dimensions:int=0
 
     def __init__(self, data,name_col,dimensions):
+        Thread.__init__(self)
         self.name_col=name_col
         self.clusters=[]
         self.dimensions=dimensions
@@ -219,6 +221,15 @@ class model:
             i = i + 1
 
 
+    def init_thread(self,algo_name,url,algo_func,p:dict):
+        self.parameters=p
+        self.algo_name = algo_name
+        self.algo_func = algo_func
+        self.url=url
+
+    def run(self):
+        self.execute(self.algo_name,self.url,self.algo_func,self.parameters)
+
     def clear_clusters(self):
         self.clusters=[]
         return self
@@ -278,11 +289,13 @@ class model:
 
         return clusters
 
-    def to3DHTML(self,offset_pca=0,for_jupyter=False):
+    def to3DHTML(self,pca_offset=0,for_jupyter=False,w="800px",h="800px"):
         if len(self.clusters)>0:
-            return draw.trace_artefact_3d(self.mesures(), self.clusters,self.name, label_col=self.name_col,
+            return draw.trace_artefact_3d(self.mesures(), self.clusters,
+                                          title=self.name,
+                                          label_col=self.name_col,
                                           for_jupyter=for_jupyter,
-                                          pca_offset=pca_offset)
+                                          pca_offset=pca_offset,w=w,h=h)
         else:
             return "No cluster"
 

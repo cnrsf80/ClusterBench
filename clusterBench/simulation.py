@@ -5,8 +5,6 @@ import pandas as pd
 import clusterBench.algo as algo
 
 
-
-
 class simulation:
     models=[]
 
@@ -36,6 +34,7 @@ class simulation:
     def convertParams(self,ps):
         ps["sup"]=[None]
         ps["sup2"]=[None]
+        ps["sup3"] = [None]
 
         rc=[]
         keys=list(ps.keys())
@@ -43,13 +42,18 @@ class simulation:
         for i in range(0,len(ps[keys[0]])):
             for j in range(0, len(ps[keys[1]])):
                 for k in range(0, len(ps[keys[2]])):
-                    c1=ps[keys[0]][i]
-                    c2=ps[keys[1]][j]
-                    c3=ps[keys[2]][k]
-                    if c3 is None:
-                        rc.append({keys[0]: c1, keys[1]: c2})
-                    else:
-                        rc.append({keys[0]:c1,keys[1]:c2,keys[2]:c3})
+                    for l in range(0, len(ps[keys[3]])):
+                        c1=ps[keys[0]][i]
+                        c2=ps[keys[1]][j]
+                        c3=ps[keys[2]][k]
+                        c4 = ps[keys[3]][l]
+                        if c4 is None:
+                            rc.append({keys[0]: c1, keys[1]: c2,keys[2]: c3})
+                        else:
+                            if c3 is None:
+                                rc.append({keys[0]: c1, keys[1]: c2})
+                            else:
+                                rc.append({keys[0]:c1,keys[1]:c2,keys[2]:c3,keys[3]:c4})
         return rc
 
     def execute(self,algo_name,url,func,ps:dict):
@@ -182,12 +186,14 @@ class simulation:
     def print_infos(self):
         return str(len(self.models))+" modeles calculés"
 
-    def get3d_html(self,offset_pca=0):
+    def get3d_html(self,n_pca=1):
         code=""
         for i in range(0, len(self.models)):
             m:algo.model=self.models[i]
-            code = code + m.to3DHTML(offset_pca,False)
-            code=code+"<br><br>"+m.print_cluster("<br>")+"<br><br>"+m.print_perfs("<br>")
+            for pca_offset in range(0, n_pca):
+                code = code + m.to3DHTML(pca_offset ,False,"1000px","600px")
+
+            code=code+"<br><br>"+m.print_cluster("<br><br>")+"<br><br>"+m.print_perfs("<br>")
 
         return code
 

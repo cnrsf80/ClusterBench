@@ -54,15 +54,17 @@ def drawOnPlot_3D(points,lines):
 
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
-def draw_3D(li_data,for_jupyter=False,lines=None):
+def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     df_data = pd.DataFrame(li_data)
 
     g = v3d.Vis3d()
-    g.width = '1200px'
-    g.height = '800px'
+    g.width = w
+    g.height = h
     g.style = 'dot-color'
     g.tooltip = """function (point) { return '<b>' + point.data.label + '</b>'; }"""
     g.showPerspective = True
+    g.showLegend=False
+    g.showShadow=True
     g.showXAxis = False
     g.showYAxis = False
     g.showZAxis = False
@@ -86,7 +88,7 @@ def draw_3D(li_data,for_jupyter=False,lines=None):
 
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
-def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pca_offset=0):
+def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
     pca = decomp.pca.PCA(n_components=3+pca_offset)
     pca.fit(data)
     newdata = pca.transform(data)
@@ -110,8 +112,9 @@ def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pc
 
     code=""
     if len(title)>0:code="<h1>"+title+"</h1>"
+    code=code+"<h3>Réprésentation 3d sur les axes "+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2)+"</h3>"
 
-    return code+draw_3D(li_data,for_jupyter=for_jupyter)
+    return code+draw_3D(li_data,for_jupyter=for_jupyter,lines=None,w=w,h=h)
 
 
 
