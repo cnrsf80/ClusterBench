@@ -64,7 +64,6 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     g.tooltip = """function (point) { return '<b>' + point.data.label + '</b>'; }"""
     g.showPerspective = True
     g.showLegend=False
-    g.showShadow=True
     g.showXAxis = False
     g.showYAxis = False
     g.showZAxis = False

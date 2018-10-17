@@ -235,7 +235,7 @@ class model(Thread):
         return self
 
     #Execution de l'algorithme passé en argument (argo) avec les paramétres (params)
-    def execute(self,algo_name,url,algo,p:dict):
+    def execute(self,algo_name,url,algo,p:dict,useCache=False):
         name=algo_name+" "
         self.help=url
         self.params=[None]*3
@@ -248,7 +248,7 @@ class model(Thread):
             name=name+key+"="+value+" "
 
         self.setname(name)
-        if not self.load_cluster():
+        if not useCache or not self.load_cluster():
             self.start_treatment()
             comp=None
             try:

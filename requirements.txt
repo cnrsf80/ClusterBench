@@ -1,6 +1,8 @@
 matplotlib
 numpy
 pandas
+ipykernel==4.8.0
+prompt-toolkit==2.0.5
 IPython
 ezvis3d
 networkx

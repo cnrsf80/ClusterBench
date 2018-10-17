@@ -4,7 +4,6 @@ import datetime
 import pandas as pd
 import clusterBench.algo as algo
 
-
 class simulation:
     models=[]
 
@@ -56,11 +55,11 @@ class simulation:
                                 rc.append({keys[0]:c1,keys[1]:c2,keys[2]:c3,keys[3]:c4})
         return rc
 
-    def execute(self,algo_name,url,func,ps:dict):
+    def execute(self,algo_name,url,func,ps:dict,useCache=False):
         print("Traitement de "+algo_name+" ********************************************************************")
         for p in self.convertParams(ps):
             m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.dimensions)
-            m=m.execute(algo_name,url, func,p)
+            m=m.execute(algo_name,url, func,p,useCache)
             self.models.append(copy.copy(m))
 
 
