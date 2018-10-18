@@ -88,7 +88,7 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
 def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
-    pca = decomp.pca.PCA(n_components=3+pca_offset)
+    pca:decomp.pca.PCA = decomp.pca.PCA(n_components=3+pca_offset)
     pca.fit(data)
     newdata = pca.transform(data)
 

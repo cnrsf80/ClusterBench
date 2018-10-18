@@ -23,20 +23,28 @@ def datasfromurl(label_col:str,dimensions:int,url):
 @app.route('/', methods=['GET'])
 def index():
     code="Exemple de commandes possible :<br>"
-    code=code+tools.addlink("http://127.0.0.1:5000/algo/hdbscan/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/min_cluster_size=3")
-    code=code+tools.addlink("http://127.0.0.1:5000/algo/hac/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/n_clusters=12,11,13")
-    code=code+tools.addlink("http://127.0.0.1:5000/algo/meanshift/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/bandwidth=0.1,0.3,0.2")
-    code=code+tools.addlink("http://127.0.0.1:5000/algo/hdbscan/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9")
-    code=code+tools.addlink("http://127.0.0.1:5000/algo/neuralgas/http%3A%2F%2Ff80.fr%2Fcnrs%2Fdatas%2FPourClustering.csv/passes=20&distance_toremove_edge=40?pca=4")
+    domain="."
+    code=code+tools.addlink(domain+"/algo/hdbscan/PourClustering.csv/min_cluster_size=3")
+    code=code+tools.addlink(domain+"/algo/hac/PourClustering.csv/n_clusters=12,11,13")
+    code=code+tools.addlink(domain+"/algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2")
+    code=code+tools.addlink(domain+"/algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9")
+    code=code+tools.addlink(domain+"/algo/neuralgas/PourClustering.csv/passes=20&distance_toremove_edge=40?pca=4")
     return code
 
 
 @app.route('/algo/<string:name_algo>/<path:url>/<string:params>', methods=['GET'])
 def algo_func(url:str,params:str,name_algo:str):
+    if not url.startswith("http"):url="http://f80.fr/cnrs/datas/"+url;
+    print("Data dans "+url)
+
     data=None
-    if url.endswith(".xlsx"):data=pd.read_excel(url)
-    if url.endswith(".csv"):data=pd.read_csv(url,sep=";")
-    if data is None:return "Erreur sur les data"
+    try:
+        if url.endswith(".xlsx"):data=pd.read_excel(url)
+        if url.endswith(".csv"):data=pd.read_csv(url,sep=";")
+    except:
+        data=None
+
+    if data is None:return "Erreur sur la source de donnée : "+url
 
     label_col=data.columns[0]
     dimensions=len(data.columns)-1
