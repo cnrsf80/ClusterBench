@@ -1,6 +1,7 @@
 #x86
 #docker build -t hhoareau/cluster_bench_x86 .
 #docker push hhoareau/cluster_bench_x86:latest
+#docker pull hhoareau/cluster_bench_x86:latest
 #test:docker run -p 5000:5000 -t hhoareau/cluster_bench_x86:latest
 #deploy:docker run -p 5000:5000 -d hhoareau/cluster_bench_x86:latest
 #test SocketServer : http://45.77.160.220:5000
@@ -15,6 +16,11 @@ FROM python:3
 EXPOSE 5000
 
 RUN mkdir /app
+RUN mkdir /app/datas
+RUN mkdir /app/clustering
+RUN mkdir /app/saved
+RUN mkdir /app/metrics
+
 WORKDIR /app
 
 COPY requirements.txt /app/requirements.txt

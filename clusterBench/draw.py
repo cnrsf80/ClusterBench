@@ -61,7 +61,11 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     g.width = w
     g.height = h
     g.style = 'dot-color'
-    g.tooltip = """function (point) { return '<b>' + point.data.label + '</b>'; }"""
+    g.tooltip = """function (point) {
+        var dt=window.dta;
+        return '<b>' + point.data.label + '</b>';
+    }"""
+
     g.showPerspective = True
     g.showLegend=False
     g.showXAxis = False
@@ -80,9 +84,12 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
         #g.plot(df_line)
 
     code= g.html(df_data, center=for_jupyter,save=False, notebook=for_jupyter, dated=True)
+
     return code
 
 
+def draw_with_babylon(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
+    df_data = pd.DataFrame(li_data)
 
 
 

@@ -1,5 +1,7 @@
 from clusterBench.gng import GrowingNeuralGas
 import os
+import hashlib
+import clusterBench.tools as tools
 from clusterBench import draw
 import time
 from threading import Thread
@@ -16,8 +18,9 @@ for i in range(200):colors.append(i)
 
 #Représente un model
 #un model est une liste de cluster après application d'un algorithme de clustering
-class model(Thread):
+class model:
     name=""
+    hash="" #code de hashage des données (utile pour le cache)
     delay:int=0 #delay en secondes
     silhouette_score:int=0
     score:int=0
@@ -32,11 +35,15 @@ class model(Thread):
     dimensions:int=0
 
     def __init__(self, data,name_col,dimensions):
-        Thread.__init__(self)
+        #Thread.__init__(self)
         self.name_col=name_col
         self.clusters=[]
         self.dimensions=dimensions
         self.data=data
+        s = ""
+        for a in list(self.data.keys()): s = s + str(a)
+        self.hash=hashlib.md5(s.encode()).hexdigest()
+
 
     #Calcul de la matrice de distance
     #func_distance est la fonction de calcul de la distance entre 2 mesures
@@ -67,7 +74,8 @@ class model(Thread):
 
     #Retourne la liste des composants par cluster
     def print_cluster(self,end_line=" - "):
-        s=""
+
+        s="<h1>"+self.name+"</h1><h2>"+str(len(self.clusters))+" clusters trouvés</h2>"+end_line+end_line
         for c in self.clusters:
             s=s+c.print(self.data, self.name_col)+end_line
         return s
@@ -87,9 +95,9 @@ class model(Thread):
 
         code=self.to3DHTML(0,False)
 
-        save(code+"<br><h2>Composition des clusters</h2>"+self.print_cluster("<br><br>"),path + "/" + filename + ".html")
+        save(code+"<br><h2>Composition des clusters</h2>"+self.print_cluster("<br><br>"),path + "/" + filename+self.name+ ".html")
 
-        self.url= url_base +"/" + filename + ".html"
+        self.url= url_base +"/" + tools.normalize(filename+self.name) + ".html"
         #self.url2d = url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename)
 
         s="<a href='"+self.url+"'>représentation 3D</a>\n"
@@ -111,13 +119,13 @@ class model(Thread):
     def save_cluster(self):
         if len(self.name)==0:return False
         res:np.ndarray=self.cluster_toarray()
-        res.tofile("./clustering/"+self.name+".array")
+        res.tofile("./clustering/"+self.hash+"_"+self.name+".array")
         return True
 
     #Charge le clustering depuis un fichier si celui-ci existe
     def load_cluster(self):
         try:
-            res=np.fromfile("./clustering/"+self.name+".array",np.int,-1)
+            res=np.fromfile("./clustering/"+self.hash+"_"+self.name+".array",np.int,-1)
             self.clusters_from_labels(res)
             return True
         except:
@@ -374,37 +382,37 @@ def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_to
     return model
 
 
-def create_two_clusters(G:nx.Graph):
-    clusters = []
-    partition = community.kernighan_lin_bisection(G, None, 500, weight='weight')
+# def create_two_clusters(G:nx.Graph):
+#     clusters = []
+#     partition = community.kernighan_lin_bisection(G, None, 500, weight='weight')
+#
+#     i=0
+#     for p in partition:
+#         clusters.append(cluster("kernighan_lin - "+str(i),p))
+#         i=i+1
+#
+#     return clusters
 
-    i=0
-    for p in partition:
-        clusters.append(cluster("kernighan_lin - "+str(i),p))
-        i=i+1
 
-    return clusters
-
-
-def create_ncluster(G:nx.Graph,target=4):
-    clusters =[cluster("premier",G.nodes)]
-    print("Recherche des clusters")
-    backup_G=G.copy()
-    while len(clusters) < target:
-       #on cherche le plus grand cluster
-       print(target-len(clusters))
-       maxlen=0
-       k=-1
-       for i in range(0,len(clusters)):
-           if len(clusters[i].index)>maxlen:
-               maxlen=len(clusters[i].index)
-               k=i
-        #On divise en deux le plus grand cluster et on le supprime
-       G = backup_G.subgraph(clusters[k].index)
-       clusters.remove(clusters[k])
-       for c in create_two_clusters(G):clusters.append(c)
-
-    return clusters
+# def create_ncluster(G:nx.Graph,target=4):
+#     clusters =[cluster("premier",G.nodes)]
+#     print("Recherche des clusters")
+#     backup_G=G.copy()
+#     while len(clusters) < target:
+#        #on cherche le plus grand cluster
+#        print(target-len(clusters))
+#        maxlen=0
+#        k=-1
+#        for i in range(0,len(clusters)):
+#            if len(clusters[i].index)>maxlen:
+#                maxlen=len(clusters[i].index)
+#                k=i
+#         #On divise en deux le plus grand cluster et on le supprime
+#        G = backup_G.subgraph(clusters[k].index)
+#        clusters.remove(clusters[k])
+#        for c in create_two_clusters(G):clusters.append(c)
+#
+#     return clusters
 
 
 def create_clusters_from_asyncfluid(G,n_community):

@@ -125,7 +125,10 @@ def buildDict(params:str,rc=dict()):
 
     return rc
 
-def addlink(url,libele=""):
+def addlink(url,libele="",target="_blank"):
     if libele=="":libele=url
-    return "<a target=_blank href='"+url+"'>"+libele+"</a><br>"
+    return "<a target="+target+" href='"+url+"'>"+libele+"</a><br>"
 
+
+def normalize(path:str):
+    return path.replace(" ","_")

@@ -186,13 +186,14 @@ class simulation:
         return str(len(self.models))+" modeles calculés"
 
     def get3d_html(self,n_pca=1):
-        code=""
         for i in range(0, len(self.models)):
             m:algo.model=self.models[i]
+            code = m.print_cluster("<br><br>");
+
             for pca_offset in range(0, n_pca):
                 code = code + m.to3DHTML(pca_offset ,False,"1000px","600px")
 
-            code=code+"<br><br>"+m.print_cluster("<br><br>")+"<br><br>"+m.print_perfs("<br>")
+            code=code+"<br><br>"+m.print_perfs("<br>")
 
         return code
 
