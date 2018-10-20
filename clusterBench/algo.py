@@ -123,6 +123,7 @@ class model:
         res.tofile("./clustering/"+self.hash+"_"+self.name+".array")
         return True
 
+
     #Charge le clustering depuis un fichier si celui-ci existe
     def load_cluster(self):
         try:
@@ -140,6 +141,10 @@ class model:
         rc=rc[0:self.dimensions]
         mes=self.data[rc]
         return mes
+
+    def names(self):
+        rc=list(self.data[self.name_col])
+        return rc
 
     def toDataframe(self,labels_true=None):
         if self.score==0:

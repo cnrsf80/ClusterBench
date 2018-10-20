@@ -195,7 +195,8 @@ class simulation:
             for pca_offset in range(0, n_pca):
                 code = code + draw.trace_artefact_GL(m,
                                                      m.id+"_pca"+str(pca_offset),
-                                                     m.name+" Axe="+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2))
+                                                     m.name+" Axe="+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2),
+                                                     pca_offset)
 
             code=code+"<br><br>"+m.print_perfs("<br>")
 

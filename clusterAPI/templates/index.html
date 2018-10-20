@@ -21,11 +21,11 @@
     <tr>
         <td>Algo</td>
         <td>
-            <select id="algo">
-                <option>HDBSCAN</option>
-                <option>NEURALGAS</option>
-                <option>HAC</option>
-                <option>MEANSHIFT</option>
+            <select id="algo" onchange="showParameters()">
+                <option value="HDBSCAN:min_samples=3 min_cluster_size=3 leaf_size=20 alpha=0.5">HDBSCAN</option>
+                <option value="NEURALGAS:passes=3 distance_toremove_edge=40">NEURALGAS</option>
+                <option value="HAC:n_clusters=11,12,13">HAC</option>
+                <option value="MEANSHIFT:bandwidth=0.1,0.3,0.2">MEANSHIFT</option>
             </select>
         </td>
     </tr>
@@ -45,6 +45,12 @@
         </td>
     </tr>
 
+    <tr>
+        <td>Notification de fin (beta)</td>
+        <td>
+            <input size="60" value="paul.dudule@gmail.com" id="email" type="email">
+        </td>
+    </tr>
 
 
     <tr>
@@ -54,7 +60,7 @@
 </table>
 <br>
 
-<div id="result" style="font-size: x-large;">
+<div id="result" style="font-size: large;">
 
 </div>
 
@@ -62,12 +68,19 @@
 
 <script>
     var showlink=()=>{
-        file=encodeURIComponent(document.getElementById("url").value)
+        var file=encodeURIComponent(document.getElementById("url").value)
+        var algo=document.getElementById("algo").value.split(":")[0];
+        var notif=document.getElementById("email").value;
+        var params=document.getElementById("algo").value.split(":")[1].replace(" ","&");
         var domain="45.77.160.220";
-        domain="localhost";
-        url="http://"+domain+":5000/algo/"+document.getElementById("algo").value+"/"
-            +file+"/"+document.getElementById("params").value+"/modele.html?hac=3";
-        document.getElementById("result").innerHTML="<a href='"+url+"'>"+url+"</a>";
+        url="http://"+domain+":5000/algo/"+algo+"/"
+            +file+"/"+params+"/modele.html?hac=3&notif="+notif;
+        document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
+    }
+
+    var showParameters=()=>{
+        var params=document.getElementById("algo").value.split(":")[1];
+        document.getElementById("params").value=params;
     }
 </script>
 </body>

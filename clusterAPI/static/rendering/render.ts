@@ -27,6 +27,7 @@ class Game {
         this._engine = new BABYLON.Engine(this._canvas, true);
     }
 
+
     prepareButton(mesh) {
         mesh.actionManager = new BABYLON.ActionManager(this._scene);
         mesh.actionManager.registerAction(
@@ -56,10 +57,30 @@ class Game {
                     trigger: BABYLON.ActionManager.OnPointerOverTrigger
                 },
                 (evt) => {
+                    let target:any=evt.meshUnderPointer;
+                    document.getElementById("row1").innerText=target.name;
+                    document.getElementById("row2").innerText=target.cluster_name;
+                    document.getElementById("row3").innerText=
+                        "x="+Math.round(target.position.x*1000)/1000+","+
+                        "y="+Math.round(target.position.y*1000)/1000+","+
+                        "z="+Math.round(target.position.z*1000)/1000;
+                }
+            )
+        );
+
+        mesh.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                {
+                    trigger: BABYLON.ActionManager.OnPointerOutTrigger
+                },
+                (evt) => {
+                    let target:any=evt.meshUnderPointer;
+                    for(var i=1;i<4;i++)
+                        document.getElementById("row"+i).innerText="";
 
                 }
             )
-        )
+        );
     }
 
     createMesure(name:string,cluster_name:string,x:float,y:float,z:float,color:BABYLON.Color3,translate:float,expense:float):void {
@@ -83,7 +104,7 @@ class Game {
         // Create a basic BJS Scene object.
         this._scene = new BABYLON.Scene(this._engine);
         this._scene.fogMode = BABYLON.Scene.FOGMODE_EXP
-        this._scene.fogDensity = 0.004;
+        this._scene.fogDensity = 0.002;
         this._scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.9);
         this._scene.clearColor = new BABYLON.Color4(0.9, 0.9, 0.9);
 
@@ -104,7 +125,7 @@ class Game {
 
 
         // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
-        this._camera = new BABYLON.ArcRotateCamera("Camera",  3*Math.PI / 2, 8*Math.PI/2 , _SIZE*3, BABYLON.Vector3.Zero(), this._scene);
+        this._camera = new BABYLON.ArcRotateCamera("Camera", 3*Math.PI / 2, 8*Math.PI/2 , _SIZE*1.5, BABYLON.Vector3.Zero(), this._scene);
 
         this._actionManager = new BABYLON.ActionManager(this._scene);
 

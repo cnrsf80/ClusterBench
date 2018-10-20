@@ -92,7 +92,7 @@ def draw_with_babylon(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     df_data = pd.DataFrame(li_data)
 
 
-def pca_totrace(data:pd.DataFrame,clusters,pca_offset=0,label_col=""):
+def pca_totrace(data:pd.DataFrame,clusters,labels,pca_offset=0):
     pca: decomp.pca.PCA = decomp.pca.PCA(n_components=3 + pca_offset)
     pca.fit(data)
     newdata = pca.transform(data)
@@ -100,17 +100,13 @@ def pca_totrace(data:pd.DataFrame,clusters,pca_offset=0,label_col=""):
     li_data:list = []
     for c in clusters:
         for k in range(len(c.index)):
-            if label_col == "":
-                label = ""
-            else:
-                label = c.name + "<br>" + str(c.labels[k])
-
             li_data.append({
                 'x': newdata[c.index[k], pca_offset],
                 'y': newdata[c.index[k], pca_offset + 1],
                 'z': newdata[c.index[k], pca_offset + 2],
                 'style': c.position,
-                'label': label,
+                'label': labels[c.index[k]],
+                'name': labels[c.index[k]],
                 'cluster': c.name
             })
 
@@ -118,8 +114,8 @@ def pca_totrace(data:pd.DataFrame,clusters,pca_offset=0,label_col=""):
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
 def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
-
-    li_data=pca_totrace(data,clusters,pca_offset,label_col)
+    #TODO: a corriger
+    li_data=pca_totrace(data,clusters,[],pca_offset)
     code=""
     if len(title)>0:code="<h1>"+title+"</h1>"
     code=code+"<h3>Réprésentation 3d sur les axes "+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2)+"</h3>"
@@ -161,7 +157,8 @@ def trace_artefact(G, clusters):
 from flask import render_template
 
 
-def trace_artefact_GL(mod,id,title):
-    li_data:list = pca_totrace(mod.mesures(), mod.clusters)
+def trace_artefact_GL(mod,id,title,pca_offset=0):
+    li_data:list = pca_totrace(mod.mesures(), mod.clusters,mod.names(),pca_offset)
+    li_data=li_data
     code=render_template("modele.html",title=title,name_zone="zone"+id,datas=li_data)
     return code
