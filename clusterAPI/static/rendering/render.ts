@@ -4,6 +4,10 @@ import float = BABYLON.float;
 
 const _VISIBLE=0.9
 const _HIDDEN=0.1
+const _SIZE=50
+
+var ScatterPlot:any;
+var showAxis:Function;
 
 class Game {
 
@@ -44,19 +48,30 @@ class Game {
 
                 }
             )
+        );
+
+        mesh.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                {
+                    trigger: BABYLON.ActionManager.OnPointerOverTrigger
+                },
+                (evt) => {
+
+                }
+            )
         )
     }
 
-    createMesure(name:string,cluster_name:string,x:float,y:float,z:float,color:BABYLON.Color3,expense:float):void {
+    createMesure(name:string,cluster_name:string,x:float,y:float,z:float,color:BABYLON.Color3,translate:float,expense:float):void {
         var materialSphere = new BABYLON.StandardMaterial("texture2", this._scene);
         materialSphere.diffuseColor = color;
         materialSphere.alpha = 0.9;
 
-        let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: 2}, this._scene);
+        let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: 1}, this._scene);
 
-        sphere.position.x = (x-0.5)*expense;
-        sphere.position.y = (y-0.5)*expense;
-        sphere.position.z = (z-0.5)*expense;
+        sphere.position.x = (x+translate)*expense;
+        sphere.position.y = (y+translate)*expense;
+        sphere.position.z = (z+translate)*expense;
         sphere.material=materialSphere;
         sphere.cluster_name=cluster_name;
 
@@ -68,16 +83,33 @@ class Game {
         // Create a basic BJS Scene object.
         this._scene = new BABYLON.Scene(this._engine);
         this._scene.fogMode = BABYLON.Scene.FOGMODE_EXP
-        this._scene.fogDensity = 0.01;
-        this._scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
+        this._scene.fogDensity = 0.004;
+        this._scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.9);
+        this._scene.clearColor = new BABYLON.Color4(0.9, 0.9, 0.9);
+
+        var dim=_SIZE*2;
+        // var scatterPlot = new ScatterPlot([dim,dim,dim],{
+        //     x: ["", "0", "1","2"],
+        //     y: ["", "0", "1","2"],
+        //     z: ["2","1", "0", "-1"]
+        // }, this._scene);
+        showAxis(50,this._scene);
+
+        // var box = BABYLON.Mesh.CreateBox("box", _SIZE*2, this._scene);
+        // var box_material=new BABYLON.StandardMaterial("box_material",this._scene);
+        // box_material.alpha=0.1;
+        // box_material.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+        // box.material=box_material;
+
+
 
         // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
-        this._camera = new BABYLON.ArcRotateCamera("Camera", 3 * Math.PI / 2, Math.PI / 8, 50, BABYLON.Vector3.Zero(), this._scene);
+        this._camera = new BABYLON.ArcRotateCamera("Camera",  3*Math.PI / 2, 8*Math.PI/2 , _SIZE*3, BABYLON.Vector3.Zero(), this._scene);
 
         this._actionManager = new BABYLON.ActionManager(this._scene);
 
         // Target the camera to scene origin.
-        this._camera.setTarget(BABYLON.Vector3.Zero());
+        this._camera.setTarget(new BABYLON.Vector3(1,1,1));
 
         // Attach the camera to the canvas.
         this._camera.attachControl(this._canvas, false);
@@ -86,12 +118,6 @@ class Game {
         this._light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,0,-1), this._scene);
         //this._light2 = new BABYLON.HemisphericLight('light2', new BABYLON.Vector3(0,1,0), this._scene);
 
-
-        // Move the sphere upward 1/2 of its height.
-
-        for(var i=0;i<150;i++){
-            this.createMesure("spere"+i,"cluster"+(i % 10),Math.random(),Math.random(),Math.random(),new BABYLON.Color3(Math.random(), Math.random(), Math.random()),40)
-        }
 
         // Create a built-in "ground" shape.
         //let ground = BABYLON.MeshBuilder.CreateGround('ground1',{width: 6, height: 6, subdivisions: 2}, this._scene);
@@ -108,11 +134,17 @@ class Game {
             this._engine.resize();
         });
     }
+
+    clearMesures() {
+        this.spheres=[];
+    }
 }
+
+let game:Game=null;
 
 window.addEventListener('DOMContentLoaded', () => {
     // Create the game using the 'renderCanvas'.
-    let game = new Game('renderCanvas');
+    game = new Game('renderCanvas');
 
     // Create the scene.
     game.createScene();
@@ -120,3 +152,23 @@ window.addEventListener('DOMContentLoaded', () => {
     // Start render loop.
     game.doRender();
 });
+
+window.addEventListener("message", (evt)=> {
+    let datas = evt.data.datas;
+    evt.preventDefault();
+    if (datas!=null && datas.length>0) {
+        game.clearMesures();
+
+        //Creation d'une palette
+        let colors=[];
+        for(let i=0;i<100;i++)
+            colors.push(new BABYLON.Color3(Math.random(), Math.random(), Math.random()))
+
+        for (let p of datas)
+            game.createMesure(p.name, p.cluster, p.x+1, p.y+1, p.z+1, colors[p.style], -1,_SIZE)
+
+
+        // game.createMesure("repere","cluster",0,0,0,colors[0],0,_SIZE);
+        // game.createMesure("repere","cluster",1,1,1,colors[0],0,_SIZE);
+    }
+}, false);

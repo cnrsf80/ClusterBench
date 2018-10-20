@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask,request,g
+from flask import Flask,request,g,render_template
 import clusterBench.simulation as simulation
 import clusterBench.algo as algo
 import pandas as pd
@@ -43,23 +43,10 @@ def create_app(test_config=None):
 
     @app.route('/', methods=['GET'])
     def index():
-        code = "Exemple de commandes possible :<br>"
-        domain = "."
-        code = code + tools.addlink(domain + "/algo/hdbscan/PourClustering.csv/min_cluster_size=3", "HDBSCAN rapide")
-        code = code + tools.addlink(domain + "/algo/hac/PourClustering.csv/n_clusters=12,11,13",
-                                    "HAC pour une douzaine de clusters")
-        code = code + tools.addlink(domain + "/algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2", "Meanshif")
-        code = code + tools.addlink(
-            domain + "/algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9",
-            "Combinaisons HDBSCAN")
-        code = code + tools.addlink(
-            domain + "/algo/neuralgas/PourClustering.csv/passes=3&distance_toremove_edge=40?pca=4", "Neural rapide")
-        code = code + tools.addlink(
-            domain + "/algo/neuralgas/PourClustering.csv/passes=15&distance_toremove_edge=40?pca=4",
-            "Neural 15 passes (long)")
-        return "<table><tr><td>%liens</td><td><div id='resultat'></div></td></tr></table>".replace("%liens", code)
+        return render_template("index.html")
 
-    @app.route('/algo/<string:name_algo>/<path:url>/<string:params>', methods=['GET'])
+
+    @app.route('/algo/<string:name_algo>/<path:url>/<string:params>/modele.html', methods=['GET'])
     def algo_func(url: str, params: str, name_algo: str):
         if not url.startswith("http"): url = "http://f80.fr/cnrs/datas/" + url;
         print("Data dans " + url)
@@ -72,6 +59,7 @@ def create_app(test_config=None):
             data = None
 
         if data is None: return "Erreur sur la source de donnée : " + url
+        if not params.__contains__("="):return "erreur sur les parametres "+params
 
         label_col = data.columns[0]
         dimensions = len(data.columns) - 1

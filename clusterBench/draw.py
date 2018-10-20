@@ -92,30 +92,34 @@ def draw_with_babylon(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     df_data = pd.DataFrame(li_data)
 
 
-
-#Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
-def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
-    pca:decomp.pca.PCA = decomp.pca.PCA(n_components=3+pca_offset)
+def pca_totrace(data:pd.DataFrame,clusters,pca_offset=0,label_col=""):
+    pca: decomp.pca.PCA = decomp.pca.PCA(n_components=3 + pca_offset)
     pca.fit(data)
     newdata = pca.transform(data)
 
-    li_data = []
+    li_data:list = []
     for c in clusters:
         for k in range(len(c.index)):
-            if label_col=="":
-                label=""
+            if label_col == "":
+                label = ""
             else:
-                label=c.name+"<br>"+str(c.labels[k])
+                label = c.name + "<br>" + str(c.labels[k])
 
             li_data.append({
                 'x': newdata[c.index[k], pca_offset],
-                'y': newdata[c.index[k], pca_offset+1],
-                'z': newdata[c.index[k], pca_offset+2],
+                'y': newdata[c.index[k], pca_offset + 1],
+                'z': newdata[c.index[k], pca_offset + 2],
                 'style': c.position,
-                'label':label,
-                'cluster':c.name
+                'label': label,
+                'cluster': c.name
             })
 
+    return li_data
+
+#Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
+def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
+
+    li_data=pca_totrace(data,clusters,pca_offset,label_col)
     code=""
     if len(title)>0:code="<h1>"+title+"</h1>"
     code=code+"<h3>Réprésentation 3d sur les axes "+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2)+"</h3>"
@@ -154,6 +158,10 @@ def trace_artefact(G, clusters):
     # plt.savefig('graph.pdf', format="pdf")
     plt.show()
 
+from flask import render_template
 
 
-
+def trace_artefact_GL(mod,id,title):
+    li_data:list = pca_totrace(mod.mesures(), mod.clusters)
+    code=render_template("modele.html",title=title,name_zone="zone"+id,datas=li_data)
+    return code

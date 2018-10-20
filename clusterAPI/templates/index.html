@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Cluster Bench</h1>
+
+<br>Liens prédéfinis:<br>
+<a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=3/modele.html?hac=1">HDBSCAN rapide</a><br>
+<a href="./algo/hac/PourClustering.csv/n_clusters=11,12,13/modele.html?hac=4">HAC pour une douzaine de clusters</a><br>
+<a href="./algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2/modele.html">Meanshif</a><br>
+<a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9/modele.html">Combinaisons HDBSCAN</a><br>
+<a href="./algo/neuralgas/PourClustering.csv/passes=3&distance_toremove_edge=40/modele.html?pca=4">Neural rapide</a><br>
+<a href="./algo/neuralgas/PourClustering.csv/passes=15&distance_toremove_edge=40/modele.html?pca=4">Neural 15 passes (long)</a><br>
+<br>
+<br>
+
+<table style="padding: 10px;margin:10px;">
+    <tr>
+        <td>Algo</td>
+        <td>
+            <select id="algo">
+                <option>HDBSCAN</option>
+                <option>NEURALGAS</option>
+                <option>HAC</option>
+                <option>MEANSHIFT</option>
+            </select>
+        </td>
+    </tr>
+
+    <tr>
+        <td>Parametres</td>
+        <td>
+            <input size="60" value="min_cluster_size=3" id="params" type="text">
+        </td>
+    </tr>
+
+
+    <tr>
+        <td>Data source</td>
+        <td>
+            <input size="60" value="http://f80.fr/cnrs/datas/PourClustering.csv" id="url" type="url">
+        </td>
+    </tr>
+
+
+
+    <tr>
+        <td></td>
+        <td><br><button onclick="showlink()" style="font-size: x-large">Build</button></td>
+    </tr>
+</table>
+<br>
+
+<div id="result" style="font-size: x-large;">
+
+</div>
+
+<br>
+
+<script>
+    var showlink=()=>{
+        file=encodeURIComponent(document.getElementById("url").value)
+        var domain="45.77.160.220";
+        domain="localhost";
+        url="http://"+domain+":5000/algo/"+document.getElementById("algo").value+"/"
+            +file+"/"+document.getElementById("params").value+"/modele.html?hac=3";
+        document.getElementById("result").innerHTML="<a href='"+url+"'>"+url+"</a>";
+    }
+</script>
+</body>
+</html>

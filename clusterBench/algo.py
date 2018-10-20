@@ -20,6 +20,7 @@ for i in range(200):colors.append(i)
 #un model est une liste de cluster après application d'un algorithme de clustering
 class model:
     name=""
+    id=""
     hash="" #code de hashage des données (utile pour le cache)
     delay:int=0 #delay en secondes
     silhouette_score:int=0
@@ -256,6 +257,8 @@ class model:
             name=name+key+"="+value+" "
 
         self.setname(name)
+        self.id = hashlib.md5(name.encode()).hexdigest()
+
         if not useCache or not self.load_cluster():
             self.start_treatment()
             comp=None
@@ -299,11 +302,12 @@ class model:
 
     def to3DHTML(self,pca_offset=0,for_jupyter=False,w="800px",h="800px"):
         if len(self.clusters)>0:
-            return draw.trace_artefact_3d(self.mesures(), self.clusters,
-                                          title=self.name,
-                                          label_col=self.name_col,
-                                          for_jupyter=for_jupyter,
-                                          pca_offset=pca_offset,w=w,h=h)
+            return draw.trace_artefact_GL(self,"","")
+            # return draw.trace_artefact_3d(self.mesures(), self.clusters,
+            #                               title=self.name,
+            #                               label_col=self.name_col,
+            #                               for_jupyter=for_jupyter,
+            #                               pca_offset=pca_offset,w=w,h=h)
         else:
             return "No cluster"
 
