@@ -45,7 +45,7 @@ def create_app(test_config=None):
     def index():
         return render_template("index.html")
 
-
+    #test : http://localhost:5000/algo/HDBSCAN/https%3A%2F%2Fmycore.core-cloud.net%2Findex.php%2Fs%2FUWSxBo17DQLDlU5%2Fdownload/min_cluster_size=3/modele.html?pca=2¬if=paul.dudule@gmail.com
     @app.route('/algo/<string:name_algo>/<path:url>/<string:params>/modele.html', methods=['GET'])
     def algo_func(url: str, params: str, name_algo: str):
         if not url.startswith("http"): url = "http://f80.fr/cnrs/datas/" + url;
@@ -54,7 +54,9 @@ def create_app(test_config=None):
         data = None
         try:
             if url.endswith(".xlsx"): data = pd.read_excel(url)
-            if url.endswith(".csv"): data = pd.read_csv(url, sep=";")
+            else:
+                data = pd.read_csv(url, sep=";",decimal=",")
+                if data is None: data = pd.read_csv(url, sep=";", decimal=".")
         except:
             data = None
 

@@ -8,14 +8,19 @@
 <h1>Cluster Bench</h1>
 
 <br>Liens prédéfinis:<br>
-<a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=3/modele.html?hac=1">HDBSCAN rapide</a><br>
-<a href="./algo/hac/PourClustering.csv/n_clusters=11,12,13/modele.html?hac=4">HAC pour une douzaine de clusters</a><br>
-<a href="./algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2/modele.html">Meanshif</a><br>
-<a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9/modele.html">Combinaisons HDBSCAN</a><br>
+<a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=3/modele.html?pca=1">HDBSCAN rapide</a><br>
+<a href="./algo/hac/PourClustering.csv/n_clusters=11,12,13/modele.html?pca=4">HAC pour une douzaine de clusters</a><br>
+<a href="./algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2/modele.html?pca=3">Meanshif</a><br>
+<a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9/modele.html?pca=4">Combinaisons HDBSCAN</a><br>
 <a href="./algo/neuralgas/PourClustering.csv/passes=3&distance_toremove_edge=40/modele.html?pca=4">Neural rapide</a><br>
 <a href="./algo/neuralgas/PourClustering.csv/passes=15&distance_toremove_edge=40/modele.html?pca=4">Neural 15 passes (long)</a><br>
 <br>
 <br>
+
+Le fichier de données doit être au format CSV avec le ";" en séparateur<br>
+Le séparateur de décimal doit être la ","<br>
+La première colonne doit contenir les libellés des mesures et toutes les<br>
+colonnes suivantes sont interpretées comme les mesures
 
 <table style="padding: 10px;margin:10px;">
     <tr>
@@ -42,6 +47,16 @@
         <td>Data source</td>
         <td>
             <input size="60" value="http://f80.fr/cnrs/datas/PourClustering.csv" id="url" type="url">
+        </td>
+        <td>
+            <button onclick="testDownload()">Vérifier</button>
+        </td>
+    </tr>
+
+    <tr>
+        <td>Nombre de vue</td>
+        <td>
+            <input size="60" value="2" id="pca" type="number" min="1" max="6">
         </td>
     </tr>
 
@@ -71,16 +86,23 @@
         var file=encodeURIComponent(document.getElementById("url").value)
         var algo=document.getElementById("algo").value.split(":")[0];
         var notif=document.getElementById("email").value;
-        var params=document.getElementById("algo").value.split(":")[1].replace(" ","&");
+        var pca=document.getElementById("pca").value;
+        var params=document.getElementById("params").value;
+        for(var i=0;i<10;i++)params=params.replace(" ","&");
         var domain="45.77.160.220";
         url="http://"+domain+":5000/algo/"+algo+"/"
-            +file+"/"+params+"/modele.html?hac=3&notif="+notif;
+            +file+"/"+params+"/modele.html?pca="+pca+"&notif="+notif;
         document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
     }
 
     var showParameters=()=>{
         var params=document.getElementById("algo").value.split(":")[1];
         document.getElementById("params").value=params;
+    }
+
+    var testDownload=function(){
+        var file=document.getElementById("url").value;
+        window.open(file,"blank_");
     }
 </script>
 </body>

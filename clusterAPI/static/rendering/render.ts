@@ -3,7 +3,7 @@
 import float = BABYLON.float;
 
 const _VISIBLE=0.9
-const _HIDDEN=0.1
+const _HIDDEN=0.3
 const _SIZE=50
 
 var ScatterPlot:any;
@@ -37,15 +37,25 @@ class Game {
                 },
                 (evt) => {
                     let target:any=evt.meshUnderPointer;
-
-                    let target_alpha=_VISIBLE;
                     if(target.material.alpha==_VISIBLE) {
                         for (let s of this.spheres) {
                             if (s.cluster_name != target.cluster_name) s.material.alpha = _HIDDEN;
+                            if (s.name == target.name ){
+                                s.scaling = new BABYLON.Vector3(2, 2, 2);
+                                s.increase=true;
+                            }
+
                         }
                     }else
-                        for(let s of this.spheres)
+                        for(let s of this.spheres){
                             s.material.alpha=_VISIBLE;
+                            if(s.increase){
+                                s.scaling = new BABYLON.Vector3(1, 1, 1);
+                                s.increase=false;
+                            }
+
+                        }
+
 
                 }
             )
