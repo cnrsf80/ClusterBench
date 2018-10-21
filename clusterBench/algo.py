@@ -89,6 +89,12 @@ class model:
     def end_treatment(self):
         self.delay=round((time.time()-self.delay)*10)/10
 
+    def getLink(self,domain:str,data_source:str,param:str):
+        rc="http://"+domain+":5000/"
+        rc=rc+self.type+"/"
+        rc=rc+param
+        rc=rc+data_source.encode()
+        return rc
 
     #Produit une réprésentation 3D et une représentation 2D des mesures
     #après PCA et coloration en fonction du cluster d'appartenance
@@ -235,11 +241,11 @@ class model:
             i = i + 1
 
 
-    def init_thread(self,algo_name,url,algo_func,p:dict):
-        self.parameters=p
-        self.algo_name = algo_name
-        self.algo_func = algo_func
-        self.url=url
+    # def init_thread(self,algo_name,url,algo_func,p:dict):
+    #     self.parameters=p
+    #     self.algo_name = algo_name
+    #     self.algo_func = algo_func
+    #     self.url=url
 
     def run(self):
         self.execute(self.algo_name,self.url,self.algo_func,self.parameters)
@@ -252,7 +258,7 @@ class model:
     def execute(self,algo_name,url,algo,p:dict,useCache=False):
         name=algo_name+" "
         self.help=url
-        self.params=[None]*3
+        self.params:list=[None]*3
         i=0
         for key in p.keys():
             value:str=str(p.get(key))

@@ -9,6 +9,7 @@ import copy
 import clusterBench.tools as tools
 from sklearn import cluster as cl
 import hdbscan
+import urllib
 
 def create_app(test_config=None):
     # create and configure the app
@@ -67,8 +68,7 @@ def create_app(test_config=None):
         dimensions = len(data.columns) - 1
         sim = simulation.simulation(data, label_col, dimensions)
 
-        if request.form.get("keep") == None:
-            sim.raz()
+        #if request.args["keep"] == None:sim.raz()
 
         # parameters={"min_elements": [1], "leaf_size": [10], "alpha": [1]}
 
@@ -124,6 +124,18 @@ def create_app(test_config=None):
             n_pca = 2
 
         code = code + sim.get3d_html(n_pca)
+
+        if request.args.__contains__("notif"):
+            url_to_send=request.url.split("&notif")[0]
+
+            url_to_send=url_to_send.replace(url,urllib.parse.quote_plus(url))
+
+            body:str="Traitement disponible "+url_to_send
+
+            tools.sendMail("ClusterBench : Fin de traitement","cnrs.f80@gmail.com",
+                           request.args["notif"],
+                           body
+                           )
 
         return code
 

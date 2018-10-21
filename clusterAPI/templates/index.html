@@ -46,7 +46,13 @@ colonnes suivantes sont interpretées comme les mesures
     <tr>
         <td>Data source</td>
         <td>
-            <input size="60" value="http://f80.fr/cnrs/datas/PourClustering.csv" id="url" type="url">
+            <input
+                    size="60"
+                    value="http://f80.fr/cnrs/datas/PourClustering.csv"
+                    id="url"
+                    type="url"
+                    onchange="showlink()"
+            >
         </td>
         <td>
             <button onclick="testDownload()">Vérifier</button>
@@ -56,14 +62,18 @@ colonnes suivantes sont interpretées comme les mesures
     <tr>
         <td>Nombre de vue</td>
         <td>
-            <input size="60" value="2" id="pca" type="number" min="1" max="6">
+            <input size="60"
+                   value="2" id="pca" type="number"
+                   min="1" max="6"
+                    onchange="showlink()"
+            >
         </td>
     </tr>
 
     <tr>
         <td>Notification de fin (beta)</td>
         <td>
-            <input size="60" value="paul.dudule@gmail.com" id="email" type="email">
+            <input size="60" value="" id="email" type="email" onchange="showlink()">
         </td>
     </tr>
 
@@ -89,15 +99,19 @@ colonnes suivantes sont interpretées comme les mesures
         var pca=document.getElementById("pca").value;
         var params=document.getElementById("params").value;
         for(var i=0;i<10;i++)params=params.replace(" ","&");
-        var domain="45.77.160.220";
-        url="http://"+domain+":5000/algo/"+algo+"/"
+        var domain=document.location.host;
+        url="http://"+domain+"/algo/"+algo+"/"
             +file+"/"+params+"/modele.html?pca="+pca+"&notif="+notif;
         document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
     }
 
     var showParameters=()=>{
+        var algo=document.getElementById("algo").value.split(":")[0];
         var params=document.getElementById("algo").value.split(":")[1];
         document.getElementById("params").value=params;
+        if(algo=="NEURALGAS" && document.getElementById("email").value=="")
+            document.getElementById("email").value="admin@f80.fr";
+        showlink();
     }
 
     var testDownload=function(){

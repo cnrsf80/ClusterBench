@@ -132,3 +132,21 @@ def addlink(url,libele="",target="_blank"):
 
 def normalize(path:str):
     return path.replace(" ","_")
+
+import smtplib
+import email.mime.multipart as multipart
+import email.mime.text as mimetext
+
+def sendMail(subject:str,_from:str,to:str,body:str):
+    if to is None:to="rv@f80.fr"
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    msg=multipart.MIMEMultipart()
+    msg["From"]=_from
+    msg["To"]=to
+    msg["Subject"]=subject
+    msg.attach(mimetext.MIMEText(body,"plain"))
+
+    server.login(_from, "hh4271!!")
+    server.sendmail(_from,to, msg.as_string())
+    server.quit()

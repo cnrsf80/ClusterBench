@@ -204,3 +204,9 @@ class simulation:
 
     def raz(self):
         self.models=[]
+
+    def getLinks(self,data_source:str,param:str):
+        rc=[]
+        for m in self.models:
+            rc.append("<a href='"+m.getLink("localhost",data_source,param)+"'>"+m.name+"</a>")
+        return rc
