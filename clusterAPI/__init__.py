@@ -9,6 +9,7 @@ import copy
 import clusterBench.tools as tools
 from sklearn import cluster as cl
 import hdbscan
+from simpledbf import Dbf5
 import urllib
 
 def create_app(test_config=None):
@@ -52,12 +53,14 @@ def create_app(test_config=None):
         if not url.startswith("http"): url = "http://f80.fr/cnrs/datas/" + url;
         print("Data dans " + url)
 
-        data = None
+        data:pd.DataFrame = None
         try:
             if url.endswith(".xlsx"): data = pd.read_excel(url)
+            if url.endswith(".dbf"):data=Dbf5(url).to_dataframe()
             else:
                 data = pd.read_csv(url, sep=";",decimal=",")
-                if data is None: data = pd.read_csv(url, sep=";", decimal=".")
+                cel=data.iloc[3][3]
+                if data is None and type(cel) is float: data = pd.read_csv(url, sep=";", decimal=".")
         except:
             data = None
 
@@ -125,7 +128,7 @@ def create_app(test_config=None):
 
         code = code + sim.get3d_html(n_pca)
 
-        if request.args.__contains__("notif"):
+        if request.args.__contains__("notif") and len(request.args["notif"])>0:
             url_to_send=request.url.split("&notif")[0]
 
             url_to_send=url_to_send.replace(url,urllib.parse.quote_plus(url))

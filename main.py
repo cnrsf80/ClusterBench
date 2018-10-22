@@ -117,6 +117,8 @@ if __name__ == '__main__':
     if len(sys.argv)>2:col_name=sys.argv[2]
 
     algos=["HAC","DBSCAN","BIRCH","MEANSHIFT","HDBSCAN","NEURALGAS","SPECTRAL"]
+    algos=["NEURALGAS"]
+
     if len(sys.argv)>3:algos=sys.argv[3].split(",")
 
     dimensions=11
@@ -124,7 +126,6 @@ if __name__ == '__main__':
 
     s:simulation= simulation.simulation(pd.read_excel(source_file), col_name,dimensions)
     exec_algos(algos,s)
-
 
     #post=str(datetime.datetime.now()).split(".")[0].replace(":","").replace("2018-","")
     post=""
