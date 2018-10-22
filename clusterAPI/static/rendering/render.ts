@@ -37,24 +37,35 @@ class Game {
                 },
                 (evt) => {
                     let target:any=evt.meshUnderPointer;
-                    if(target.material.alpha==_VISIBLE) {
-                        for (let s of this.spheres) {
-                            if (s.cluster_name != target.cluster_name) s.material.alpha = _HIDDEN;
-                            if (s.name == target.name ){
-                                s.scaling = new BABYLON.Vector3(2, 2, 2);
-                                s.increase=true;
+
+                    if(target.material.alpha==_VISIBLE){
+                        if(!target.increase) {
+                            for (let s of this.spheres) {
+                                if (s.cluster_name != target.cluster_name) s.material.alpha = _HIDDEN;
+                                if (s.name == target.name ){
+                                    s.scaling = new BABYLON.Vector3(2, 2, 2);
+                                    s.increase=true;
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            for (let s of this.spheres) {
+                                if (s.increase && s.name == target.name) {
+                                    s.scaling = new BABYLON.Vector3(1, 1, 1);
+                                    s.increase = false;
+                                }
+
                             }
 
                         }
-                    }else
-                        for(let s of this.spheres){
-                            s.material.alpha=_VISIBLE;
-                            if(s.increase){
+                    } else {
+                            for (let s of this.spheres) {
+                                s.material.alpha=_VISIBLE;
                                 s.scaling = new BABYLON.Vector3(1, 1, 1);
-                                s.increase=false;
                             }
-
-                        }
+                    }
 
 
                 }

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    Calcul en cours ...
+<script>
+    var email=document.location.href;
+    if(email.indexOf("mail=")>-1){
+        email=email.split("mail=")[1];
+        if(email.length>0)
+            document.write("Un mail sera envoyé pour la fin du traitement à "+email);
+    }
+
+</script>
+</body>
+</html>

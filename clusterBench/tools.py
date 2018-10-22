@@ -145,8 +145,23 @@ def sendMail(subject:str,_from:str,to:str,body:str):
     msg["From"]=_from
     msg["To"]=to
     msg["Subject"]=subject
-    msg.attach(mimetext.MIMEText(body,"plain"))
+    msg.attach(mimetext.MIMEText(body,"html"))
 
-    server.login(_from, "hh4271!!")
-    server.sendmail(_from,to, msg.as_string())
-    server.quit()
+    try:
+        server.login(_from, "hh4271!!")
+        server.sendmail(_from,to, msg.as_string())
+        server.quit()
+    except:
+        print("Email non envoyé")
+
+
+import urllib.request
+def AnalyseFile(url:str):
+    if url.endswith(".xlsx") or url.endswith(".xls"): return "excel"
+    if url.endswith(".csv"): return "csv"
+    with urllib.request.urlopen(url) as response:
+        data: str = response.read()
+        if data.__contains__("rels/workbook"):return "excel"
+        return "csv"
+    return None
+
