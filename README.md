@@ -24,19 +24,19 @@ python3 main.py<br>
 
 ou bien lancer le serveur 
 
-<h1>Resultats</h1>
+#Resultats
 Les répertoires suivant contiennent :
  - "metrics", une synthese du clustering
  - "saved", l'ensemble des représentations 2D et 3D des modeles
  - "clustering", un cache du résultat de chaque calcul
 
-<h1>Code</h1>
+#Code
 Le code est principalement contenu dans le répertoire clusterBench. Il repose sur 3 classes :
  - "cluster" : contient le détail d'un cluster
  - "algo" : contient les paramétres d'un modele, et les clusters obtenus
  - "simulation" : contient une liste de modeles arpès éxécution 
 
-<h1>Infrastructure</h1>
+#Infrastructure
 Installation depuis :
     https://github.com/movalex/rpi-jupyter-conda
     

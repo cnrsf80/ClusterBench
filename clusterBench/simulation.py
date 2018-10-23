@@ -153,6 +153,7 @@ class simulation:
 
 
 
+    #Evaluation des principales métriques du clustering obtenu pour une simulation
     def init_metrics(self,showProgress=False):
         rc=""
         self.metrics: pd.DataFrame = pd.DataFrame()
@@ -177,14 +178,10 @@ class simulation:
 
         return rc
 
-    # def create_synthese_file(self,filename="synthese.xlsx"):
-    #     writer = pd.ExcelWriter("./metrics/" + filename)
-    #     self.metrics.to_excel(writer)
-    #     writer.save()
-
 
     def print_infos(self):
         return str(len(self.models))+" modeles calculés"
+
 
     def get3d_html(self,n_pca=1):
         code=""
