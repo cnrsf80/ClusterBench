@@ -1,10 +1,12 @@
 #x86
-#docker build -t hhoareau/cluster_bench_x86 . & docker push hhoareau/cluster_bench_x86:latest
+#docker build -t f80hub/cluster_bench_x86 . & docker push f80hub/cluster_bench_x86:latest
 #docker push hhoareau/cluster_bench_x86:latest
 #docker pull hhoareau/cluster_bench_x86:latest
 #test:docker run -p 5000:5000 -t hhoareau/cluster_bench_x86:latest
-#docker rm -f cluster_bench
-#deploy:docker run -p 5000:5000 --name cluster_bench -d hhoareau/cluster_bench_x86:latest
+#docker rm -f clusterbench & docker pull f80hub/cluster_bench_x86:latest &
+#docker run --restart=always -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_x86:latest
+#
+
 #test SocketServer : http://45.77.160.220:5000
 
 #arm

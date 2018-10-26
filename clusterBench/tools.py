@@ -165,3 +165,34 @@ def AnalyseFile(url:str):
         return "csv"
     return None
 
+#Assure l'importation des données depuis une url en acceptant plusieurs format ==> conversion en dataframe
+import pandas as pd
+from simpledbf import Dbf5
+def get_data_from_url(url:str):
+    if not url.startswith("http:"):
+        url = os.path.join("./datas", url)
+
+    format = AnalyseFile(url)
+    data: pd.DataFrame = None
+    try:
+        if format == "excel": data = pd.read_excel(url)
+        if format == "dbf": data = Dbf5(url).to_dataframe()
+        if format == "csv":
+            data = pd.read_csv(url, sep=";", decimal=",")
+            if not data is None and not type(data.iloc[3][3]) is float: data = pd.read_csv(url, sep=",", decimal=".")
+            if not data is None and not type(data.iloc[3][3]) is float: data = pd.read_csv(url, sep=";", decimal=".")
+    except:
+        data = None
+
+    if data is None: return "Erreur sur la source de donnée : " + url
+
+    return data
+
+import math
+def chk_integrity(data:pd.DataFrame):
+    for row in data.values:
+        for cel in row:
+            if cel is None:return False
+            if is_number(cel) and math.isnan(cel):return False
+
+    return True

@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
+<style>
+    .image-upload > input {
+  visibility:hidden;
+  width:0;
+  height:0
+}
+</style>
 <body>
 <table width="100%" style="width:100%;vertical-align: text-top;text-align: left;">
     <tr>
@@ -43,23 +50,42 @@
                 <tr>
                     <td>Parametres</td>
                     <td>
-                        <input
-                                size="60"
-                                value="min_samples=3 min_cluster_size=3 leaf_size=20 alpha=0.5"
+                        <textarea   rows="5"
+                                cols="60"
                                 id="params"
-                                onchange="showlink()" onkeypress="showlink()"
-                                type="text">
+                                onchange="showlink()" onkeyup="showlink()"
+                        >
+                            min_samples=3<br>
+                            min_cluster_size=3<br>
+                            leaf_size=20<br>
+                            alpha=0.5
+                        </textarea>
                     </td>
                 </tr>
 
                 <tr><td><br></td></tr>
 
                 <tr>
-                    <td>Upload file</td>
+                    <td>Choose files on server</td>
                     <td>
+                        {{ list_file|safe }}
+
+                        &nbsp;or Upload new file&nbsp;
+
+                        <div style="display: inline" class="image-upload">
+                            <label for="file">
+                            <img style="width:15px;padding:0px;" src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
+                        </label>
+
                         <input title="Upload" type="file" id="file" name="file" onchange="postFile()">
+                        </div>
+
+
+
                     </td>
                 </tr>
+
+
 
                 <tr>
                     <td>URL data source</td>
@@ -84,14 +110,14 @@
                     <td>
                         <input size="60"
                                value="2" id="pca" type="number"
-                               min="1" max="6"
+                               min="0" max="6"
                                onchange="showlink()"
                         >
                     </td>
                 </tr>
 
                 <tr>
-                    <td>Notification de fin (beta)</td>
+                    <td>Notification de fin de traitement</td>
                     <td>
                         <input size="60" value="" id="email" type="email" onchange="showlink()">
                     </td>
@@ -126,7 +152,10 @@
         var notif=document.getElementById("email").value;
         var pca=document.getElementById("pca").value;
         var params=document.getElementById("params").value;
+        for(var i=0;i<10;i++)params=params.replace("\n"," ").replace("<br>"," ");
+        for(var i=0;i<10;i++)params=params.replace("  "," ");
         for(var i=0;i<10;i++)params=params.replace(" ","&");
+
         var domain=document.location.host;
         url="http://"+domain+"/algo/"+algo+"/"
             +file+"/"+params+"/modele.html?pca="+pca+"&notif="+notif;
@@ -138,6 +167,7 @@
         var algo=document.getElementById("algo").value.split("::")[0];
         var params=document.getElementById("algo").value.split("::")[1];
         document.getElementById("doc").src=document.getElementById("algo").value.split("::")[2];
+        for(var i=0;i<10;i++)params=params.replace(" ","\n");
 
         document.getElementById("params").value=params;
         if(algo=="NEURALGAS" && document.getElementById("email").value=="")
@@ -147,6 +177,9 @@
 
     var testDownload=function(){
         var file=document.getElementById("url").value;
+        if(file.indexOf("http")!=0)
+            file="http://45.77.160.220:5000/datas/"+file;
+
         window.open(file,"blank_");
     }
 
@@ -173,9 +206,14 @@
         },500);
     }
 
+    document.getElementById("lst_files").addEventListener("change",(evt)=>{
+        document.getElementById("url").value=evt.currentTarget.value;
+    });
+
     setTimeout(()=>{
         showlink();
         showParameters();
+        document.getElementById("url").value=document.getElementById("lst_files").value;
     },1000);
 </script>
 </body>

@@ -61,6 +61,7 @@ class simulation:
         for p in self.convertParams(ps):
             m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.dimensions)
             m=m.execute(algo_name,url, func,p,useCache)
+            m.init_noise_cluster()
             self.models.append(copy.copy(m))
 
 
@@ -183,11 +184,12 @@ class simulation:
         return str(len(self.models))+" modeles calculés"
 
 
-    def get3d_html(self,n_pca=1):
+    def get3d_html(self,n_pca=1,no_text=False):
         code=""
         for i in range(0, len(self.models)):
             m:algo.model=self.models[i]
-            code = code+m.print_cluster("<br><br>");
+
+            if not no_text:code = code+m.table();
 
             for pca_offset in range(0, n_pca):
                 code = code + draw.trace_artefact_GL(m,
@@ -195,7 +197,7 @@ class simulation:
                                                      m.name+" Axe="+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2),
                                                      pca_offset)
 
-            code=code+"<br><br>"+m.print_perfs("<br>")
+            if not no_text:code=code+"<br><br>"+m.print_perfs("<br>")
 
         return code
 
@@ -207,3 +209,7 @@ class simulation:
         for m in self.models:
             rc.append("<a href='"+m.getLink("localhost",data_source,param)+"'>"+m.name+"</a>")
         return rc
+
+    def synthese(self):
+        code="Synthese des metriques:<br>"+self.metrics.to_html()
+        return code

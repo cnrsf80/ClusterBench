@@ -34,6 +34,7 @@ class model:
     v_measure_score = 0
     data:pd.DataFrame=None
     dimensions:int=0
+    clusters_distance:pd.DataFrame=None
 
     def __init__(self, data,name_col,dimensions):
         #Thread.__init__(self)
@@ -72,14 +73,57 @@ class model:
 
             np.save(namefile,self.distances)
 
+    #calcul la distance entre les clusters
+    def init_distance_cluster(self):
+        m=self.mesures().as_matrix()
+        i=0
+
+        for c1 in self.clusters:
+            tools.progress(i,len(self.clusters))
+            i=i+1
+            for c2 in self.clusters:
+                if c1!=c2:
+                    if c1.clusters_distances.get(c2.name) is None:
+                        d=list(c1.distance_min(c2, m))
+                        c1.clusters_distances[c2.name]=d
+                        #c2.clusters_distances[c1.name]=d
+
+
+
+    def init_matrice_distance_cluster(self):
+        print("Calcul de la matrice de distance")
+        if self.clusters_distance is None:
+            self.clusters_distance = pd.DataFrame(index=self.get_cluster_names(), columns=self.get_cluster_names())
+
+        for c1 in self.clusters:
+            self.clusters_distance[c1.name][c1.name] = 0
+            for c2 in c1.clusters_distances:
+                d=c1.clusters_distances[c2][0]
+                self.clusters_distance[c1.name][c2] = d
+                self.clusters_distance[c2][c1.name] = d
+
+        return self.clusters_distance
+
+
+    def get_cluster_names(self):
+        rc=[]
+        for c in self.clusters:
+            rc.append(c.name)
+        return rc
 
     #Retourne la liste des composants par cluster
     def print_cluster(self,end_line=" - "):
-
         s="<h1>"+self.name+"</h1><h2>"+str(len(self.clusters))+" clusters trouvés</h2>"+end_line+end_line
         for c in self.clusters:
             s=s+c.print(self.data, self.name_col)+end_line
         return s
+
+    def table(self):
+        s="<h1>"+self.name+"</h1><h2>"+str(len(self.clusters))+" clusters trouvés</h2><table>"
+        s=s+"<tr><td>Cluster Name</td><td>Eléments</td><td>Plus proche</td></tr>"
+        for c in self.clusters:
+            s=s+"<tr>"+c.td(self.data, self.name_col)+"</tr>"
+        return s+"</table>"
 
     #Mesure le temps de traitement de l'algorithme
     def start_treatment(self):
@@ -135,6 +179,7 @@ class model:
         try:
             res=np.fromfile("./clustering/"+self.hash+"_"+self.name+".array",np.int,-1)
             self.clusters_from_labels(res)
+            self.init_distance_cluster()
             return True
         except:
             return False
@@ -157,17 +202,17 @@ class model:
             self.init_metrics(labels_true=labels_true)
 
         obj={
+            "Algo": self.type,
             "Name":self.name,
-            "Algo":self.type,
             "Param1":str(self.params[0]),
             "Param2":str(self.params[1]),
             "Param3":str(self.params[2]),
-            "nClusters":len(self.clusters),
+            "Param4":str(self.params[3]),
+            "Nbr Clusters":len(self.clusters),
             "delay (secondes)":self.delay,
             "URL":self.url,
             "2D":self.url2d,
             "Help":self.help,
-            "Clusters":self.print_cluster(),
             "Score":[self.score],
             "Rand_index":[self.rand_index],
             "Silhouette":[self.silhouette_score],
@@ -184,6 +229,11 @@ class model:
 
 
     def init_metrics(self,labels_true):
+
+        mes=self.mesures()
+        for c in self.clusters:
+            c.init_metrics(mes)
+
         if len(self.clusters)>2:
             labels=self.cluster_toarray()
             self.silhouette_score= metrics.silhouette_score(self.mesures(), labels)
@@ -201,6 +251,9 @@ class model:
                         )/6
             self.score=round(self.score*20*100)/100
 
+            if len(self.clusters)<10:
+                self.init_distance_cluster()
+
         else:
             self.silhouette_score=0
             self.score=0
@@ -210,6 +263,7 @@ class model:
             self.v_measure_score=0
 
         return self.print_perfs()
+
 
     def print_perfs(self,endline="<br>"):
         s=("<h2>Algorithme : %s</h2>" % self.name)+endline
@@ -226,13 +280,17 @@ class model:
             s=s+"completeness_score  %s" % self.completeness_score+endline
 
             s = s +("<h2>Score (silhouette sur 10 + rand,homogeneité, v_mesure et completness sur 2,5) <strong>%s / 20</strong></h2>" % self.score)
+            if not self.clusters_distance is None:s = s + "Distance entre cluster:<br>" + self.clusters_distance.to_html() + "<br>"
+
         return s
 
 
     def clusters_from_labels(self, labels,name="cl_"):
         n_clusters_ = round(max(labels) + 1)
         for i in range(n_clusters_):
-            self.clusters.append(cluster(name + str(i), [], i,i))
+            color=draw.colors[i]
+            c=cluster(name + str(i), [], color,i)
+            self.clusters.append(c)
 
         i = 0
         for l in labels:
@@ -258,12 +316,12 @@ class model:
     def execute(self,algo_name,url,algo,p:dict,useCache=False):
         name=algo_name+" "
         self.help=url
-        self.params:list=[None]*3
+        self.params:list=[None]*6
         i=0
         for key in p.keys():
             value:str=str(p.get(key))
             if value.__contains__("000000000"):value=str(round(p.get(key)*100)/100)
-            if(i<3):self.params[i] = str(value)
+            if(i<len(p.keys())):self.params[i] = str(value)
             i = i + 1
             name=name+key+"="+value+" "
 
@@ -323,6 +381,21 @@ class model:
             return "No cluster"
 
 
+    def init_noise_cluster(self):
+        noise=[]
+        for i in range(len(self.data)):
+            find=False
+            for c in self.clusters:
+                if c.index.__contains__(i):
+                    find=True
+                    break
+            if not find:
+                noise.append(i)
+
+        self.clusters.append(cluster("noise",noise,[0.8,0.8,0.8],len(self.clusters)))
+
+
+
     def setname(self, name:str="ALGO"):
         self.name=name
         self.type=name.split(" ")[0]
@@ -346,10 +419,30 @@ class cluster:
     def __init__(self, name="",index=[],color="red",pos=0):
         self.index = index
         self.name = name
-        self.color= draw.get_color(color)
+        self.color= list(color)
         self.labels=[]
         self.position=pos
+        self.clusters_distances=dict()  #Distance aux autres cluster
+        self.center=None
+        self.variance = None
         self.marker=tirage(['^','o','v','<','>','x','D','*'])
+
+    def init_metrics(self,mes):
+        pts:pd.DataFrame=mes.iloc[self.index]
+        self.variance=np.var(pts.as_matrix())
+        self.center=np.mean(pts.as_matrix())
+
+    def distance_min(self,c,mes):
+        d_min=np.inf
+        for i1 in self.index:
+            for i2 in c.index:
+                v=mes[i1]-mes[i2]
+                d=np.linalg.norm(v)
+                if d<d_min:
+                    d_min=d
+                    save_i1=i1
+                    save_i2=i2
+        return d_min,save_i1,save_i2
 
     def contain(self,i):
         for n in self.index:
@@ -363,10 +456,29 @@ class cluster:
             col=data[label_col]
             self.labels.append(col[index])
 
+    def near_cluster(self):
+        if self.clusters_distances is None:return ""
+        d_min=np.inf
+        rc=""
+        for k in self.clusters_distances:
+            if self.clusters_distances[k][0]<d_min:
+                rc=k
+                d_min=self.clusters_distances[k][0]
+        return rc
+
     def print(self,data,label_col="",sep=" / "):
         s=("Cl:"+self.name+"=")
         s=s+(sep.join(data[label_col][self.index]))
         return s
+
+    def td(self,data,label_col=""):
+        rgb:str="rgb("+str(self.color[0]*255)+","+str(self.color[1]*255)+","+str(self.color[2]*255)+")"
+        s=("<td style='background-color:"+rgb+"'><strong>"+self.name+"&nbsp;&nbsp;</strong></td>")
+        s = s + "<td>"+str(len(self.index))+"</td><td>"
+        s=s+self.near_cluster()+"</td><td>"
+        s=s+("</td><td>".join(data[label_col][self.index]))
+        return s+"</td>"
+
 
     def __eq__(self, other):
         if set(other.index).issubset(self.index) and set(self.index).issubset(other.index):

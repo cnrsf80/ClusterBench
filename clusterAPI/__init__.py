@@ -9,11 +9,10 @@ import copy
 import clusterBench.tools as tools
 from sklearn import cluster as cl
 import hdbscan
-from simpledbf import Dbf5
 import urllib
 
 #Fonction principale d'exécution des algorithmes de clustering
-def gencode(data, params: str, name_algo: str):
+def gencode(data, params: str, name_algo: str,no_text=False):
     label_col = data.columns[0]         #Le libellé des mesures est pris sur la premiere colonne
     dimensions = len(data.columns) - 1  #Les composantes sont les colonnes suivantes
     sim = simulation.simulation(data, label_col, dimensions)
@@ -64,15 +63,23 @@ def gencode(data, params: str, name_algo: str):
 
 
     sim.init_metrics(False)
-    code = sim.print_infos() + "<br>"
+
+    if not no_text:
+        code = sim.print_infos() + "<br>synthese<br>"
+    else:
+        code=""
 
     try:n_pca = int(request.args["pca"])
     except:n_pca = 2
 
-    code = code + sim.get3d_html(n_pca)
+    code = code + sim.get3d_html(n_pca,no_text)
+
+    if not no_text:
+        code = code.replace("synthese",sim.synthese())
 
     return code
 
+#http://45.77.160.220:5000/algo/NEURALGAS/Pour%20clustering2%20(1).xlsx/passes=30&distance_toremove_edge=50/modele.html?pca=2&notif=hhoareau%40gmail.com
 #Créer une instance du serveur
 def create_app(test_config=None):
     # create and configure the app
@@ -99,8 +106,11 @@ def create_app(test_config=None):
     #Retourne la page d'acceuil du serveur d'API
     @app.route('/', methods=['GET'])
     def index():
-        return render_template("index.html")
+        html="<select id='lst_files'>"
+        for s in os.listdir(os.path.join("./datas", "")):
+            html=html+"<option>"+s+"</option>"
 
+        return render_template("index.html",list_file=html+"</select>")
 
 
     #Retourne True si le format du fichier est accepté
@@ -119,8 +129,16 @@ def create_app(test_config=None):
         # submit an empty part without filename
         if file and allowed_file(file.filename):
             filename = file.filename
-            file.save(os.path.join("./datas", filename))
-            return jsonify(url=filename);
+
+            url=os.path.join("./datas", filename)
+            file.save(url)
+
+            data = tools.get_data_from_url(filename)
+            if not tools.chk_integrity(data):
+                os.remove(url)
+                return "Le fichier contient des valeurs incorrectes"
+            else :
+                return jsonify(url=filename)
 
 
 
@@ -132,40 +150,33 @@ def create_app(test_config=None):
         return '\n'.join(s)
 
 
+
+
     import time
     #Api principale permetant l'execution des algorithmes de clustering
     #url : contient l'adresse internet de la source de données à traiter
     #test : http://localhost:5000/algo/HDBSCAN/https%3A%2F%2Fmycore.core-cloud.net%2Findex.php%2Fs%2FUWSxBo17DQLDlU5%2Fdownload/min_cluster_size=3/modele.html?pca=2¬if=paul.dudule@gmail.com
     @app.route('/algo/<string:name_algo>/<path:url>/<string:params>/modele.html', methods=['GET'])
     def algo_func(url: str, params: str, name_algo: str):
-        if not url.startswith("http:"):
-            url=os.path.join("./datas", url)
+        data=tools.get_data_from_url(url)
 
-        format=tools.AnalyseFile(url)
-        data:pd.DataFrame = None
-        try:
-            if format=="excel": data = pd.read_excel(url)
-            if format == "dbf": data = Dbf5(url).to_dataframe()
-            if format == "csv" :
-                data = pd.read_csv(url, sep=";",decimal=",")
-                if not data is None and not type(data.iloc[3][3]) is float: data = pd.read_csv(url, sep=",", decimal=".")
-                if not data is None and not type(data.iloc[3][3]) is float: data = pd.read_csv(url, sep=";", decimal=".")
-        except:
-            data = None
-
-        if data is None: return "Erreur sur la source de donnée : " + url
         if not params.__contains__("="):return "erreur sur les parametres "+params
 
         start = time.time()
-        html=gencode(data,params,name_algo)
+
+        no_text=False
+        if request.args.__contains__("notext"):no_text=True
+
+        html=gencode(data,params,name_algo,no_text)
         delay=(time.time()-start)
 
         if delay>10 and request.args.__contains__("notif") and len(request.args["notif"]) > 0:
             #url_to_send = request.url.split("&notif")[0]
+            url_to_send = request.url
             #url = ""
             #url_to_send = url_to_send.replace(url, urllib.parse.quote_plus(url))
 
-            body: str = "Traitement disponible <a href='" + url + "'>Ici</a>"
+            body: str = "Traitement disponible <a href='" + url_to_send + "'>Ici</a>"
 
             tools.sendMail("ClusterBench : Fin de traitement", "cnrs.f80@gmail.com",
                            request.args["notif"],

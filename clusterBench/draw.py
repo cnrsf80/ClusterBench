@@ -4,11 +4,31 @@ import pandas as pd
 import networkx as nx
 from matplotlib import colors as mcolors
 
+import random
+
 
 #Palette de couleurs
-def get_color(index):
-    colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
-    return list(colors.values())[index]
+
+def color_distance(c1,c2):
+    s=0
+    for i in range(0,3):
+        s=s+abs(c1[i]-c2[i])
+    return s
+
+
+#colors = list(dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS).values())
+colors=[[random.random(),random.random(),random.random()]]
+for i in range(1,250):
+    while True:
+        new_color=[random.random(),random.random(),random.random()]
+        b=True
+        for k in range(0, i):
+            if color_distance(colors[i-k-1],new_color)<0.1:b=False
+
+        if b:
+            colors.append(new_color)
+            break
+
 
 #Affichage des mesures en 2D
 def trace_artefact_2d(data, clusters, path,name):
@@ -99,15 +119,23 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,pca_offset=0):
 
     li_data:list = []
     for c in clusters:
+
+        distances: pd.DataFrame = pd.DataFrame.from_dict(c.clusters_distances,orient="index",columns=["distance","p1","p2"])
+        distances=distances.sort_values("distance")
+        distances=distances[0:10]
+        distances=distances.transpose()
+        #distances.sort_index(ascending=False)
+
         for k in range(len(c.index)):
             li_data.append({
                 'x': newdata[c.index[k], pca_offset],
                 'y': newdata[c.index[k], pca_offset + 1],
                 'z': newdata[c.index[k], pca_offset + 2],
-                'style': c.position,
+                'style': c.color,
                 'label': labels[c.index[k]],
                 'name': labels[c.index[k]],
-                'cluster': c.name
+                'cluster': c.name,
+                'cluster_distance':distances.to_json()
             })
 
     return li_data
@@ -160,5 +188,12 @@ from flask import render_template
 def trace_artefact_GL(mod,id,title,pca_offset=0):
     li_data:list = pca_totrace(mod.mesures(), mod.clusters,mod.names(),pca_offset)
     li_data=li_data
-    code=render_template("modele.html",title=title,name_zone="zone"+id,datas=li_data)
+
+    lst_cluster="<select>";
+    for c in mod.clusters:
+        lst_cluster=lst_cluster+"<option>"+c.name+"</option>"
+
+    lst_cluster=lst_cluster+"</select>"
+
+    code=render_template("modele.html",title=title,name_zone="zone"+id,datas=li_data,lst_cluster=lst_cluster)
     return code

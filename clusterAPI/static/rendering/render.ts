@@ -2,9 +2,9 @@
 
 import float = BABYLON.float;
 
-const _VISIBLE=0.9
-const _HIDDEN=0.3
-const _SIZE=50
+const _VISIBLE=0.9;
+const _HIDDEN=0.2;
+const _SIZE=50;
 
 var ScatterPlot:any;
 var showAxis:Function;
@@ -12,6 +12,7 @@ var showAxis:Function;
 class Game {
 
     private spheres:any[]=[];
+    private links:any[]=[];
 
     private _canvas: HTMLCanvasElement;
     private _engine: BABYLON.Engine;
@@ -28,6 +29,30 @@ class Game {
     }
 
 
+    showCluster(cluster_name,show=true){
+        for (let s of this.spheres) {
+            var name=s.cluster_name.substr(0,Math.min(cluster_name.length,s.cluster_name.length)).toLowerCase();
+            if (name == cluster_name.toLowerCase()){
+                if(show)
+                    s.material.alpha = _VISIBLE;
+                else
+                    s.material.alpha = _HIDDEN;
+            }
+        }
+    }
+
+    showMesure(mes_name,show=true){
+        for (let s of this.spheres) {
+            var name=s.name.substr(0,Math.min(mes_name.length,s.name.length)).toLowerCase();
+            if (name == mes_name.toLowerCase())
+                if(show)
+                    s.material.alpha = _VISIBLE;
+                else
+                    s.material.alpha = _HIDDEN;
+        }
+    }
+
+
     prepareButton(mesh) {
         mesh.actionManager = new BABYLON.ActionManager(this._scene);
         mesh.actionManager.registerAction(
@@ -36,36 +61,26 @@ class Game {
                     trigger: BABYLON.ActionManager.OnPickTrigger
                 },
                 (evt) => {
+
                     let target:any=evt.meshUnderPointer;
+                    if(target==null)return;
 
-                    if(target.material.alpha==_VISIBLE){
-                        if(!target.increase) {
-                            for (let s of this.spheres) {
-                                if (s.cluster_name != target.cluster_name) s.material.alpha = _HIDDEN;
-                                if (s.name == target.name ){
-                                    s.scaling = new BABYLON.Vector3(2, 2, 2);
-                                    s.increase=true;
-                                }
-
+                    if(!evt.sourceEvent.altKey)
+                        this.showCluster(target.cluster_name,!evt.sourceEvent.shiftKey);
+                    else{
+                        for (let s of this.spheres) {
+                            if (s.name == target.name ){
+                                if (s.increase) {
+                                        s.scaling = new BABYLON.Vector3(1, 1, 1);
+                                        s.increase = false;
+                                } else {
+                                            s.scaling = new BABYLON.Vector3(2, 2, 2);
+                                            s.increase=true;
+                                        }
                             }
                         }
-                        else
-                        {
-                            for (let s of this.spheres) {
-                                if (s.increase && s.name == target.name) {
-                                    s.scaling = new BABYLON.Vector3(1, 1, 1);
-                                    s.increase = false;
-                                }
-
-                            }
-
-                        }
-                    } else {
-                            for (let s of this.spheres) {
-                                s.material.alpha=_VISIBLE;
-                                s.scaling = new BABYLON.Vector3(1, 1, 1);
-                            }
                     }
+
 
 
                 }
@@ -104,21 +119,33 @@ class Game {
         );
     }
 
-    createMesure(name:string,cluster_name:string,x:float,y:float,z:float,color:BABYLON.Color3,translate:float,expense:float):void {
+    createMesure(obj:any,color:BABYLON.Color3,translate:float,expense:float):void {
         var materialSphere = new BABYLON.StandardMaterial("texture2", this._scene);
         materialSphere.diffuseColor = color;
         materialSphere.alpha = 0.9;
 
         let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: 1}, this._scene);
 
-        sphere.position.x = (x+translate)*expense;
-        sphere.position.y = (y+translate)*expense;
-        sphere.position.z = (z+translate)*expense;
+        sphere.position.x = (obj.x+translate)*expense;
+        sphere.position.y = (obj.y+translate)*expense;
+        sphere.position.z = (obj.z+translate)*expense;
         sphere.material=materialSphere;
-        sphere.cluster_name=cluster_name;
+        sphere.cluster_name=obj.cluster;
+        sphere.name=obj.name;
+        sphere.cluster_distance=JSON.parse(obj.cluster_distance);
 
         this.prepareButton(sphere);
         this.spheres.push(sphere);
+    }
+
+    linkSphere(s1:any,s2:any):void {
+        let path = [
+            new BABYLON.Vector3(s1.position.x, s1.position.y, s1.position.z),
+            new BABYLON.Vector3(s2.position.x, s2.position.y, s2.position.z)
+        ]
+
+        var tube = BABYLON.MeshBuilder.CreateTube("link"+s1.name+"_"+s2.name, {path: path, radius: 0.04},this._scene);
+        this.links.push(tube);
     }
 
     createScene() : void {
@@ -128,6 +155,10 @@ class Game {
         this._scene.fogDensity = 0.002;
         this._scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.9);
         this._scene.clearColor = new BABYLON.Color4(0.9, 0.9, 0.9);
+
+        this._scene.registerBeforeRender(()=>{
+
+        })
 
         var dim=_SIZE*2;
         // var scatterPlot = new ScatterPlot([dim,dim,dim],{
@@ -157,8 +188,10 @@ class Game {
         this._camera.attachControl(this._canvas, false);
 
         // Create a basic light, aiming 0,1,0 - meaning, to the sky.
-        this._light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,0,-1), this._scene);
-        //this._light2 = new BABYLON.HemisphericLight('light2', new BABYLON.Vector3(0,1,0), this._scene);
+        this._light1 = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,0,-20), this._scene);
+        this._light2 = new BABYLON.HemisphericLight('light2', new BABYLON.Vector3(0,0,+20), this._scene);
+        this._light1.intensity=0.65;
+        this._light2.intensity=0.65;
 
 
         // Create a built-in "ground" shape.
@@ -177,8 +210,58 @@ class Game {
         });
     }
 
+
+
+
     clearMesures() {
         this.spheres=[];
+        this.links=[];
+    }
+
+    makeRotate(){
+        this._camera.alpha=game._camera.alpha+0.1;
+        this._camera.rebuildAnglesAndRadius();
+        this.doRender();
+    }
+
+    moveLightToCamera(){
+
+    }
+
+    showClosedCluster() {
+        let l=[];
+        this.spheres.forEach((s:any)=> {
+                if (s.material.alpha == _VISIBLE) {
+                    l.push(s);
+                }
+            });
+
+        l.forEach((s)=>{
+                let i=0;
+                for(let k in s.cluster_distance){
+                    let d=s.cluster_distance[k];
+                    i++;
+                    if(i>5)break;
+                    this.spheres[d.p1].material.alpha=_VISIBLE;
+                    this.spheres[d.p2].material.alpha=_VISIBLE;
+                    this.linkSphere(this.spheres[d.p1],this.spheres[d.p2]);
+                }
+            }
+        )
+    }
+
+    clearLinks() {
+        this.links.forEach((l)=>{
+            l.dispose();
+        })
+        this.links=[];
+    }
+
+    removeNoise() {
+        this.spheres.forEach((s)=>{
+            if(s.cluster_name=="noise")
+                s.dispose();
+        })
     }
 }
 
@@ -195,22 +278,74 @@ window.addEventListener('DOMContentLoaded', () => {
     game.doRender();
 });
 
+/**
+ * Affichage des points contenu dans datas
+ *
+ */
 window.addEventListener("message", (evt)=> {
     let datas = evt.data.datas;
     evt.preventDefault();
     if (datas!=null && datas.length>0) {
         game.clearMesures();
 
-        //Creation d'une palette
-        let colors=[];
-        for(let i=0;i<100;i++)
-            colors.push(new BABYLON.Color3(Math.random(), Math.random(), Math.random()))
 
-        for (let p of datas)
-            game.createMesure(p.name, p.cluster, p.x+1, p.y+1, p.z+1, colors[p.style], -1,_SIZE)
+        for (let p of datas){
+            let color=new BABYLON.Color3(p.style[0],p.style[1],p.style[2]);
+            game.createMesure(p,color, 0,_SIZE);
+        }
+
 
 
         // game.createMesure("repere","cluster",0,0,0,colors[0],0,_SIZE);
         // game.createMesure("repere","cluster",1,1,1,colors[0],0,_SIZE);
     }
 }, false);
+
+window.addEventListener("keypress", (evt)=> {
+   if(evt.key=="c"){
+       game.showCluster(prompt("Cluster name"),true);
+   }
+
+   if(evt.key=="C"){
+       game.showCluster(prompt("Cluster name"),false);
+   }
+
+   if(evt.key=="N"){
+       game.showCluster("noise",false);
+   }
+
+   if(evt.key=="n"){
+       game.showCluster("noise",true);
+   }
+
+    if(evt.key=="h"){
+        game.clearLinks();
+       game.showCluster("",false);
+   }
+
+   if(evt.key=="H"){
+       game.showCluster("",true);
+   }
+
+
+   if(evt.key=="d"){
+       game.clearLinks();
+       game.showClosedCluster();
+   }
+
+
+   if(evt.key=="m"){
+       game.showMesure(prompt("Measure name"),true);
+   }
+
+   if(evt.key=="M"){
+       game.showMesure(prompt("Measure name"),false);
+   }
+
+   if(evt.key=="r"){
+       game.removeNoise();
+   }
+
+
+
+});
