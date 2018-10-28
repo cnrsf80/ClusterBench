@@ -23,7 +23,7 @@ for i in range(1,250):
         new_color=[random.random(),random.random(),random.random()]
         b=True
         for k in range(0, i):
-            if color_distance(colors[i-k-1],new_color)<0.1:b=False
+            if color_distance(colors[i-k-1],new_color)<0.2:b=False
 
         if b:
             colors.append(new_color)
@@ -120,10 +120,14 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,pca_offset=0):
     li_data:list = []
     for c in clusters:
 
-        distances: pd.DataFrame = pd.DataFrame.from_dict(c.clusters_distances,orient="index",columns=["distance","p1","p2"])
-        distances=distances.sort_values("distance")
-        distances=distances[0:10]
-        distances=distances.transpose()
+        if len(c.clusters_distances)>0:
+            distances: pd.DataFrame = pd.DataFrame.from_dict(c.clusters_distances,orient="index",columns=["distance","p1","p2"])
+            distances=distances.sort_values("distance")
+            distances=distances[0:10]
+            distances=distances.transpose()
+            ss=distances.to_json()
+        else:
+            ss="{}"
         #distances.sort_index(ascending=False)
 
         for k in range(len(c.index)):
@@ -135,7 +139,7 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,pca_offset=0):
                 'label': labels[c.index[k]],
                 'name': labels[c.index[k]],
                 'cluster': c.name,
-                'cluster_distance':distances.to_json()
+                'cluster_distance':ss
             })
 
     return li_data
@@ -147,7 +151,6 @@ def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pc
     code=""
     if len(title)>0:code="<h1>"+title+"</h1>"
     code=code+"<h3>Réprésentation 3d sur les axes "+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2)+"</h3>"
-
     return code+draw_3D(li_data,for_jupyter=for_jupyter,lines=None,w=w,h=h)
 
 

@@ -15,18 +15,17 @@
 <table width="100%" style="width:100%;vertical-align: text-top;text-align: left;">
     <tr>
         <td>
-
             <h1>Cluster Bench</h1>
 
-            <h2>Liens prédéfinis:</h2>
-            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=3/modele.html?pca=1">HDBSCAN rapide</a><br>
-            <a href="./algo/hac/PourClustering.csv/n_clusters=11,12,13/modele.html?pca=4">HAC pour une douzaine de clusters</a><br>
-            <a href="./algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2/modele.html?pca=3">Meanshif</a><br>
-            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9/modele.html?pca=4">Combinaisons HDBSCAN</a><br>
-            <a href="./algo/neuralgas/PourClustering.csv/passes=3&distance_toremove_edge=40/modele.html?pca=4">Neural rapide</a><br>
-            <a href="./algo/neuralgas/PourClustering.csv/passes=15&distance_toremove_edge=40/modele.html?pca=4">Neural 15 passes (long)</a><br>
-            <br>
-            <br>
+{#            <h2>Liens prédéfinis:</h2>#}
+{#            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=3/modele.html?pca=1">HDBSCAN rapide</a><br>#}
+{#            <a href="./algo/hac/PourClustering.csv/n_clusters=11,12,13/modele.html?pca=4">HAC pour une douzaine de clusters</a><br>#}
+{#            <a href="./algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2/modele.html?pca=3">Meanshif</a><br>#}
+{#            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9/modele.html?pca=4">Combinaisons HDBSCAN</a><br>#}
+{#            <a href="./algo/neuralgas/PourClustering.csv/passes=3&distance_toremove_edge=40/modele.html?pca=4">Neural rapide</a><br>#}
+{#            <a href="./algo/neuralgas/PourClustering.csv/passes=15&distance_toremove_edge=40/modele.html?pca=4">Neural 15 passes (long)</a><br>#}
+{#            <br>#}
+{#            <br>#}
 
             Le fichier de données doit être au format Excel (recommandé) ou CSV avec le ";" en séparateur<br>
             Le séparateur de décimal doit être la ","<br>
@@ -34,12 +33,24 @@
             La première colonne doit contenir les libellés des mesures et toutes les<br>
             colonnes suivantes sont interpretées comme les mesures<br>
 
+            <br>
+            <br>Commandes sur la visu 3d:<br>
+            - <strong>'h'</strong> et SHIFT+'h' respectivement cache / montre toutes les mesures<br>
+            - <strong>'m'</strong> et SHIFT+'m' opere un filtre sur les mesures pour les montrer / cacher<br>
+            - <strong>'c'</strong> et SHIFT+'c' opere un filtre sur les clusters pour les montrer / cacher<br>
+            - <strong>'r'</strong> supprime définitivement le bruit (permet d'accéler la navigation)<br>
+            - <strong>'k'</strong> connecte entre elles les mesures du même nom<br>
+            - click et SHIFT+click montre / cache le cluster d'appartenance de la mesure<br>
+            - ALT+click permet grossis / réduit les mesures du même nom<br>
+            - click droit permet d'enregistrer la visu en format image
+            <br>
+
             <table style="padding: 10px;margin:10px;">
                 <tr>
                     <td>Algo</td>
                     <td>
                         <select id="algo" onchange="showParameters()">
-                            <option value="HDBSCAN::min_samples=3 min_cluster_size=3 leaf_size=20 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
+                            <option value="HDBSCAN::min_samples=1 min_cluster_size=3 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
                             <option value="NEURALGAS::passes=3 distance_toremove_edge=40::https://en.wikipedia.org/wiki/Neural_gas">NEURALGAS</option>
                             <option value="HAC::n_clusters=11,12,13::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html">HAC</option>
                             <option value="MEANSHIFT::bandwidth=0.1,0.3,0.2::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html">MEANSHIFT</option>
@@ -55,9 +66,8 @@
                                 id="params"
                                 onchange="showlink()" onkeyup="showlink()"
                         >
-                            min_samples=3<br>
+                            min_samples=1<br>
                             min_cluster_size=3<br>
-                            leaf_size=20<br>
                             alpha=0.5
                         </textarea>
                     </td>
@@ -95,7 +105,7 @@
                                 value="http://f80.fr/cnrs/datas/PourClustering.xlsx"
                                 id="url"
                                 type="url"
-                                onchange="showlink()"
+                                onkeyup="showlink()"
                         >
                     </td>
                     <td>
@@ -146,7 +156,7 @@
 <div id="result" style="width:100%;text-align:center;font-size: large;"></div>
 
 <script>
-    var showlink=()=>{
+    function showlink(){
         var file=encodeURIComponent(document.getElementById("url").value)
         var algo=document.getElementById("algo").value.split(":")[0];
         var notif=document.getElementById("email").value;
@@ -163,7 +173,7 @@
         return url;
     }
 
-    var showParameters=()=>{
+    function showParameters(){
         var algo=document.getElementById("algo").value.split("::")[0];
         var params=document.getElementById("algo").value.split("::")[1];
         document.getElementById("doc").src=document.getElementById("algo").value.split("::")[2];
@@ -172,6 +182,7 @@
         document.getElementById("params").value=params;
         if(algo=="NEURALGAS" && document.getElementById("email").value=="")
             document.getElementById("email").value="admin@f80.fr";
+
         showlink();
     }
 
@@ -202,7 +213,8 @@
     function openlink(){
         window.open("./static/wait.html?mail="+document.getElementById("email").value,"out");
         setTimeout(()=>{
-        window.open(showlink(),"out");
+            window.open(
+                showlink(),"out");
         },500);
     }
 
@@ -211,10 +223,10 @@
     });
 
     setTimeout(()=>{
-        showlink();
-        showParameters();
         document.getElementById("url").value=document.getElementById("lst_files").value;
-    },1000);
+        showParameters();
+        showlink();
+    },1500);
 </script>
 </body>
 </html>

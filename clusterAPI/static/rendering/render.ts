@@ -29,10 +29,10 @@ class Game {
     }
 
 
-    showCluster(cluster_name,show=true){
+    showCluster(cluster_name,show=true,explicit=true){
         for (let s of this.spheres) {
             var name=s.cluster_name.substr(0,Math.min(cluster_name.length,s.cluster_name.length)).toLowerCase();
-            if (name == cluster_name.toLowerCase()){
+            if (name == cluster_name.toLowerCase() && (explicit==false || name.length==cluster_name.length)){
                 if(show)
                     s.material.alpha = _VISIBLE;
                 else
@@ -65,8 +65,9 @@ class Game {
                     let target:any=evt.meshUnderPointer;
                     if(target==null)return;
 
-                    if(!evt.sourceEvent.altKey)
+                    if(!evt.sourceEvent.altKey){
                         this.showCluster(target.cluster_name,!evt.sourceEvent.shiftKey);
+                    }
                     else{
                         for (let s of this.spheres) {
                             if (s.name == target.name ){
@@ -228,14 +229,18 @@ class Game {
 
     }
 
-    showClosedCluster() {
-        let l=[];
+    getVisibleMesure(){
+        var l=[];
         this.spheres.forEach((s:any)=> {
                 if (s.material.alpha == _VISIBLE) {
                     l.push(s);
                 }
             });
+        return l;
+    }
 
+    showClosedCluster() {
+        let l=this.getVisibleMesure();
         l.forEach((s)=>{
                 let i=0;
                 for(let k in s.cluster_distance){
@@ -258,10 +263,24 @@ class Game {
     }
 
     removeNoise() {
+        var toRemove=[];
         this.spheres.forEach((s)=>{
-            if(s.cluster_name=="noise")
+            if(s.cluster_name=="noise"){
                 s.dispose();
-        })
+                toRemove.push(this.spheres.indexOf(s));
+            }
+        });
+    }
+
+    mesureConnection() {
+        this.getVisibleMesure().forEach((m)=>{
+            if(m.cluster_name!="noise"){
+                this.spheres.forEach((s)=>{
+                   if(s.name==m.name && s.cluster_name!="noise")
+                       this.linkSphere(s,m);
+                });
+            }
+        });
     }
 }
 
@@ -303,7 +322,7 @@ window.addEventListener("message", (evt)=> {
 
 window.addEventListener("keypress", (evt)=> {
    if(evt.key=="c"){
-       game.showCluster(prompt("Cluster name"),true);
+       game.showCluster(prompt("Cluster name"),true,false);
    }
 
    if(evt.key=="C"){
@@ -331,6 +350,10 @@ window.addEventListener("keypress", (evt)=> {
    if(evt.key=="d"){
        game.clearLinks();
        game.showClosedCluster();
+   }
+
+    if(evt.key=="k"){
+       game.mesureConnection();
    }
 
 

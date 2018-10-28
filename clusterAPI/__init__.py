@@ -20,13 +20,11 @@ def gencode(data, params: str, name_algo: str,no_text=False):
     sim.raz()
 
     if name_algo.upper().__contains__("HDBSCAN"):
-        parameters = tools.buildDict(params, {"min_samples": [3], "min_cluster_size": [2], "leaf_size": [20],
-                                              "alpha": [0.5]})
+        parameters = tools.buildDict(params, {"min_samples": [3], "min_cluster_size": [2], "alpha": [0.5]})
         sim.execute(algo_name="HDBSCAN",
                     url="https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
                     func=lambda x:
                     hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"],
-                                    leaf_size=x["leaf_size"],
                                     min_samples=x["min_samples"],
                                     alpha=x["alpha"]),
                     ps=parameters)
@@ -106,7 +104,7 @@ def create_app(test_config=None):
     #Retourne la page d'acceuil du serveur d'API
     @app.route('/', methods=['GET'])
     def index():
-        html="<select id='lst_files'>"
+        html="<select onchange='showlink()' id='lst_files'>"
         for s in os.listdir(os.path.join("./datas", "")):
             html=html+"<option>"+s+"</option>"
 

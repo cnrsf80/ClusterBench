@@ -1,5 +1,10 @@
 #Installation
-L'installation de l'API sur un serveur repose sur Docker. Un serveur de containers Docker disposant d'au moins 512 MB est suffisant.
+L'installation de l'API sur un serveur repose sur Docker. 
+Cette installation peut être réalisé simplement par la commande : 
+``curl -fsSL get.docker.com -o get-docker.sh | sh``<br>
+Un serveur de containers Docker disposant d'au moins 512 MB est suffisant.
+L'installation se fait simplement par :
+docker run --restart=always -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_x86:latest
 
 #Utilisation via l'interface
 L'interface permet un usage user-friendly de l'API. 

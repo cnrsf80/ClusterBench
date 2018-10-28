@@ -75,7 +75,7 @@ class model:
 
     #calcul la distance entre les clusters
     def init_distance_cluster(self):
-        m=self.mesures().as_matrix()
+        m=self.mesures().values
         i=0
 
         for c1 in self.clusters:
@@ -251,7 +251,7 @@ class model:
                         )/6
             self.score=round(self.score*20*100)/100
 
-            if len(self.clusters)<10:
+            if len(self.clusters)<3:
                 self.init_distance_cluster()
 
         else:
@@ -288,6 +288,7 @@ class model:
     def clusters_from_labels(self, labels,name="cl_"):
         n_clusters_ = round(max(labels) + 1)
         for i in range(n_clusters_):
+            if i>=len(draw.colors):i=1
             color=draw.colors[i]
             c=cluster(name + str(i), [], color,i)
             self.clusters.append(c)
@@ -429,8 +430,8 @@ class cluster:
 
     def init_metrics(self,mes):
         pts:pd.DataFrame=mes.iloc[self.index]
-        self.variance=np.var(pts.as_matrix())
-        self.center=np.mean(pts.as_matrix())
+        self.variance=np.var(pts.values)
+        self.center=np.mean(pts.values)
 
     def distance_min(self,c,mes):
         d_min=np.inf
