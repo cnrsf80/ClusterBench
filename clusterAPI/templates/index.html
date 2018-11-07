@@ -50,7 +50,7 @@
                     <td>Algo</td>
                     <td>
                         <select id="algo" onchange="showParameters()">
-                            <option value="HDBSCAN::min_samples=1 min_cluster_size=3 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
+                            <option value="HDBSCAN::min_samples=1,2,3 min_cluster_size=3 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
                             <option value="NEURALGAS::passes=3 distance_toremove_edge=40::https://en.wikipedia.org/wiki/Neural_gas">NEURALGAS</option>
                             <option value="HAC::n_clusters=11,12,13::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html">HAC</option>
                             <option value="MEANSHIFT::bandwidth=0.1,0.3,0.2::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html">MEANSHIFT</option>
@@ -135,9 +135,14 @@
 
 
                 <tr>
-                    <td><button onclick="showlink()" style="font-size: x-large">Build</button></td>
+                    <td>
+                        <button onclick="showlink()" style="font-size: x-large">Build</button>
+                    </td>
                     <td>
                         <button onclick="openlink()" style="font-size: x-large">Open</button></td>
+                    </td>
+                    <td>
+                        <button onclick="runAll()" style="font-size: x-large">Parallel</button></td>
                     </td>
                 </tr>
 
@@ -156,7 +161,16 @@
 <div id="result" style="width:100%;text-align:center;font-size: large;"></div>
 
 <script>
-    function showlink(){
+    function cutParams(param){
+        param.split("&").forEach((val)=>{
+            val.split(",").forEach((k)=>{
+                   debugger
+                    v=k;
+            });
+        });
+    }
+
+    function showlink(multiple=false){
         var file=encodeURIComponent(document.getElementById("url").value)
         var algo=document.getElementById("algo").value.split(":")[0];
         var notif=document.getElementById("email").value;
@@ -167,10 +181,21 @@
         for(var i=0;i<10;i++)params=params.replace(" ","&");
 
         var domain=document.location.host;
-        url="http://"+domain+"/algo/"+algo+"/"
-            +file+"/"+params+"/modele.html?pca="+pca+"&notif="+notif;
-        document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
-        return url;
+
+        if(!multiple){
+            url="http://"+domain+"/algo/"+algo+"/"
+                +file+"/"+params+"/modele.html?pca="+pca+"&notif="+notif;
+            document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
+            return url;
+        } else {
+            urls=[];
+            cutParams(params).forEach((p)=>{
+                url="http://"+domain+"/algo/"+algo+"/"+file+"/"+p+"/modele.html?pca="+pca+"&notif="+notif;
+                urls.push(url);
+            });
+            return urls;
+        }
+
     }
 
     function showParameters(){
@@ -211,6 +236,22 @@
     }
 
     function openlink(){
+        window.open("./static/wait.html?mail="+document.getElementById("email").value,"out");
+        setTimeout(()=>{
+            window.open(
+                showlink(),"out");
+        },500);
+    }
+
+    function runAll(){
+        showlink(true).forEach(url=>{
+            debugger
+            window.open(url,"_blank");
+        })
+    }
+
+    function openlink(){
+
         window.open("./static/wait.html?mail="+document.getElementById("email").value,"out");
         setTimeout(()=>{
             window.open(

@@ -183,6 +183,8 @@ def create_app(test_config=None):
 
         return html
 
+
+
     @app.route('/datas/<string:label_col>/<int:dimensions>', methods=['POST'])
     def datas(label_col: str, dimensions: int):
         f = request.files[0]
