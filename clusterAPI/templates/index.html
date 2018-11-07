@@ -161,13 +161,51 @@
 <div id="result" style="width:100%;text-align:center;font-size: large;"></div>
 
 <script>
-    function cutParams(param){
-        param.split("&").forEach((val)=>{
-            val.split(",").forEach((k)=>{
-                   debugger
-                    v=k;
-            });
+    function cutParams(params){
+
+        var ps={};
+        var keys=[];
+        params.split("&").forEach(param=>{
+            keys.push(param.split("=")[0]);
+            ps[param.split("=")[0]]=param.split("=")[1].split(",");
         });
+
+        keys.push("sup");
+        keys.push("sup2");
+        keys.push("sup3");
+        ps["sup"]=[0];
+        ps["sup2"]=[0];
+        ps["sup3"]=[0];
+
+        let l_p=[];
+
+        for(var i=0;i<ps[keys[0]].length;i++)
+            for(var j=0;j<ps[keys[1]].length;j++)
+                for(var k=0;k<ps[keys[2]].length;k++)
+                    for(var l=0;l<ps[keys[3]].length;l++){
+                        c1=ps[keys[0]][i];
+                        c2=ps[keys[1]][j];
+                        c3=ps[keys[2]][k];
+                        c4=ps[keys[3]][l];
+
+                        var obj={};
+                        obj[keys[0]]=c1;
+                        if(c2!=null)obj[keys[1]]=c2;
+                        if(c3!=null)obj[keys[2]]=c3;
+                        if(c4!=null)obj[keys[3]]=c4;
+
+                        l_p.push(obj);
+                    }
+
+        var rc=[];
+        l_p.forEach((val)=>{
+            var s="";
+            for(var p in val)
+                s=s+p+"="+val[p]+"&";
+            rc.push(s.substr(0,s.length-1));
+        });
+
+        return rc;
     }
 
     function showlink(multiple=false){
@@ -211,7 +249,7 @@
         showlink();
     }
 
-    var testDownload=function(){
+    function testDownload(){
         var file=document.getElementById("url").value;
         if(file.indexOf("http")!=0)
             file="http://45.77.160.220:5000/datas/"+file;
@@ -235,23 +273,18 @@
             });
     }
 
-    function openlink(){
-        window.open("./static/wait.html?mail="+document.getElementById("email").value,"out");
-        setTimeout(()=>{
-            window.open(
-                showlink(),"out");
-        },500);
-    }
 
     function runAll(){
         showlink(true).forEach(url=>{
-            debugger
-            window.open(url,"_blank");
-        })
+            fetch(url).then((res)=>{
+                return res;
+            }).then((res)=>{
+                window.open(showlink(),"result");
+            });
+        });
     }
 
     function openlink(){
-
         window.open("./static/wait.html?mail="+document.getElementById("email").value,"out");
         setTimeout(()=>{
             window.open(

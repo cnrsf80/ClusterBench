@@ -56,6 +56,8 @@ class simulation:
                                 rc.append({keys[0]:c1,keys[1]:c2,keys[2]:c3,keys[3]:c4})
         return rc
 
+
+
     def execute(self,algo_name,url,func,ps:dict,useCache=False):
         print("Traitement de "+algo_name+" ********************************************************************")
         for p in self.convertParams(ps):
