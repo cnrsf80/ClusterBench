@@ -201,6 +201,10 @@ class model:
         if self.score==0:
             self.init_metrics(labels_true=labels_true)
 
+        for i in range(3):
+            if len(self.params)<4:
+                self.params.append(None);
+
         obj={
             "Algo": self.type,
             "Name":self.name,
