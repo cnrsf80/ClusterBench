@@ -4,8 +4,7 @@
 #x86
 FROM python:3
 #docker build -t f80hub/cluster_bench_x86 . & docker push f80hub/cluster_bench_x86:latest
-#docker rm -f clusterbench & docker pull f80hub/cluster_bench_x86:latest &
-#docker run --restart=always -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_x86:latest
+#docker rm -f clusterbench && docker pull f80hub/cluster_bench_x86:latest && docker run --restart=always -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_x86:latest
 
 #arm
 #FROM arm32v7/python

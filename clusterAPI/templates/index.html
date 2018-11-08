@@ -144,7 +144,7 @@
                     <td>
                         <button onclick="runAll()" style="font-size: x-large">Parallel</button>
                         <br>
-                        <span id="nTreatments">0 running</span>
+                        <div id="nTreatments">0 running</div>
                     </td>
                 </tr>
 
@@ -278,16 +278,20 @@
 
     function runAll(){
         var urls=showlink(true);
-        document.getElementById("nTreatments").innerHTML=urls.length+" running";
+        var waiting="&nbsp;<img src='https://img.memecdn.com/what-are-you-waiting-for_o_518867.gif' style='width:20px'>"
+        document.getElementById("nTreatments").innerHTML=urls.length+" running"+waiting;
         var i=0;
         urls.forEach(url=>{
             fetch(url).then((res)=>{
                 i++;
-                document.getElementById("nTreatments").innerHTML=(urls.length-i)+" running";
+                document.getElementById("nTreatments").innerHTML=(urls.length-i)+" running"+waiting;
                 return res;
             }).then((res)=>{
-                if(i==urls.length)
+                if(i==urls.length){
                     openlink();
+                    document.getElementById("nTreatments").innerHTML="treatment ended";
+                }
+
             });
         });
     }
