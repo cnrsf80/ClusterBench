@@ -139,10 +139,12 @@
                         <button onclick="showlink()" style="font-size: x-large">Build</button>
                     </td>
                     <td>
-                        <button onclick="openlink()" style="font-size: x-large">Open</button></td>
+                        <button onclick="openlink()" style="font-size: x-large">Open</button>
                     </td>
                     <td>
-                        <button onclick="runAll()" style="font-size: x-large">Parallel</button></td>
+                        <button onclick="runAll()" style="font-size: x-large">Parallel</button>
+                        <br>
+                        <span id="nTreatments">0 running</span>
                     </td>
                 </tr>
 
@@ -275,11 +277,17 @@
 
 
     function runAll(){
-        showlink(true).forEach(url=>{
+        var urls=showlink(true);
+        document.getElementById("nTreatments").innerHTML=urls.length+" running";
+        var i=0;
+        urls.forEach(url=>{
             fetch(url).then((res)=>{
+                i++;
+                document.getElementById("nTreatments").innerHTML=(urls.length-i)+" running";
                 return res;
             }).then((res)=>{
-                window.open(showlink(),"result");
+                if(i==urls.length)
+                    openlink();
             });
         });
     }
