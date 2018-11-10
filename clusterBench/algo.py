@@ -275,7 +275,7 @@ class model:
         s=s+("Nombre de clusters : %s" % len(self.clusters))+endline+endline
 
         if len(self.clusters)>1:
-            s=s+"<a href='http://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics.cluster'>Indicateurs de performance du clustering</a>\n"
+            s=s+"<a href='http://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics.cluster'>Indicateurs de performance du clustering</a>"+endline
             s=s+("Silhouette score %s" % self.silhouette_score)+endline
             s=s+"Rand_index %s" % self.rand_index+endline
             #s=s+"Information mutuelle (https://fr.wikipedia.org/wiki/Information_mutuelle) : %s" % self.adjusted_mutual_info_score+"\n"
@@ -358,21 +358,25 @@ class model:
     def ideal_matrix(self):
         print("Fabrication d'un cluster de référence pour les métriques")
         clusters=np.asarray(np.zeros(len(self.data)),np.int8)
-        d:dict={}
-        for k in range(len(self.data)):
-            item=self.data[self.name_col][k]
-            if d.get(item)==None:
-                d[item] = [k]
-            else:
-                d[item].append(k)
 
-        j=0
-        for k in d.keys():
-            for i in d.get(k):
-                clusters[i]=j
-            j=j+1
+        # d:dict={}
+        # for k in range(len(self.data)):
+        #     item=self.data[self.name_col][k]
+        #     if d.get(item)==None:
+        #         d[item] = [k]
+        #     else:
+        #         d[item].append(k)
+        #
+        # j=0
+        # for k in d.keys():
+        #     for i in d.get(k):
+        #         clusters[i]=j
+        #     j=j+1
+        # return clusters
 
-        return clusters
+        return np.asarray(self.data["ref_cluster"],np.int8)
+
+
 
     def to3DHTML(self,pca_offset=0,for_jupyter=False,w="800px",h="800px"):
         if len(self.clusters)>0:
@@ -509,7 +513,7 @@ def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_to
         model.clusters_from_real(gng.cluster_data(), "NEURALGAS_")
         model.save_cluster()
     else:
-        print("Chargement de "+model.name)
+        print("Chargement du résultat de "+model.name+" depuis le cache")
 
     return model
 

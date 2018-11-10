@@ -112,7 +112,7 @@ def draw_with_babylon(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     df_data = pd.DataFrame(li_data)
 
 
-def pca_totrace(data:pd.DataFrame,clusters,labels,pca_offset=0):
+def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
     pca: decomp.pca.PCA = decomp.pca.PCA(n_components=3 + pca_offset)
     pca.fit(data)
     newdata = pca.transform(data)
@@ -139,15 +139,16 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,pca_offset=0):
                 'label': labels[c.index[k]],
                 'name': labels[c.index[k]],
                 'cluster': c.name,
+                'ref_cluster':ref_cluster[c.index[k]],
                 'cluster_distance':ss
             })
 
     return li_data
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
-def trace_artefact_3d(data, clusters, title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
+def trace_artefact_3d(data, clusters, ref_cluster,title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
     #TODO: a corriger
-    li_data=pca_totrace(data,clusters,[],pca_offset)
+    li_data=pca_totrace(data,clusters,[],pca_offset,ref_cluster)
     code=""
     if len(title)>0:code="<h1>"+title+"</h1>"
     code=code+"<h3>Réprésentation 3d sur les axes "+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2)+"</h3>"
@@ -189,7 +190,7 @@ from flask import render_template
 
 
 def trace_artefact_GL(mod,id,title,pca_offset=0):
-    li_data:list = pca_totrace(mod.mesures(), mod.clusters,mod.names(),pca_offset)
+    li_data:list = pca_totrace(mod.mesures(), mod.clusters,mod.names(),mod.data['ref_cluster'],pca_offset)
     li_data=li_data
 
     lst_cluster="<select>";

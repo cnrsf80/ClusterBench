@@ -6,10 +6,10 @@
 </head>
 <style>
     .image-upload > input {
-  visibility:hidden;
-  width:0;
-  height:0
-}
+        visibility:hidden;
+        width:0;
+        height:0
+    }
 </style>
 <body>
 <table width="100%" style="width:100%;vertical-align: text-top;text-align: left;">
@@ -17,15 +17,15 @@
         <td>
             <h1>Cluster Bench</h1>
 
-{#            <h2>Liens prédéfinis:</h2>#}
-{#            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=3/modele.html?pca=1">HDBSCAN rapide</a><br>#}
-{#            <a href="./algo/hac/PourClustering.csv/n_clusters=11,12,13/modele.html?pca=4">HAC pour une douzaine de clusters</a><br>#}
-{#            <a href="./algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2/modele.html?pca=3">Meanshif</a><br>#}
-{#            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9/modele.html?pca=4">Combinaisons HDBSCAN</a><br>#}
-{#            <a href="./algo/neuralgas/PourClustering.csv/passes=3&distance_toremove_edge=40/modele.html?pca=4">Neural rapide</a><br>#}
-{#            <a href="./algo/neuralgas/PourClustering.csv/passes=15&distance_toremove_edge=40/modele.html?pca=4">Neural 15 passes (long)</a><br>#}
-{#            <br>#}
-{#            <br>#}
+            {#            <h2>Liens prédéfinis:</h2>#}
+            {#            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=3/modele.html?pca=1">HDBSCAN rapide</a><br>#}
+            {#            <a href="./algo/hac/PourClustering.csv/n_clusters=11,12,13/modele.html?pca=4">HAC pour une douzaine de clusters</a><br>#}
+            {#            <a href="./algo/meanshift/PourClustering.csv/bandwidth=0.1,0.3,0.2/modele.html?pca=3">Meanshif</a><br>#}
+            {#            <a href="./algo/hdbscan/PourClustering.csv/min_cluster_size=5,6,7,8&alpha=0.1,0.3,0.5,0.9/modele.html?pca=4">Combinaisons HDBSCAN</a><br>#}
+            {#            <a href="./algo/neuralgas/PourClustering.csv/passes=3&distance_toremove_edge=40/modele.html?pca=4">Neural rapide</a><br>#}
+            {#            <a href="./algo/neuralgas/PourClustering.csv/passes=15&distance_toremove_edge=40/modele.html?pca=4">Neural 15 passes (long)</a><br>#}
+            {#            <br>#}
+            {#            <br>#}
 
             Le fichier de données doit être au format Excel (recommandé) ou CSV avec le ";" en séparateur<br>
             Le séparateur de décimal doit être la ","<br>
@@ -50,7 +50,7 @@
                     <td>Algo</td>
                     <td>
                         <select id="algo" onchange="showParameters()">
-                            <option value="HDBSCAN::min_samples=1,2,3 min_cluster_size=3 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
+                            <option value="HDBSCAN::min_samples=1,2,3,4,5,6 min_cluster_size=2,3,4,5,6,7,8 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
                             <option value="NEURALGAS::passes=3 distance_toremove_edge=40::https://en.wikipedia.org/wiki/Neural_gas">NEURALGAS</option>
                             <option value="HAC::n_clusters=11,12,13::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html">HAC</option>
                             <option value="MEANSHIFT::bandwidth=0.1,0.3,0.2::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html">MEANSHIFT</option>
@@ -62,9 +62,9 @@
                     <td>Parametres</td>
                     <td>
                         <textarea   rows="5"
-                                cols="60"
-                                id="params"
-                                onchange="showlink()" onkeyup="showlink()"
+                                    cols="60"
+                                    id="params"
+                                    onchange="showlink()" onkeyup="showlink()"
                         >
                             min_samples=1<br>
                             min_cluster_size=3<br>
@@ -84,10 +84,10 @@
 
                         <div style="display: inline" class="image-upload">
                             <label for="file">
-                            <img style="width:15px;padding:0px;" src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
-                        </label>
+                                <img style="width:15px;padding:0px;" src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
+                            </label>
 
-                        <input title="Upload" type="file" id="file" name="file" onchange="postFile()">
+                            <input title="Upload" type="file" id="file" name="file" onchange="postFile()">
                         </div>
 
 
@@ -116,10 +116,10 @@
                 <tr><td><br></td></tr>
 
                 <tr>
-                    <td>Nombre de vue</td>
+                    <td>Nombre de vues</td>
                     <td>
                         <input size="60"
-                               value="2" id="pca" type="number"
+                               value="1" id="pca" type="number"
                                min="0" max="6"
                                onchange="showlink()"
                         >
@@ -133,6 +133,12 @@
                     </td>
                 </tr>
 
+                <tr>
+                    <td>Simultaneous jobs</td>
+                    <td>
+                        <input value="3" id="jobs" type="number" min="1" max="10" onchange="showlink()">
+                    </td>
+                </tr>
 
                 <tr>
                     <td>
@@ -246,7 +252,7 @@
 
         document.getElementById("params").value=params;
         if(algo=="NEURALGAS" && document.getElementById("email").value=="")
-            document.getElementById("email").value="admin@f80.fr";
+            document.getElementById("email").value="dev@f80.fr";
 
         showlink();
     }
@@ -276,24 +282,38 @@
     }
 
 
+
+
     function runAll(){
+        var max_jobs=Number(document.getElementById("jobs").value);
         var urls=showlink(true);
-        var waiting="&nbsp;<img src='https://img.memecdn.com/what-are-you-waiting-for_o_518867.gif' style='width:20px'>"
+        var waiting="&nbsp;<img src='https://mir-s3-cdn-cf.behance.net/project_modules/disp/ab79a231234507.564a1d23814ef.gif' style='width:25px'>"
         document.getElementById("nTreatments").innerHTML=urls.length+" running"+waiting;
         var i=0;
-        urls.forEach(url=>{
-            fetch(url).then((res)=>{
-                i++;
-                document.getElementById("nTreatments").innerHTML=(urls.length-i)+" running"+waiting;
-                return res;
-            }).then((res)=>{
-                if(i==urls.length){
-                    openlink();
-                    document.getElementById("nTreatments").innerHTML="treatment ended";
-                }
+        var n_jobs=0;
 
-            });
-        });
+        handle=setInterval(()=>{
+            if(n_jobs<max_jobs) {
+                n_jobs++;
+                console.log("On lance un nouveau job."+n_jobs+" en cours");
+                fetch(url + "&nometric").then((res) => {return res;}).then((res) => {
+                    console.log("Fin d'un job");
+                    i++;
+                    n_jobs--;
+                    document.getElementById("nTreatments").innerHTML = (urls.length - i) + " treatments" + waiting;
+
+                    if (i == urls.length) {
+                        clearInterval(handle);
+                        openlink();
+                        document.getElementById("nTreatments").innerHTML = "treatment ended";
+                    }
+                }).catch(function() {
+                    console.log("error");
+                });;
+            }
+        },100);
+
+
     }
 
     function openlink(){

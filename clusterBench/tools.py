@@ -188,6 +188,7 @@ def get_data_from_url(url:str):
 
     return data
 
+#Permet de vérifier que l'ensemble des mesures n'est pas null
 import math
 def chk_integrity(data:pd.DataFrame):
     for row in data.values:
@@ -196,3 +197,13 @@ def chk_integrity(data:pd.DataFrame):
             if is_number(cel) and math.isnan(cel):return False
 
     return True
+
+
+def tokenize(items:list):
+    rc=[]
+    for item in items:
+        pos=items.index(item)
+        rc.append(pos)
+
+    return rc
+

@@ -9,13 +9,23 @@ import copy
 import clusterBench.tools as tools
 from sklearn import cluster as cl
 import hdbscan
-import urllib
+
+def create_ref_cluster_from_name(data, label_col):
+    rc=tools.tokenize(list(data[label_col]))
+    return rc
+
 
 #Fonction principale d'exécution des algorithmes de clustering
-def gencode(data, params: str, name_algo: str,no_text=False):
+#retourne le code HTML résultat de l'éxécution des algorithmes
+def run_algo(data, params: str, name_algo: str,no_text=False,no_metric=False):
+
     label_col = data.columns[0]         #Le libellé des mesures est pris sur la premiere colonne
-    dimensions = len(data.columns) - 1  #Les composantes sont les colonnes suivantes
-    sim = simulation.simulation(data, label_col, dimensions)
+    if not list(data.columns).__contains__("ref_cluster"):
+        data["ref_cluster"]=create_ref_cluster_from_name(data,label_col)
+
+    dimensions = len(data.columns) - 2  # Les composantes sont les colonnes suivantes
+
+    sim = simulation.simulation(data, label_col, dimensions,no_metric)
 
     sim.raz()
 
@@ -60,31 +70,42 @@ def gencode(data, params: str, name_algo: str,no_text=False):
                 sim.append_modeles(m)
 
 
-    sim.init_metrics(False)
+    if not no_metric:
+        sim.init_metrics(False)
+        if not no_text:
+            code = sim.print_infos() + "<br>synthese<br>"
+        else:
+            code = ""
 
-    if not no_text:
-        code = sim.print_infos() + "<br>synthese<br>"
+        try:
+            n_pca = int(request.args["pca"])
+        except:
+            n_pca = 2
+
+        code = code + sim.get3d_html(n_pca, no_text)
+
+        if not no_text:
+            code = code.replace("synthese", sim.synthese())
+
+        return code
     else:
-        code=""
+        return ""
 
-    try:n_pca = int(request.args["pca"])
-    except:n_pca = 2
 
-    code = code + sim.get3d_html(n_pca,no_text)
 
-    if not no_text:
-        code = code.replace("synthese",sim.synthese())
 
-    return code
+
+
+
 
 #http://45.77.160.220:5000/algo/NEURALGAS/Pour%20clustering2%20(1).xlsx/passes=30&distance_toremove_edge=50/modele.html?pca=2&notif=hhoareau%40gmail.com
 #Créer une instance du serveur
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+
     app.config.from_mapping(
-        SECRET_KEY='dev',
-        #DATABASE=os.path.join(app.instance_path, 'clusterAPI.sqlite'),
+        SECRET_KEY='cnrs',
     )
 
     if test_config is None:
@@ -101,6 +122,8 @@ def create_app(test_config=None):
         pass
 
 
+
+
     #Retourne la page d'acceuil du serveur d'API
     @app.route('/', methods=['GET'])
     def index():
@@ -111,10 +134,12 @@ def create_app(test_config=None):
         return render_template("index.html",list_file=html+"</select>")
 
 
-    #Retourne True si le format du fichier est accepté
+
+
+
+    #Retourne Vrai si le format du fichier est accepté
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in ["xlsx","xls","csv","txt"]
-
 
 
 
@@ -165,7 +190,10 @@ def create_app(test_config=None):
         no_text=False
         if request.args.__contains__("notext"):no_text=True
 
-        html=gencode(data,params,name_algo,no_text)
+        no_metric=False
+        if request.args.__contains__("nometric"):no_metric=True
+
+        html=run_algo(data,params,name_algo,no_text,no_metric)
         delay=(time.time()-start)
 
         if delay>10 and request.args.__contains__("notif") and len(request.args["notif"]) > 0:

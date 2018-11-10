@@ -65,12 +65,28 @@ class Game {
                     let target:any=evt.meshUnderPointer;
                     if(target==null)return;
 
-                    if(!evt.sourceEvent.altKey){
+                    if(!evt.sourceEvent.altKey && !evt.sourceEvent.ctrlKey){
                         this.showCluster(target.cluster_name,!evt.sourceEvent.shiftKey);
                     }
-                    else{
+
+
+                    if(evt.sourceEvent.altKey){
                         for (let s of this.spheres) {
                             if (s.name == target.name ){
+                                if (s.increase) {
+                                        s.scaling = new BABYLON.Vector3(1, 1, 1);
+                                        s.increase = false;
+                                } else {
+                                            s.scaling = new BABYLON.Vector3(2, 2, 2);
+                                            s.increase=true;
+                                        }
+                            }
+                        }
+                    }
+
+                    if(evt.sourceEvent.ctrlKey){
+                        for (let s of this.spheres) {
+                            if (s.ref_cluster == target.ref_cluster ){
                                 if (s.increase) {
                                         s.scaling = new BABYLON.Vector3(1, 1, 1);
                                         s.increase = false;
@@ -97,6 +113,7 @@ class Game {
                     let target:any=evt.meshUnderPointer;
                     document.getElementById("row1").innerText=target.name;
                     document.getElementById("row2").innerText=target.cluster_name;
+                    document.getElementById("row4").innerText=target.ref_cluster;
                     document.getElementById("row3").innerText=
                         "x="+Math.round(target.position.x*1000)/1000+","+
                         "y="+Math.round(target.position.y*1000)/1000+","+
@@ -132,6 +149,7 @@ class Game {
         sphere.position.z = (obj.z+translate)*expense;
         sphere.material=materialSphere;
         sphere.cluster_name=obj.cluster;
+        sphere.ref_cluster=obj.ref_cluster;
         sphere.name=obj.name;
         sphere.cluster_distance=JSON.parse(obj.cluster_distance);
 
@@ -276,7 +294,7 @@ class Game {
         this.getVisibleMesure().forEach((m)=>{
             if(m.cluster_name!="noise"){
                 this.spheres.forEach((s)=>{
-                   if(s.name==m.name && s.cluster_name!="noise")
+                   if(s.ref_cluster==m.ref_cluster && s.cluster_name!="noise")
                        this.linkSphere(s,m);
                 });
             }
@@ -285,6 +303,7 @@ class Game {
 }
 
 let game:Game=null;
+
 
 window.addEventListener('DOMContentLoaded', () => {
     // Create the game using the 'renderCanvas'.
@@ -307,18 +326,16 @@ window.addEventListener("message", (evt)=> {
     if (datas!=null && datas.length>0) {
         game.clearMesures();
 
-
         for (let p of datas){
             let color=new BABYLON.Color3(p.style[0],p.style[1],p.style[2]);
             game.createMesure(p,color, 0,_SIZE);
         }
 
-
-
         // game.createMesure("repere","cluster",0,0,0,colors[0],0,_SIZE);
         // game.createMesure("repere","cluster",1,1,1,colors[0],0,_SIZE);
     }
 }, false);
+
 
 window.addEventListener("keypress", (evt)=> {
    if(evt.key=="c"){
@@ -346,7 +363,6 @@ window.addEventListener("keypress", (evt)=> {
        game.showCluster("",true);
    }
 
-
    if(evt.key=="d"){
        game.clearLinks();
        game.showClosedCluster();
@@ -355,7 +371,6 @@ window.addEventListener("keypress", (evt)=> {
     if(evt.key=="k"){
        game.mesureConnection();
    }
-
 
    if(evt.key=="m"){
        game.showMesure(prompt("Measure name"),true);

@@ -23,13 +23,14 @@ class simulation:
         mod.clusters_from_labels(true_labels)
         return mod
 
-    def __init__(self,data:pd.DataFrame,col_name:str,dimensions:int):
+    def __init__(self,data:pd.DataFrame,col_name:str,dimensions:int,no_metric=False):
         self.ref_model:algo.model=self.init_reference_model(data,col_name,dimensions)
-        self.ref_model.init_metrics(self.ref_model.cluster_toarray())
+
+        if not no_metric:
+            self.ref_model.init_metrics(self.ref_model.cluster_toarray())
+
         self.col_name :str= col_name
         self.dimensions=dimensions
-
-
 
     def convertParams(self,ps):
         ps["sup"]=[None]
