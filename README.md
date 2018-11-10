@@ -1,16 +1,16 @@
 #Installation
 L'installation de l'API sur un serveur repose sur Docker. 
-Cette installation peut être réalisé simplement par la commande : 
-``sudo curl -sSL get.docker.com | sh``<br>
+Cette installation peut être réalisée simplement par la commande : 
+``curl -fsSL get.docker.com -o get-docker.sh | sh``<br>
 Un serveur de containers Docker disposant d'au moins 512 MB est suffisant.
 L'installation se fait simplement par :
 docker run --restart=always -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_x86:latest
 
 #Utilisation via l'interface
-L'interface permet un usage user-friendly de l'API. 
+Une interface permet un usage plus "user-friendly" de l'API. 
 L'utilisateur y sélectionne 
 - l'algorithme de clustering à appliquer
-- modifie les paramétrès (dépendant de l'algorithme)
+- modifie les paramétres (dépendant de l'algorithme)
 - upload sur le serveur les données à traiter ou indique directement à l'API l'adresse internet ou trouver le fichier
 - précise le nombre de vues pour la restitution graphique du clustering (voir complément sur la notion de vue)
 - précise un email de notification de fin de traitement (voir complément sur la notification)
@@ -33,22 +33,21 @@ Une notification de fin de traitement est envoyé si :
 Le code de l'API repose sur plusieurs framework :
  - "Flask", permet d'exposer le programme sous forme d'API
  - "Babylon.js" permet la representation 3D du clustering
- - "Scikit-laern" contient certains algorithmes de clustering et les calculs de métriques
+ - "Scikit-learn" contient certains algorithmes de clustering et les calculs de métriques
  
-D'autres librairie complémentaire sont inclus notamment :
+D'autres librairies complémentaires sont incluse notamment :
+ - "gng" contient une version adaptée pour python 3.6 de l'algotithme du gaz neuronal
+ - "hdbscan" contient l'algorithme DBSCAN en version modifiée pour gérer les densités multiples
+ 
+Le code est principalement contenu dans le répertoire clusterBench. 
+Il repose sur 3 classes :
+ - "cluster" : représentant un cluster, l'ensemble des points et des propriétés générales
+ - "algo" : contient les paramétres d'un modèle, et la liste des clusters obtenus
+ - "simulation" : contient une liste de modeles arpès éxécution et les métriques résultantes
+ 
 
  
-Le code est principalement contenu dans le répertoire clusterBench. Il repose sur 3 classes :
- - "cluster" : contient le détail d'un cluster
- - "algo" : contient les paramétres d'un modele, et les clusters obtenus
- - "simulation" : contient une liste de modeles arpès éxécution 
- 
-
- 
-
-
-
-#Complémentes
+#Compléments
 Installation du code :
 
 Une distribution, idéalement Linux et Python 3.6 installé
