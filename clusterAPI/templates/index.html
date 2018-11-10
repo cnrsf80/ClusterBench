@@ -32,6 +32,8 @@
             <br>
             La première colonne doit contenir les libellés des mesures et toutes les<br>
             colonnes suivantes sont interpretées comme les mesures<br>
+            Une colonne Ref_cluster peut fabriquer un cluster de référence pour le calcul des métriques <br>
+            Sinon c'est le nom des mesures qui est utilisé pour fabriquer ce cluster de référence.
 
             <br>
             <br>Commandes sur la visu 3d:<br>
@@ -62,7 +64,7 @@
                     <td>Parametres</td>
                     <td>
                         <textarea   rows="5"
-                                    cols="60"
+                                    cols="40"
                                     id="params"
                                     onchange="showlink()" onkeyup="showlink()"
                         >
@@ -101,7 +103,7 @@
                     <td>URL data source</td>
                     <td>
                         <input
-                                size="60"
+                                size="40"
                                 value="http://f80.fr/cnrs/datas/PourClustering.xlsx"
                                 id="url"
                                 type="url"
@@ -129,7 +131,7 @@
                 <tr>
                     <td>Notification de fin de traitement</td>
                     <td>
-                        <input size="60" value="" id="email" type="email" onchange="showlink()">
+                        <input size="40" value="" id="email" type="email" onchange="showlink()">
                     </td>
                 </tr>
 
@@ -150,7 +152,7 @@
                     <td>
                         <button onclick="runAll()" style="font-size: x-large">Parallel</button>
                         <br>
-                        <div id="nTreatments">0 running</div>
+                        <div id="nTreatments" style="width:150px;">0 running</div>
                     </td>
                 </tr>
 
@@ -161,6 +163,7 @@
         </td>
         <td width="50%" style="vertical-align: top;">
             <iframe width="100%" height="600px;" id="doc" name="out"></iframe>
+            <div id="console" style="height:0px"></div><br>
         </td>
     </tr>
 </table>
@@ -282,6 +285,24 @@
     }
 
 
+    var start=null;
+    function log(s){
+        if(document.getElementById("console").style.height!="100px"){
+            document.getElementById("console").style.height="100px";
+            document.getElementById("console").style.maxHeight="100px";
+            document.getElementById("console").innerHTML="";
+        }
+        var delay=Math.round((new Date().getTime()-start.getTime())/1000);
+        var format=Math.round(delay / 60)+":"+(delay % 60);
+        var new_s=format+" - "+s+"<br>"+document.getElementById("console").innerHTML;
+        document.getElementById("console").innerHTML=new_s.substr(0,300);
+    }
+
+    function clear_log(){
+        start=new Date();
+        document.getElementById("console").innerHTML="";
+        document.getElementById("console").style.height="0px";
+    }
 
 
     function runAll(){
@@ -291,29 +312,32 @@
         document.getElementById("nTreatments").innerHTML=urls.length+" running"+waiting;
         var i=0;
         var n_jobs=0;
+        clear_log();
 
         handle=setInterval(()=>{
             if(n_jobs<max_jobs) {
                 n_jobs++;
-                console.log("On lance un nouveau job."+n_jobs+" en cours");
+                log("On lance un nouveau job."+n_jobs+" en cours");
                 fetch(url + "&nometric").then((res) => {return res;}).then((res) => {
-                    console.log("Fin d'un job");
                     i++;
                     n_jobs--;
-                    document.getElementById("nTreatments").innerHTML = (urls.length - i) + " treatments" + waiting;
+                    log("Fin d'un job."+n_jobs+" actifs");
 
                     if (i == urls.length) {
                         clearInterval(handle);
                         openlink();
+                        clear_log();
                         document.getElementById("nTreatments").innerHTML = "treatment ended";
+                    } else {
+                        document.getElementById("nTreatments").innerHTML = (urls.length - i) + " treatments" + waiting;
                     }
-                }).catch(function() {
-                    console.log("error");
-                });;
+                }).catch(() => {
+                    log("probable saturation du serveur. Diminuer le nombre de taches simultanés");
+                    i=url.length;
+                    document.getElementById("nTreatments").innerHTML = "treatment abort";
+                });
             }
-        },100);
-
-
+        },1000);
     }
 
     function openlink(){
