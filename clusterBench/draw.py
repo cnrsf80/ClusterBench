@@ -8,6 +8,8 @@ import random
 
 
 #Palette de couleurs
+from clusterBench import algo
+
 
 def color_distance(c1,c2):
     s=0
@@ -111,15 +113,16 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
 def draw_with_babylon(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     df_data = pd.DataFrame(li_data)
 
-
+#Projection 3D des cluster et cluster de référence + calcul des enveloppes
 def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
     pca: decomp.pca.PCA = decomp.pca.PCA(n_components=3 + pca_offset)
     pca.fit(data)
     newdata = pca.transform(data)
 
     li_data:list = []
-    for c in clusters:
+    facets=[]
 
+    for c in clusters:
         if len(c.clusters_distances)>0:
             distances: pd.DataFrame = pd.DataFrame.from_dict(c.clusters_distances,orient="index",columns=["distance","p1","p2"])
             distances=distances.sort_values("distance")
@@ -130,11 +133,16 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
             ss="{}"
         #distances.sort_index(ascending=False)
 
+        facets.append(c.get_3dhull(newdata,pca_offset))
+
         for k in range(len(c.index)):
+            x=newdata[c.index[k], pca_offset]
+            y=newdata[c.index[k], pca_offset + 1]
+            z=newdata[c.index[k], pca_offset + 2]
             li_data.append({
-                'x': newdata[c.index[k], pca_offset],
-                'y': newdata[c.index[k], pca_offset + 1],
-                'z': newdata[c.index[k], pca_offset + 2],
+                'x': x,
+                'y': y,
+                'z': z,
                 'style': c.color,
                 'label': labels[c.index[k]],
                 'name': labels[c.index[k]],
@@ -143,7 +151,7 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
                 'cluster_distance':ss
             })
 
-    return li_data
+    return li_data,facets
 
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
 def trace_artefact_3d(data, clusters, ref_cluster,title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
@@ -188,16 +196,21 @@ def trace_artefact(G, clusters):
 
 from flask import render_template
 
+#Production du fichier à destination du tracé 3d
+def trace_artefact_GL(mod:algo,id,title,ref_model:algo,pca_offset=0):
+    li_data,facets= pca_totrace(mod.mesures(), mod.clusters,mod.names(),mod.data['ref_cluster'],pca_offset)
+    li_data2,facets_ref=pca_totrace(ref_model.mesures(), ref_model.clusters,ref_model.names(),ref_model.data['ref_cluster'],pca_offset)
 
-def trace_artefact_GL(mod,id,title,pca_offset=0):
-    li_data:list = pca_totrace(mod.mesures(), mod.clusters,mod.names(),mod.data['ref_cluster'],pca_offset)
-    li_data=li_data
+    # lst_cluster="<select>";
+    # for c in mod.clusters:
+    #     lst_cluster=lst_cluster+"<option>"+c.name+"</option>"
+    # lst_cluster=lst_cluster+"</select>"
 
-    lst_cluster="<select>";
-    for c in mod.clusters:
-        lst_cluster=lst_cluster+"<option>"+c.name+"</option>"
-
-    lst_cluster=lst_cluster+"</select>"
-
-    code=render_template("modele.html",title=title,name_zone="zone"+id,datas=li_data,lst_cluster=lst_cluster)
+    code=render_template("modele.html",
+                         title=title,
+                         name_zone="zone"+id,
+                         datas=li_data,
+                         facets_ref=facets_ref,
+                         facets=facets,
+                         url_to_render="/static/rendering/render.html?offset="+str(pca_offset))
     return code

@@ -11,7 +11,7 @@
         height:0
     }
 </style>
-<body>
+<body style="margin:0px;padding:2px;">
 <table width="100%" style="width:100%;vertical-align: text-top;text-align: left;">
     <tr>
         <td>
@@ -29,22 +29,12 @@
 
             Le fichier de données doit être au format Excel (recommandé) ou CSV avec le ";" en séparateur<br>
             Le séparateur de décimal doit être la ","<br>
-            <br>
             La première colonne doit contenir les libellés des mesures et toutes les<br>
             colonnes suivantes sont interpretées comme les mesures<br>
             Une colonne Ref_cluster peut fabriquer un cluster de référence pour le calcul des métriques <br>
             Sinon c'est le nom des mesures qui est utilisé pour fabriquer ce cluster de référence.
 
-            <br>
-            <br>Commandes sur la visu 3d:<br>
-            - <strong>'h'</strong> et SHIFT+'h' respectivement cache / montre toutes les mesures<br>
-            - <strong>'m'</strong> et SHIFT+'m' opere un filtre sur les mesures pour les montrer / cacher<br>
-            - <strong>'c'</strong> et SHIFT+'c' opere un filtre sur les clusters pour les montrer / cacher<br>
-            - <strong>'r'</strong> supprime définitivement le bruit (permet d'accéler la navigation)<br>
-            - <strong>'k'</strong> connecte entre elles les mesures du même nom<br>
-            - click et SHIFT+click montre / cache le cluster d'appartenance de la mesure<br>
-            - ALT+click permet grossis / réduit les mesures du même nom<br>
-            - click droit permet d'enregistrer la visu en format image
+            Pour obtenir l'aide des commandes de la visualisation, utilisé 'h'
             <br>
 
             <table style="padding: 10px;margin:10px;">
@@ -52,7 +42,7 @@
                     <td>Algo</td>
                     <td>
                         <select id="algo" onchange="showParameters()">
-                            <option value="HDBSCAN::min_samples=1,2,3,4,5,6 min_cluster_size=2,3,4,5,6,7,8 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
+                            <option value="HDBSCAN::min_samples=2 min_cluster_size=3 alpha=0.5::https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#">HDBSCAN</option>
                             <option value="NEURALGAS::passes=3 distance_toremove_edge=40::https://en.wikipedia.org/wiki/Neural_gas">NEURALGAS</option>
                             <option value="HAC::n_clusters=11,12,13::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html">HAC</option>
                             <option value="MEANSHIFT::bandwidth=0.1,0.3,0.2::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html">MEANSHIFT</option>
@@ -91,13 +81,8 @@
 
                             <input title="Upload" type="file" id="file" name="file" onchange="postFile()">
                         </div>
-
-
-
                     </td>
                 </tr>
-
-
 
                 <tr>
                     <td>URL data source</td>
@@ -108,6 +93,7 @@
                                 id="url"
                                 type="url"
                                 onkeyup="showlink()"
+                                onchange="showLink()"
                         >
                     </td>
                     <td>
@@ -143,32 +129,25 @@
                 </tr>
 
                 <tr>
+                    <td>Only graphic</td>
                     <td>
-                        <button onclick="showlink()" style="font-size: x-large">Build</button>
-                    </td>
-                    <td>
-                        <button onclick="openlink()" style="font-size: x-large">Open</button>
-                    </td>
-                    <td>
-                        <button onclick="runAll()" style="font-size: x-large">Parallel</button>
-                        <br>
-                        <div id="nTreatments" style="width:150px;">0 running</div>
+                        <input value="3" id="notext" type="checkbox" onchange="showlink()">
                     </td>
                 </tr>
-
             </table>
-            <br>
-
-
         </td>
         <td width="50%" style="vertical-align: top;">
             <iframe width="100%" height="600px;" id="doc" name="out"></iframe>
+            <button onclick="showlink()" style="font-size: x-large">Build</button>
+            <button onclick="openlink()" style="font-size: x-large">Open</button>
+            <button onclick="runAll()" style="font-size: x-large">Parallel</button>
+            <div id="nTreatments" style="display:inline-block;width:150px;">0 running</div>
+            <br>
             <div id="console" style="height:0px"></div><br>
         </td>
     </tr>
 </table>
 
-<br>
 <div id="result" style="width:100%;text-align:center;font-size: large;"></div>
 
 <script>
@@ -233,8 +212,17 @@
 
         if(!multiple){
             url="http://"+domain+"/algo/"+algo+"/"
-                +file+"/"+params+"/modele.html?pca="+pca+"&notif="+notif;
+                +file+"/"+params+"/modele.html?pca="+pca;
+
+
+            if(notif.length>0)url+="&notif="+notif;
+
+            var notext=document.getElementById("notext").checked;
+            if(notext)url=url+"&notext";
+
+
             document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
+
             return url;
         } else {
             urls=[];

@@ -108,20 +108,21 @@ def convert_to_number(v):
 #Construit un dictionnaire a partir de la syntaxe param1=value1,param2=value2
 def buildDict(params:str,rc=dict()):
     for s in params.split("&"):
-        k=s.split("=")[0]
-        v=s.split("=")[1]
-        if not type(v) is list:
-            if v.__contains__(","):
-                tmp=[]
-                for vv in v.split(","):
-                    tmp.append(convert_to_number(vv))
-                v=tmp
-            else:
-                if is_number(v) and type(v) is str:
-                    v=[convert_to_number(v)]
+        if len(s)>0 and s.index("=")>-1:
+            k=s.split("=")[0]
+            v=s.split("=")[1]
+            if not type(v) is list:
+                if v.__contains__(","):
+                    tmp=[]
+                    for vv in v.split(","):
+                        tmp.append(convert_to_number(vv))
+                    v=tmp
                 else:
-                    v=[v]
-        rc[k]=v
+                    if is_number(v) and type(v) is str:
+                        v=[convert_to_number(v)]
+                    else:
+                        v=[v]
+            rc[k]=v
 
     return rc
 

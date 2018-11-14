@@ -122,19 +122,14 @@ def create_app(test_config=None):
         pass
 
 
-
-
     #Retourne la page d'acceuil du serveur d'API
     @app.route('/', methods=['GET'])
     def index():
-        html="<select onchange='showlink()' id='lst_files'>"
+        html="<select onmouseup='showlink()' id='lst_files'>"
         for s in os.listdir(os.path.join("./datas", "")):
             html=html+"<option>"+s+"</option>"
 
         return render_template("index.html",list_file=html+"</select>")
-
-
-
 
 
     #Retourne Vrai si le format du fichier est accepté

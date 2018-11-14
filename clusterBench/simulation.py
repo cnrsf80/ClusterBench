@@ -198,11 +198,14 @@ class simulation:
                 code = code + draw.trace_artefact_GL(m,
                                                      m.id+"_pca"+str(pca_offset),
                                                      m.name+" Axe="+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2),
+                                                     self.ref_model,
                                                      pca_offset)
 
             if not no_text:code=code+"<br><br>"+m.print_perfs("<br>")
 
         return code
+
+
 
     def raz(self):
         self.models=[]

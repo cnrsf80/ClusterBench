@@ -8,14 +8,17 @@ const _SIZE=50;
 
 var ScatterPlot:any;
 var showAxis:Function;
+var g:Function;
 
 class Game {
 
     private spheres:any[]=[];
     private links:any[]=[];
+    private polygons:any[]=[];
 
     private _canvas: HTMLCanvasElement;
     private _engine: BABYLON.Engine;
+    private _recorder: BABYLON.VideoRecorder;
     private _scene: BABYLON.Scene;
     private _camera: BABYLON.ArcRotateCamera;
     private _light1: BABYLON.Light;
@@ -26,10 +29,13 @@ class Game {
         // Create canvas and engine.
         this._canvas = document.getElementById(canvasElement) as HTMLCanvasElement;
         this._engine = new BABYLON.Engine(this._canvas, true);
+        if(BABYLON.VideoRecorder.IsSupported(this._engine))
+            this._recorder = new BABYLON.VideoRecorder(this._engine)
     }
 
 
     showCluster(cluster_name,show=true,explicit=true){
+        if(cluster_name==null)cluster_name="";
         for (let s of this.spheres) {
             var name=s.cluster_name.substr(0,Math.min(cluster_name.length,s.cluster_name.length)).toLowerCase();
             if (name == cluster_name.toLowerCase() && (explicit==false || name.length==cluster_name.length)){
@@ -97,9 +103,31 @@ class Game {
                             }
                         }
                     }
+                }
+            )
+        );
 
+        mesh.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                {
+                    trigger: BABYLON.ActionManager.OnDoublePickTrigger
+                },
+                (evt)=>{
+                    let target:any=evt.meshUnderPointer;
+                    this.showCluster(null,false);
+                    this.showCluster(target.cluster_name);
+                    this.setCameraToTarget(target.position.x,target.position.y,target.position.z);
+                }
+            )
+        );
 
-
+        mesh.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                {
+                    trigger: BABYLON.ActionManager.OnPickDownTrigger
+                },
+                (evt) => {
+                    game.stopAutoRotation();
                 }
             )
         );
@@ -115,9 +143,9 @@ class Game {
                     document.getElementById("row2").innerText=target.cluster_name;
                     document.getElementById("row4").innerText=target.ref_cluster;
                     document.getElementById("row3").innerText=
-                        "x="+Math.round(target.position.x*1000)/1000+","+
-                        "y="+Math.round(target.position.y*1000)/1000+","+
-                        "z="+Math.round(target.position.z*1000)/1000;
+                        Math.round(target.position.x*100)/100+","+
+                        Math.round(target.position.y*100)/100+","+
+                        Math.round(target.position.z*100)/100;
                 }
             )
         );
@@ -129,7 +157,7 @@ class Game {
                 },
                 (evt) => {
                     let target:any=evt.meshUnderPointer;
-                    for(var i=1;i<4;i++)
+                    for(var i=1;i<5;i++)
                         document.getElementById("row"+i).innerText="";
 
                 }
@@ -161,23 +189,32 @@ class Game {
         let path = [
             new BABYLON.Vector3(s1.position.x, s1.position.y, s1.position.z),
             new BABYLON.Vector3(s2.position.x, s2.position.y, s2.position.z)
-        ]
+        ];
 
         var tube = BABYLON.MeshBuilder.CreateTube("link"+s1.name+"_"+s2.name, {path: path, radius: 0.04},this._scene);
         this.links.push(tube);
     }
 
+    getVisibleClusters():any[]{
+        var rc=[];
+        this.spheres.forEach(s=>{
+           if(s.material.alpha==_VISIBLE && rc.indexOf(s.cluster_name)==-1)
+               rc.push(s.cluster_name)
+        });
+        return rc;
+    }
+
     createScene() : void {
         // Create a basic BJS Scene object.
         this._scene = new BABYLON.Scene(this._engine);
-        this._scene.fogMode = BABYLON.Scene.FOGMODE_EXP
-        this._scene.fogDensity = 0.002;
-        this._scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.9);
+        this._scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
+        this._scene.fogDensity = 0.0015;
+        this._scene.fogColor = new BABYLON.Color3(0.95, 0.95, 0.95);
         this._scene.clearColor = new BABYLON.Color4(0.9, 0.9, 0.9);
 
         this._scene.registerBeforeRender(()=>{
 
-        })
+        });
 
         var dim=_SIZE*2;
         // var scatterPlot = new ScatterPlot([dim,dim,dim],{
@@ -196,12 +233,12 @@ class Game {
 
 
         // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
-        this._camera = new BABYLON.ArcRotateCamera("Camera", 3*Math.PI / 2, 8*Math.PI/2 , _SIZE*1.5, BABYLON.Vector3.Zero(), this._scene);
+        this._camera = new BABYLON.ArcRotateCamera("Camera", 3*Math.PI / 2, 6*Math.PI/2 , _SIZE*1.5, BABYLON.Vector3.Zero(), this._scene);
 
         this._actionManager = new BABYLON.ActionManager(this._scene);
 
         // Target the camera to scene origin.
-        this._camera.setTarget(new BABYLON.Vector3(1,1,1));
+        this._camera.setTarget(new BABYLON.Vector3(0,0,0));
 
         // Attach the camera to the canvas.
         this._camera.attachControl(this._canvas, false);
@@ -212,6 +249,9 @@ class Game {
         this._light1.intensity=0.65;
         this._light2.intensity=0.65;
 
+
+        if(location.href.indexOf("autorotate")>-1)
+            this.startAutoRotation();
 
         // Create a built-in "ground" shape.
         //let ground = BABYLON.MeshBuilder.CreateGround('ground1',{width: 6, height: 6, subdivisions: 2}, this._scene);
@@ -273,10 +313,49 @@ class Game {
         )
     }
 
+    /**
+     * Trace les facettes
+     * @param clusters
+     * @param translate
+     * @param expense
+     * @param filter
+     * @param offset contient le numero du graphique
+     */
+    traceFacets(clusters:any[],translate:float,expense:float,filter:null,offset=0){
+        clusters.forEach(facets=>{
+            facets.forEach((facet)=>{
+                if(facet[1]==offset && (filter==null || facet[0].indexOf(filter)>-1)){
+                var k=2;
+                var shape = [
+                        new BABYLON.Vector3((facet[k][0]+translate)*expense, (facet[k][1]+translate)*expense,(facet[k][2]+translate)*expense),
+                        new BABYLON.Vector3((facet[k+1][0]+translate)*expense, (facet[k+1][1]+translate)*expense,(facet[k+1][2]+translate)*expense),
+                        new BABYLON.Vector3((facet[k+2][0]+translate)*expense, (facet[k+2][1]+translate)*expense,(facet[k+2][2]+translate)*expense)
+                  ];
+
+                var lines=[[shape[0],shape[1]],[shape[1],shape[2]],[shape[0],shape[2]]];
+                var polygon=BABYLON.MeshBuilder.CreateLineSystem("line"+facet[0],{lines:lines},this._scene);
+
+                //var poly_tri = new BABYLON.PolygonMeshBuilder("polygon",shape,this._scene);
+                //var polygon = poly_tri.build(null, 0.01);
+
+                this.polygons.push(polygon);
+                }
+            });
+        })
+    }
+
+    removeFacets(){
+        this.polygons.forEach(p=>{
+            p.dispose();
+        });
+
+        this.polygons=[];
+    }
+
     clearLinks() {
         this.links.forEach((l)=>{
             l.dispose();
-        })
+        });
         this.links=[];
     }
 
@@ -300,6 +379,31 @@ class Game {
             }
         });
     }
+
+    startAutoRotation(){
+        this._camera.useAutoRotationBehavior=true;
+        this._camera.autoRotationBehavior.idleRotationSpeed=0.4;
+    }
+
+    stopAutoRotation(){
+        this._camera.useAutoRotationBehavior=false;
+    }
+
+    makeMovie() {
+        document.getElementById("message").innerHTML="<img style='width:20px' src='https://api.voxhub.net/api-v1/contentFileLoader?file=/website/store/recordings/df85aa22-4888-465d-8976-5739eec9f415'>";
+        this._recorder.startRecording("clusterBench.webm",400);
+    }
+
+    stopMovie() {
+        document.getElementById("message").innerHTML="";
+        this._recorder.stopRecording();
+    }
+
+
+    setCameraToTarget(x: string, y: string, z: string) {
+        this._camera.setTarget(new BABYLON.Vector3(Number(x),Number(y),Number(z)));
+    }
+
 }
 
 let game:Game=null;
@@ -316,6 +420,9 @@ window.addEventListener('DOMContentLoaded', () => {
     game.doRender();
 });
 
+var facets=[];
+var facets_ref=[];
+
 /**
  * Affichage des points contenu dans datas
  *
@@ -330,6 +437,9 @@ window.addEventListener("message", (evt)=> {
             let color=new BABYLON.Color3(p.style[0],p.style[1],p.style[2]);
             game.createMesure(p,color, 0,_SIZE);
         }
+
+        facets=evt.data.facets;
+        facets_ref=evt.data.facets_ref;
 
         // game.createMesure("repere","cluster",0,0,0,colors[0],0,_SIZE);
         // game.createMesure("repere","cluster",1,1,1,colors[0],0,_SIZE);
@@ -354,12 +464,69 @@ window.addEventListener("keypress", (evt)=> {
        game.showCluster("noise",true);
    }
 
-    if(evt.key=="h"){
+    if(evt.key=="S"){
         game.clearLinks();
        game.showCluster("",false);
    }
 
-   if(evt.key=="H"){
+    if(evt.key=="p"){
+        game.getVisibleClusters().forEach(c=>{
+            var url=location.href.split("offset=")[1];
+            game.traceFacets(facets,0,_SIZE,c,Number(url));
+        });
+    }
+
+    if(evt.key=="o"){
+        var url=location.href.split("offset=")[1];
+        game.traceFacets(facets_ref,0,_SIZE,null,Number(url));
+    }
+
+    if(evt.key=="H"){
+        document.getElementById("message").innerHTML="";
+    }
+
+    if(evt.key=="h"){
+        var text="" +
+            "            <br>Commandes sur la visu 3d:<br>\n" +
+            "            - <strong>'s'</strong> et SHIFT+'s' respectivement montre et cache toutes les mesures<br>\n" +
+            "            - <strong>'m'</strong> et SHIFT+'m' opere un filtre sur les mesures pour les montrer / cacher<br>\n" +
+            "            - <strong>'c'</strong> et SHIFT+'c' opere un filtre sur les clusters pour les montrer / cacher<br>\n" +
+            "            - <strong>'a'</strong> et SHIFT+'a' engage une autorotation du graphique<br>\n" +
+            "            - <strong>'w'</strong> centre la caméra sur l'échantillon pointé par la souris<br>\n" +
+            "            - <strong>'v'</strong> et SHIFT+'v' démarre et stop un enregistrement video au format webm (lisible par vlc ou d'autres lecteurs)<br>\n" +
+            "            - <strong>'p'</strong> et SHIFT+'p' entoure les clusters visible (patatoides) <br>\n" +
+            "            - <strong>'o'</strong> entoure les clusters de référence<br>\n" +
+            "            - <strong>'r'</strong> supprime définitivement le bruit (permet d'accéler la navigation)<br>\n" +
+            "            - <strong>'k'</strong> connecte entre elles les mesures du même nom<br>\n" +
+            "\n" +
+            "            - 'click' et 'SHIFT+click' montre / cache le cluster d'appartenance de la mesure<br>\n" +
+            "            - 'double click' permet d'étudier un cluster en particulier<br>\n" +
+            "            - 'ALT+click' permet grossis / réduit les mesures du même nom<br>\n" +
+            "            - 'click droit' permet d'enregistrer la visu en format image";
+
+        document.getElementById("message").innerHTML=text;
+        setTimeout(()=>{
+            document.getElementById("message").innerHTML="";
+        },10000);
+    }
+
+    if(evt.key=="P"){
+        game.removeFacets();
+    }
+
+    if(evt.key=="w"){
+        var txt=document.getElementById("row3").innerText;
+        if(txt!=null && txt.length>0) {
+            var coord = txt.split(",");
+            game.setCameraToTarget(coord[0], coord[1], coord[2]);
+        }
+    }
+
+    if(evt.key=="W"){
+        game.setCameraToTarget("0","0","0");
+    }
+
+   if(evt.key=="s"){
        game.showCluster("",true);
    }
 
@@ -367,6 +534,20 @@ window.addEventListener("keypress", (evt)=> {
        game.clearLinks();
        game.showClosedCluster();
    }
+
+   if(evt.key=="v"){
+       game.makeMovie();
+   }
+
+   if(evt.key=="V"){
+       game.stopMovie();
+   }
+
+   if(evt.key=="a")
+       game.startAutoRotation();
+
+   if(evt.key=="A")
+       game.stopAutoRotation();
 
     if(evt.key=="k"){
        game.mesureConnection();
@@ -380,10 +561,11 @@ window.addEventListener("keypress", (evt)=> {
        game.showMesure(prompt("Measure name"),false);
    }
 
+
+
    if(evt.key=="r"){
        game.removeNoise();
    }
-
 
 
 });

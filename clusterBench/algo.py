@@ -1,3 +1,5 @@
+from scipy.spatial.qhull import ConvexHull
+
 from clusterBench.gng import GrowingNeuralGas
 import os
 import hashlib
@@ -425,6 +427,7 @@ class model:
 
 #definie un cluster
 class cluster:
+    #initialisation d'un cluster vide
     def __init__(self, name="",index=[],color="red",pos=0):
         self.index = index
         self.name = name
@@ -459,11 +462,33 @@ class cluster:
                 return True
         return False
 
+    #Remplissage d'un cluster
     def add_index(self,index,data=None,label_col=""):
         self.index.append(index)
         if data is not None:
             col=data[label_col]
             self.labels.append(col[index])
+
+    #Initialisation de l'enveloppe d'un cluster
+    from scipy.spatial import ConvexHull
+    def get_3dhull(self,data,offset):
+        facets = []
+        pts = data[self.index]
+
+        if(len(pts)>3):
+            hull=ConvexHull(pts)
+
+            for p in hull.simplices:
+                k:list=list(p)
+                facet=[self.name,offset,list(pts[k[0]]),list(pts[k[1]]),list(pts[k[2]])]
+                facets.append(facet)
+
+        if len(pts)==3:
+            facet = [self.name, offset,list(pts[0]), list(pts[1]), list(pts[2])]
+            facets.append(facet)
+
+        return facets
+
 
     def near_cluster(self):
         if self.clusters_distances is None:return ""
@@ -475,11 +500,13 @@ class cluster:
                 d_min=self.clusters_distances[k][0]
         return rc
 
+    #Sortie texte du cluster
     def print(self,data,label_col="",sep=" / "):
         s=("Cl:"+self.name+"=")
         s=s+(sep.join(data[label_col][self.index]))
         return s
 
+    #sortie destinée à un tableau html
     def td(self,data,label_col=""):
         rgb:str="rgb("+str(self.color[0]*255)+","+str(self.color[1]*255)+","+str(self.color[2]*255)+")"
         s=("<td style='background-color:"+rgb+"'><strong>"+self.name+"&nbsp;&nbsp;</strong></td>")
