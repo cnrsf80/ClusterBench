@@ -199,17 +199,20 @@ from flask import render_template
 #Production du fichier à destination du tracé 3d
 def trace_artefact_GL(mod:algo,id,title,ref_model:algo,pca_offset=0):
     li_data,facets= pca_totrace(mod.mesures(), mod.clusters,mod.names(),mod.data['ref_cluster'],pca_offset)
-    li_data2,facets_ref=pca_totrace(ref_model.mesures(), ref_model.clusters,ref_model.names(),ref_model.data['ref_cluster'],pca_offset)
 
-    # lst_cluster="<select>";
-    # for c in mod.clusters:
-    #     lst_cluster=lst_cluster+"<option>"+c.name+"</option>"
-    # lst_cluster=lst_cluster+"</select>"
+    tmp_li_data,facets_ref=pca_totrace(ref_model.mesures(), ref_model.clusters,ref_model.names(),ref_model.data['ref_cluster'],pca_offset)
+
+    d=pd.concat([mod.data.ix[:,0],mod.mesures()],axis=1,sort=False)
+
+    toList=[]
+    for line in d.values:
+        toList.append(list(line))
 
     code=render_template("modele.html",
                          title=title,
                          name_zone="zone"+id,
                          datas=li_data,
+                         data_source=toList,
                          facets_ref=facets_ref,
                          facets=facets,
                          url_to_render="/static/rendering/render.html?offset="+str(pca_offset))

@@ -8,13 +8,15 @@ const _SIZE=50;
 
 var ScatterPlot:any;
 var showAxis:Function;
-var g:Function;
+
 
 class Game {
 
     private spheres:any[]=[];
     private links:any[]=[];
     private polygons:any[]=[];
+
+    private scale=_SIZE;
 
     private _canvas: HTMLCanvasElement;
     private _engine: BABYLON.Engine;
@@ -165,16 +167,16 @@ class Game {
         );
     }
 
-    createMesure(obj:any,color:BABYLON.Color3,translate:float,expense:float):void {
+    createMesure(obj:any,color:BABYLON.Color3):void {
         var materialSphere = new BABYLON.StandardMaterial("texture2", this._scene);
         materialSphere.diffuseColor = color;
         materialSphere.alpha = 0.9;
 
         let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: 1}, this._scene);
 
-        sphere.position.x = (obj.x+translate)*expense;
-        sphere.position.y = (obj.y+translate)*expense;
-        sphere.position.z = (obj.z+translate)*expense;
+        sphere.position.x = (obj.x)*this.scale;
+        sphere.position.y = (obj.y)*this.scale;
+        sphere.position.z = (obj.z)*this.scale;
         sphere.material=materialSphere;
         sphere.cluster_name=obj.cluster;
         sphere.ref_cluster=obj.ref_cluster;
@@ -216,7 +218,7 @@ class Game {
 
         });
 
-        var dim=_SIZE*2;
+        var dim=this.scale*2;
         // var scatterPlot = new ScatterPlot([dim,dim,dim],{
         //     x: ["", "0", "1","2"],
         //     y: ["", "0", "1","2"],
@@ -224,16 +226,13 @@ class Game {
         // }, this._scene);
         showAxis(50,this._scene);
 
-        // var box = BABYLON.Mesh.CreateBox("box", _SIZE*2, this._scene);
-        // var box_material=new BABYLON.StandardMaterial("box_material",this._scene);
-        // box_material.alpha=0.1;
-        // box_material.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.3);
-        // box.material=box_material;
-
-
-
         // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
-        this._camera = new BABYLON.ArcRotateCamera("Camera", 3*Math.PI / 2, 6*Math.PI/2 , _SIZE*1.5, BABYLON.Vector3.Zero(), this._scene);
+        this._camera = new BABYLON.ArcRotateCamera("Camera",
+            2.2*Math.PI / 2,
+            1.5*Math.PI/2 ,
+            this.scale*1.5,
+            BABYLON.Vector3.Zero(),
+            this._scene);
 
         this._actionManager = new BABYLON.ActionManager(this._scene);
 
@@ -257,6 +256,8 @@ class Game {
         //let ground = BABYLON.MeshBuilder.CreateGround('ground1',{width: 6, height: 6, subdivisions: 2}, this._scene);
     }
 
+
+
     doRender() : void {
         // Run the render loop.
         this._engine.runRenderLoop(() => {
@@ -270,12 +271,13 @@ class Game {
     }
 
 
-
-
     clearMesures() {
         this.spheres=[];
         this.links=[];
     }
+
+
+
 
     makeRotate(){
         this._camera.alpha=game._camera.alpha+0.1;
@@ -283,9 +285,8 @@ class Game {
         this.doRender();
     }
 
-    moveLightToCamera(){
 
-    }
+
 
     getVisibleMesure(){
         var l=[];
@@ -321,22 +322,19 @@ class Game {
      * @param filter
      * @param offset contient le numero du graphique
      */
-    traceFacets(clusters:any[],translate:float,expense:float,filter:null,offset=0){
+    traceFacets(clusters:any[],translate:float,filter:null,offset=0){
         clusters.forEach(facets=>{
             facets.forEach((facet)=>{
                 if(facet[1]==offset && (filter==null || facet[0].indexOf(filter)>-1)){
                 var k=2;
                 var shape = [
-                        new BABYLON.Vector3((facet[k][0]+translate)*expense, (facet[k][1]+translate)*expense,(facet[k][2]+translate)*expense),
-                        new BABYLON.Vector3((facet[k+1][0]+translate)*expense, (facet[k+1][1]+translate)*expense,(facet[k+1][2]+translate)*expense),
-                        new BABYLON.Vector3((facet[k+2][0]+translate)*expense, (facet[k+2][1]+translate)*expense,(facet[k+2][2]+translate)*expense)
+                        new BABYLON.Vector3((facet[k][0]+translate)*this.scale, (facet[k][1]+translate)*this.scale,(facet[k][2]+translate)*this.scale),
+                        new BABYLON.Vector3((facet[k+1][0]+translate)*this.scale, (facet[k+1][1]+translate)*this.scale,(facet[k+1][2]+translate)*this.scale),
+                        new BABYLON.Vector3((facet[k+2][0]+translate)*this.scale, (facet[k+2][1]+translate)*this.scale,(facet[k+2][2]+translate)*this.scale)
                   ];
 
                 var lines=[[shape[0],shape[1]],[shape[1],shape[2]],[shape[0],shape[2]]];
                 var polygon=BABYLON.MeshBuilder.CreateLineSystem("line"+facet[0],{lines:lines},this._scene);
-
-                //var poly_tri = new BABYLON.PolygonMeshBuilder("polygon",shape,this._scene);
-                //var polygon = poly_tri.build(null, 0.01);
 
                 this.polygons.push(polygon);
                 }
@@ -404,6 +402,31 @@ class Game {
         this._camera.setTarget(new BABYLON.Vector3(Number(x),Number(y),Number(z)));
     }
 
+    updateScale(step: number,datas:any[]) {
+         this.spheres.forEach((s:any)=> {
+            s.position.x=s.position.x*step;
+            s.position.y=s.position.y*step;
+            s.position.z=s.position.z*step;
+         });
+    }
+
+    toCSV(datas,sep=";",end_line="\n") {
+        //Créer la ligne des mesures
+        if(datas.length==0)return("");
+
+        var rc="Ref"+sep;
+        for(var k=0;k<datas[0].length-1;k++)rc=rc+"Mesure"+k+sep;
+        rc=rc.substr(0,rc.length-1)+end_line;
+
+        var i=0;
+        this.spheres.forEach((s:any)=> {
+            if(s.material.alpha==_VISIBLE){
+                rc=rc+datas[i].join(sep)+end_line;
+            }
+            i++;
+         });
+        return rc;
+    }
 }
 
 let game:Game=null;
@@ -422,29 +445,36 @@ window.addEventListener('DOMContentLoaded', () => {
 
 var facets=[];
 var facets_ref=[];
+var datas:any=null;
+var data_source:any=null;
+
 
 /**
  * Affichage des points contenu dans datas
  *
  */
 window.addEventListener("message", (evt)=> {
-    let datas = evt.data.datas;
+    datas = evt.data.datas;
+    data_source=evt.data.data_source;
+
     evt.preventDefault();
     if (datas!=null && datas.length>0) {
         game.clearMesures();
-
-        for (let p of datas){
-            let color=new BABYLON.Color3(p.style[0],p.style[1],p.style[2]);
-            game.createMesure(p,color, 0,_SIZE);
-        }
+        for (let p of datas)
+            game.createMesure(p,new BABYLON.Color3(p.style[0],p.style[1],p.style[2]));
 
         facets=evt.data.facets;
         facets_ref=evt.data.facets_ref;
-
-        // game.createMesure("repere","cluster",0,0,0,colors[0],0,_SIZE);
-        // game.createMesure("repere","cluster",1,1,1,colors[0],0,_SIZE);
     }
 }, false);
+
+
+function download(text, name, type) {
+  var a:any = document.getElementById("a");
+  var file = new Blob([text], {type: type});
+  a.href = URL.createObjectURL(file);
+  a.download = name;
+}
 
 
 window.addEventListener("keypress", (evt)=> {
@@ -460,6 +490,9 @@ window.addEventListener("keypress", (evt)=> {
        game.showCluster("noise",false);
    }
 
+   if(evt.key=="+")game.updateScale(1.05,datas);
+   if(evt.key=="-")game.updateScale(0.95,datas);
+
    if(evt.key=="n"){
        game.showCluster("noise",true);
    }
@@ -472,13 +505,13 @@ window.addEventListener("keypress", (evt)=> {
     if(evt.key=="p"){
         game.getVisibleClusters().forEach(c=>{
             var url=location.href.split("offset=")[1];
-            game.traceFacets(facets,0,_SIZE,c,Number(url));
+            game.traceFacets(facets,0,c,Number(url));
         });
     }
 
     if(evt.key=="o"){
         var url=location.href.split("offset=")[1];
-        game.traceFacets(facets_ref,0,_SIZE,null,Number(url));
+        game.traceFacets(facets_ref,0,null,Number(url));
     }
 
     if(evt.key=="H"){
@@ -494,6 +527,8 @@ window.addEventListener("keypress", (evt)=> {
             "            - <strong>'a'</strong> et SHIFT+'a' engage une autorotation du graphique<br>\n" +
             "            - <strong>'w'</strong> centre la caméra sur l'échantillon pointé par la souris<br>\n" +
             "            - <strong>'v'</strong> et SHIFT+'v' démarre et stop un enregistrement video au format webm (lisible par vlc ou d'autres lecteurs)<br>\n" +
+            "            - <strong>'+'</strong> et '-' écarte/réduit les mesure par changement d'échelle <br>\n" +
+            "            - <strong>'e'</strong> export les données visibles au format CSV dans le presse papier<br>\n" +
             "            - <strong>'p'</strong> et SHIFT+'p' entoure les clusters visible (patatoides) <br>\n" +
             "            - <strong>'o'</strong> entoure les clusters de référence<br>\n" +
             "            - <strong>'r'</strong> supprime définitivement le bruit (permet d'accéler la navigation)<br>\n" +
@@ -543,11 +578,24 @@ window.addEventListener("keypress", (evt)=> {
        game.stopMovie();
    }
 
-   if(evt.key=="a")
-       game.startAutoRotation();
+   if(evt.key=="a") game.startAutoRotation();
+   if(evt.key=="A")game.stopAutoRotation();
 
-   if(evt.key=="A")
-       game.stopAutoRotation();
+   if(evt.key=="e"){
+       var code=game.toCSV(data_source);
+       // @ts-ignore
+       navigator.permissions.query({name: "clipboard-write"}).then(result => {
+        if (result.state == "granted" || result.state == "prompt") {
+            // @ts-ignore
+            navigator.clipboard.writeText(code).then(()=>{
+                alert("Mesures visible dans le presse-papier au format CSV");
+            });
+        }else{
+            prompt("Copier dans le presse papier",code);
+        }
+       });
+   }
+
 
     if(evt.key=="k"){
        game.mesureConnection();

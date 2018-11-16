@@ -476,7 +476,10 @@ class cluster:
         pts = data[self.index]
 
         if(len(pts)>3):
-            hull=ConvexHull(pts)
+            try:
+                hull=ConvexHull(pts)
+            except:
+                return facets
 
             for p in hull.simplices:
                 k:list=list(p)
