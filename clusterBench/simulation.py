@@ -1,20 +1,112 @@
-import copy
-from clusterBench import tools
 from clusterBench import draw
 import datetime
 import pandas as pd
 import clusterBench.algo as algo
+import time
+import copy
+import clusterBench.tools as tools
+from sklearn import cluster as cl
+import hdbscan
+
+from flask import request
+
 
 class simulation:
+
     models=[]
 
-    def init_reference_model(self,data:pd.DataFrame, col_name:str, n_mesures:int):
-        print(str(len(data)) + " mesures à traiter")
-        print("Colonne de utilisé pour le nom " + col_name)
+    def __init__(self,data:pd.DataFrame,no_metric=False):
 
-        data["Ref"] = data.index
-        data.index = range(len(data))
-        mod = algo.model(data, col_name, n_mesures)
+        if not no_metric:
+            self.ref_model.init_metrics(self.ref_model.cluster_toarray())
+
+        self.data=data
+        self.col_name= self.data.columns[0]  # Le libellé des mesures est pris sur la premiere colonne
+        if not list(self.data.columns).__contains__("ref_cluster"):
+            self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, self.label_col)
+
+        self.dimensions = len(self.data.columns) - 2  # Les composantes sont les colonnes suivantes
+        self.ref_model: algo.model = self.init_reference_model(data, self.col_name, self.dimensions)
+
+    def create_ref_cluster_from_name(data, label_col):
+        rc = tools.tokenize(list(data[label_col]))
+        return rc
+
+    # Fonction principale d'exécution des algorithmes de clustering
+    # retourne le code HTML résultat de l'éxécution des algorithmes
+    def run_algo(self,params: str, name_algo: str, no_text=False, no_metric=False):
+
+        self.raz()
+
+        if name_algo.upper().__contains__("HDBSCAN"):
+            parameters = tools.buildDict(params, {"min_samples": [3], "min_cluster_size": [2], "alpha": [0.5]})
+            self.execute(algo_name="HDBSCAN",
+                        url="https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
+                        func=lambda x:
+                        hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"],
+                                        min_samples=x["min_samples"],
+                                        alpha=x["alpha"]),
+                        ps=parameters)
+
+        if name_algo.upper().__contains__("MEANSHIFT"):
+            parameters = tools.buildDict(params, {"bandwidth": [2]})
+            self.execute("MEANSHIFT",
+                        "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html#sklearn.cluster.MeanShift",
+                        lambda x:
+                        cl.MeanShift(bandwidth=x["bandwidth"], bin_seeding=False, cluster_all=True),
+                        parameters)
+
+        if name_algo.upper().__contains__("HAC"):
+            parameters = tools.buildDict(params, {"n_clusters": [12]})
+            self.execute("HAC",
+                        "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html#sklearn.cluster.AgglomerativeClustering",
+                        lambda x:
+                        cl.AgglomerativeClustering(n_clusters=x["n_clusters"]),
+                        parameters
+                        )
+
+        if name_algo.upper().__contains__("NEURALGAS"):
+            parameters = tools.buildDict(params, {"passes": [10], "distance_toremove": [60]})
+            for passes in parameters.get("passes"):
+                for distance_toremove_edge in parameters.get("distance_toremove_edge"):
+                    m: algo.model = algo.create_cluster_from_neuralgasnetwork(
+                        copy.deepcopy(self.ref_model).clear_clusters(),
+                        a=0.5,
+                        passes=passes,
+                        distance_toremove_edge=distance_toremove_edge)
+                    m.params = [passes, distance_toremove_edge, ""]
+                    m.help = "https://github.com/AdrienGuille/GrowingNeuralGas"
+                    self.append_modeles(m)
+
+        if not no_metric:
+            self.init_metrics(False)
+            if not no_text:
+                code = self.print_infos() + "<br>synthese<br>"
+            else:
+                code = ""
+
+            try:
+                n_pca = int(request.args["pca"])
+            except:
+                n_pca = 2
+
+            code = code + self.get3d_html(n_pca, no_text)
+
+            if not no_text:
+                code = code.replace("synthese", self.synthese())
+
+            return code
+        else:
+            return ""
+
+
+    def init_reference_model(self):
+        print(str(len(self.data)) + " mesures à traiter")
+        print("Colonne de utilisé pour le nom " + self.col_name)
+
+        self.data["Ref"] = self.data.index
+        self.data.index = range(len(self.data))
+        mod = algo.model(self.data, self.col_name, self.n_mesures)
 
         # Usage d'une autre fonction de distance que la distance euclidienne
         # mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))
@@ -23,14 +115,6 @@ class simulation:
         mod.clusters_from_labels(true_labels)
         return mod
 
-    def __init__(self,data:pd.DataFrame,col_name:str,dimensions:int,no_metric=False):
-        self.ref_model:algo.model=self.init_reference_model(data,col_name,dimensions)
-
-        if not no_metric:
-            self.ref_model.init_metrics(self.ref_model.cluster_toarray())
-
-        self.col_name :str= col_name
-        self.dimensions=dimensions
 
     def convertParams(self,ps):
         ps["sup"]=[None]

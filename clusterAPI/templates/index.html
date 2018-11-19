@@ -70,16 +70,14 @@
                 <tr>
                     <td>Choose files on server</td>
                     <td>
-                        {{ list_file|safe }}
-
-                        &nbsp;or Upload new file&nbsp;
-
+                        {{ list_file|safe }}&nbsp;or Upload new file&nbsp;
                         <div style="display: inline" class="image-upload">
                             <label for="file">
                                 <img style="width:15px;padding:0px;" src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
                             </label>
 
-                            <input title="Upload" type="file" id="file" name="file" onchange="postFile()">
+                            <input
+                                    title="Upload" type="file" id="file" name="file" onchange="postFile()">
                         </div>
                     </td>
                 </tr>
@@ -117,7 +115,11 @@
                 <tr>
                     <td>Notification de fin de traitement</td>
                     <td>
-                        <input size="40" value="" id="email" type="email" onchange="showlink()">
+                        <input size="40"
+                               value=""
+                               id="email"
+                               type="email"
+                               onchange="showlink()">
                     </td>
                 </tr>
 
@@ -198,6 +200,7 @@
         return rc;
     }
 
+
     function showlink(multiple=false){
         var file=encodeURIComponent(document.getElementById("url").value)
         var algo=document.getElementById("algo").value.split(":")[0];
@@ -207,13 +210,13 @@
         for(var i=0;i<10;i++)params=params.replace("\n"," ").replace("<br>"," ");
         for(var i=0;i<10;i++)params=params.replace("  "," ");
         for(var i=0;i<10;i++)params=params.replace(" ","&");
+        if(params[0]==' ')params=params.substr(1,params.length);
 
         var domain=document.location.host;
+        var job_name="job"+new Date().getTime();
 
         if(!multiple){
-            url="http://"+domain+"/algo/"+algo+"/"
-                +file+"/"+params+"/modele.html?pca="+pca;
-
+            url="http://"+domain+"/engine/job/"+algo+"/"+params+"?url="+file+"&pca="+pca;
 
             if(notif.length>0)url+="&notif="+notif;
 
@@ -227,13 +230,14 @@
         } else {
             urls=[];
             cutParams(params).forEach((p)=>{
-                url="http://"+domain+"/algo/"+algo+"/"+file+"/"+p+"/modele.html?pca="+pca+"&notif="+notif;
+                url="http://"+domain+"/engine/job/"+algo+"/"+p+"?url="+file+"&pca="+pca+"&notif="+notif;
                 urls.push(url);
             });
             return urls;
         }
-
     }
+
+
 
     function showParameters(){
         var algo=document.getElementById("algo").value.split("::")[0];
@@ -248,29 +252,47 @@
         showlink();
     }
 
+
+
+
     function testDownload(){
         var file=document.getElementById("url").value;
         if(file.indexOf("http")!=0)
             file="http://45.77.160.220:5000/datas/"+file;
-
         window.open(file,"blank_");
     }
 
+
+
+
+
+    /**
+     * Envoi les fichiers sur le serveur via l'api
+     */
     function postFile(){
-        file=document.getElementById("file").files[0];
-        var formData = new FormData();
-        formData.append('file', file);
         document.getElementById("cmdVerify").style.visibility="hidden";
 
-        fetch("/upload",{method:"post",body:formData})
+        file=document.getElementById("file").files[0];
+        var formData = new FormData();
+        formData.append('files', file);
+
+        fetch("/datas/measure/"+file.name,{
+            method:"POST",
+            body:formData
+        })
             .then(response => {
                 return response.json();
             })
             .then(r => {
                 document.getElementById("url").value=r.url;
                 showlink();
-            });
+            }).catch((r)=>{
+                alert("Pas de connexion"+r);
+        });
     }
+
+
+
 
 
     var start=null;
@@ -293,6 +315,9 @@
     }
 
 
+    /**
+     * Lance l'execution de plusieurs requetes sur le serveur
+     */
     function runAll(){
         var max_jobs=Number(document.getElementById("jobs").value);
         var urls=showlink(true);
