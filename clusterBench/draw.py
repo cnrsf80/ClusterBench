@@ -18,7 +18,6 @@ def color_distance(c1,c2):
     return s
 
 
-#colors = list(dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS).values())
 colors=[[random.random(),random.random(),random.random()]]
 for i in range(1,250):
     while True:
@@ -153,21 +152,22 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
 
     return li_data,facets
 
-def to3D(G:nx.Graph,positions:dict):
+def to3D(G:algo.network):
     li_data=[]
-    for p in positions.keys():
-        li_data.append({
-            'x':positions[p][0],'y':positions[p][1],'z':positions[p][2],
-            'label':p,
-            'name':p,
-            'style':[0.5,0.5,0.5],
-            'cluster':p
-        })
+    for c in G.clusters:
+        for p in c.index:
+            row=G.data.iloc[[p]]
+            li_data.append({
+                'x':float(row[0]),'y':float(row[1]),'z':float(row[2]),
+                'label':G.data[G.name_col][p],
+                'name':G.data[G.name_col][p],
+                'style':c.color,
+                'cluster':c.name
+            })
 
     edges=[]
-    l_positions=list(positions.keys())
     for e in G.graph.edges:
-        edges.append({"start":l_positions.index(e[0]),"end":l_positions.index(e[1])})
+        edges.append({"start":e[0],"end":e[1]})
 
     return li_data,edges
 
@@ -241,8 +241,8 @@ def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0):
                          url_to_render="/static/rendering/render.html?offset="+str(pca_offset))
     return code
 
-def trace_graph(G:nx.Graph,positions:dict):
-    li_data,edges=to3D(G,positions)
+def trace_graph(G:algo.network):
+    li_data,edges=to3D(G)
     code = render_template("modele.html",
                            title="",
                            name_zone="zone",

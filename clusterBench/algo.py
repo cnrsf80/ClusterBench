@@ -1,3 +1,5 @@
+import itertools
+
 from scipy.spatial.qhull import ConvexHull
 
 from clusterBench.gng import GrowingNeuralGas
@@ -14,9 +16,6 @@ import pandas as pd
 from networkx.algorithms import community
 from clusterBench.tools import tirage,save
 import copy
-
-colors=[]
-for i in range(200):colors.append(i)
 
 #Représente un model
 #un model est une liste de cluster après application d'un algorithme de clustering
@@ -43,22 +42,14 @@ class model:
 
     def __init__(self, data,name_col:str=None,dimensions:int=None,positions=None):
 
-        if type(data)==nx.Graph:
-            d=list(data.nodes.keys())
-            #self.data: pd.DataFrame = pd.DataFrame({"name":d})
-            self.data: pd.DataFrame = pd.DataFrame.from_dict(positions,orient="index")
-            self.data["name"]=self.data.sort_index
-            self.dimensions = 3
-            self.name_col = "name"
-        else:
-            self.name_col=name_col
-            self.dimensions=dimensions
-            self.data=data
+      self.name_col=name_col
+      self.dimensions=dimensions
+      self.data=data
 
-            s = ""
-            for a in list(self.data.keys()): s = s + str(a)
+      s = ""
+      for a in list(self.data.keys()): s = s + str(a)
 
-            self.hash=hashlib.md5(s.encode()).hexdigest()
+      self.hash=hashlib.md5(s.encode()).hexdigest()
 
 
     #Calcul de la matrice de distance
@@ -554,28 +545,48 @@ class cluster:
         self.name=prefixe+str.strip(rc)
 
 
-class network:
+class network(model):
     graph=None
     positions=None
 
-    def __init__(self,nodes,edges):
-        self.graph=nx.Graph()
-        self.graph.add_node(nodes)
-        self.graph.add_edge(edges)
+    # def __init__(self,nodes,edges):
+    #     self.graph=nx.Graph()
+    #     self.graph.add_node(nodes)
+    #     self.graph.add_edge(edges)
 
     def __init__(self,url:str):
         self.graph=nx.read_gml(url)
 
+        pos=self.relocate()
+        self.data: pd.DataFrame = pd.DataFrame(list(pos.values()))
+
+        self.data["name"] = list(pos.keys())
+        self.graph=nx.convert_node_labels_to_integers(self.graph)
+
+        self.dimensions = 3
+        self.name_col = "name"
+
 
     def relocate(self,dim=3,scale=3):
         if self.positions is None:
-            self.positions=nx.spectral_layout(self.graph,dim=dim,scale=scale)
+            d=nx.spectral_layout(self.graph,dim=dim,scale=scale)
+            self.position=list(d.values())
+            return d
+        else:
+            return self.positions
 
-    def findClusters(self):
+
+    def findClusters(self,prefixe="cl_"):
         comm=nx.algorithms.community.girvan_newman(self.graph)
         self.relocate()
-        m=model(self.graph,positions=self.positions)
-        self.clusters=m.clusters_from_labels(comm)
+        i=0
+
+        for c in next(comm):
+            cl=cluster(prefixe,index=list(c),color=draw.colors[i])
+            i=i+1
+            self.clusters.append(cl)
+
+
 
 
 

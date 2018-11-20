@@ -8,7 +8,7 @@ import clusterBench.draw as draw
 
 ns_graph = Namespace('graph', description='Job related operations to calculation')
 
-#test:http://localhost:5000/graph/lesmis.gml
+#test:http://localhost:5000/graph/routes.gml
 @ns_graph.route("/<string:url>")
 class graph(Resource):
     def get(self,url:str):
@@ -24,8 +24,8 @@ class graph(Resource):
 
         if not graph is None:
             graph.findClusters()
-            pos=graph.relocate(3)
-            return Response(draw.trace_graph(graph,pos),"text/html")
+            graph.relocate(3)
+            return Response(draw.trace_graph(graph),"text/html")
 
 
 
