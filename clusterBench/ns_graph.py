@@ -1,5 +1,5 @@
 from flask_restplus import Namespace, Resource
-from flask import Response
+from flask import Response,Request
 import os
 import pandas as pd
 import clusterBench.tools as tools
@@ -8,10 +8,12 @@ import clusterBench.draw as draw
 
 ns_graph = Namespace('graph', description='Job related operations to calculation')
 
-#test:http://localhost:5000/graph/routes.gml
+#test:http://localhost:5000/graph/lesmis.gml?method=modularity
 @ns_graph.route("/<string:url>")
 class graph(Resource):
     def get(self,url:str):
+        arguments = tools.add_default_value(Request.args.__dict__,{"method": "gn"})
+
         graph = None
         if url.endswith(".gml"):
             if not url.startswith("http"):url="./datas/"+url
@@ -23,7 +25,7 @@ class graph(Resource):
                 graph=algo.network(data["ref"],d)
 
         if not graph is None:
-            graph.findClusters()
+            graph.findClusters(method=arguments["method"])
             graph.relocate(3)
             return Response(draw.trace_graph(graph),"text/html")
 

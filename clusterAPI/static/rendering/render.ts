@@ -47,6 +47,7 @@ class Game {
                     s.material.alpha = _HIDDEN;
             }
         }
+        //this.showEdge();
     }
 
     showMesure(mes_name,show=true){
@@ -58,6 +59,16 @@ class Game {
                 else
                     s.material.alpha = _HIDDEN;
         }
+        //this.showEdge();
+    }
+
+    showEdge(){
+        this.links.forEach(l=>{
+            if(this.spheres[l.start].material.alpha==_HIDDEN || this.spheres[l.end].material.alpha==_HIDDEN)
+                l.edgesColor.alpha=_HIDDEN;
+            else
+                l.edgesColor.alpha=_VISIBLE;
+        });
     }
 
 
@@ -181,6 +192,7 @@ class Game {
         sphere.cluster_name=obj.cluster;
         sphere.ref_cluster=obj.ref_cluster;
         sphere.name=obj.name;
+        sphere.index=obj.index;
         if(obj.hasOwnProperty("cluster_distance"))sphere.cluster_distance=JSON.parse(obj.cluster_distance);
 
         this.prepareButton(sphere);
@@ -193,7 +205,21 @@ class Game {
             new BABYLON.Vector3(s2.position.x, s2.position.y, s2.position.z)
         ];
 
-        var tube = BABYLON.MeshBuilder.CreateTube("link"+s1.name+"_"+s2.name, {path: path, radius: 0.04},this._scene);
+        var tube:any = BABYLON.MeshBuilder.CreateTube("link"+s1.name+"_"+s2.name,
+            {
+                path: path,
+                radius: 0.04,
+                tessellation:12,
+            },
+            this._scene);
+
+        tube.material=new BABYLON.StandardMaterial("texture2", this._scene);
+        tube.material.diffuseColor = new BABYLON.Color3(0.8,0.8,0.8);
+        tube.material.alpha = _VISIBLE;
+
+        tube["start"]=s1.index;
+        tube["end"]=s2.index;
+
         this.links.push(tube);
     }
 
@@ -374,7 +400,7 @@ class Game {
     }
 
     mesureConnection(edges=null) {
-        if(edges==null){
+        if(false){
             this.getVisibleMesure().forEach((m)=>{
                 if(m.cluster_name!="noise"){
                     this.spheres.forEach((s)=>{
@@ -473,8 +499,13 @@ window.addEventListener("message", (evt)=> {
     evt.preventDefault();
     if (datas!=null && datas.length>0) {
         game.clearMesures();
-        for (let p of datas)
+        var i=0;
+        for (let p of datas){
+            p.index=i;
             game.createMesure(p,new BABYLON.Color3(p.style[0],p.style[1],p.style[2]));
+            i=i+1
+        }
+
 
         facets=evt.data.facets;
         facets_ref=evt.data.facets_ref;
@@ -514,9 +545,9 @@ window.addEventListener("keypress", (evt)=> {
    }
 
     if(evt.key=="S"){
-        game.clearLinks();
-       game.showCluster("",false);
-   }
+        //game.clearLinks();
+        game.showCluster("",false);
+    }
 
     if(evt.key=="p"){
         game.getVisibleClusters().forEach(c=>{

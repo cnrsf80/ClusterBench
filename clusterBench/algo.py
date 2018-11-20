@@ -555,9 +555,13 @@ class network(model):
     #     self.graph.add_edge(edges)
 
     def __init__(self,url:str):
+        tools.progress(0,100,"Chargement du graphe")
         self.graph=nx.read_gml(url)
 
-        pos=self.relocate()
+        tools.progress(10, 100, "positionnement des noeuds")
+        pos=self.relocate(method="fr")
+
+        tools.progress(90,100,"Préparation")
         self.data: pd.DataFrame = pd.DataFrame(list(pos.values()))
 
         self.data["name"] = list(pos.keys())
@@ -567,25 +571,24 @@ class network(model):
         self.name_col = "name"
 
 
-    def relocate(self,dim=3,scale=3):
-        if self.positions is None:
-            d=nx.spectral_layout(self.graph,dim=dim,scale=scale)
-            self.position=list(d.values())
-            return d
-        else:
-            return self.positions
+    def relocate(self,dim=3,scale=3,method="spectral"):
+        if method=="spectral":d=nx.spectral_layout(self.graph,dim=dim,scale=scale)
+        if method=="fr":d=nx.fruchterman_reingold_layout(self.graph,iterations=50,dim=3)
+        self.position=list(d.values())
+        return d
 
 
-    def findClusters(self,prefixe="cl_"):
-        comm=nx.algorithms.community.girvan_newman(self.graph)
-        self.relocate()
+    def findClusters(self,prefixe="cl_",method="gn"):
+        tools.progress(0, 100, "Recherche des communautés")
+        if method=="gn":comm=nx.algorithms.community.girvan_newman(self.graph)
+        if method=="modularity":comm=nx.algorithms.community.modularity(self.graph)
+
+        tools.progress(70, 100, "Fabrication des clusters")
         i=0
-
         for c in next(comm):
-            cl=cluster(prefixe,index=list(c),color=draw.colors[i])
+            cl=cluster(prefixe+str(i),index=list(c),color=draw.colors[i % len(draw.colors)])
             i=i+1
             self.clusters.append(cl)
-
 
 
 
@@ -646,8 +649,8 @@ def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_to
 #     return clusters
 
 
-def create_clusters_from_asyncfluid(G,n_community):
-    coms = community.asyn_fluidc(G, n_community, 500)
+def create_clusters_from_asyncfluid(G,n_community=50):
+    coms = community.asyn_fluidc(G, k=n_community,max_iter=500)
     partition = []
     for c in coms:
         partition.append(cluster("asyncfluid",c))
