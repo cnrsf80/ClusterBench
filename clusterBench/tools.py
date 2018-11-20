@@ -208,3 +208,10 @@ def tokenize(items:list):
 
     return rc
 
+
+def add_default_value(args:dict, param):
+    for p in param:
+        if not p in args:
+            args[p]=param[p]
+
+    return args

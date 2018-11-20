@@ -197,10 +197,13 @@ def trace_artefact(G, clusters):
 from flask import render_template
 
 #Production du fichier à destination du tracé 3d
-def trace_artefact_GL(mod:algo,id,title,ref_model:algo,pca_offset=0):
+def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0):
     li_data,facets= pca_totrace(mod.mesures(), mod.clusters,mod.names(),mod.data['ref_cluster'],pca_offset)
 
-    tmp_li_data,facets_ref=pca_totrace(ref_model.mesures(), ref_model.clusters,ref_model.names(),ref_model.data['ref_cluster'],pca_offset)
+    if ref_model is None:
+        facets_ref=[]
+    else:
+        tmp_li_data,facets_ref=pca_totrace(ref_model.mesures(), ref_model.clusters,ref_model.names(),ref_model.data['ref_cluster'],pca_offset)
 
     d=pd.concat([mod.data.ix[:,0],mod.mesures()],axis=1,sort=False)
 

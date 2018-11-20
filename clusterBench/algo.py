@@ -145,7 +145,6 @@ class model:
     #Produit une réprésentation 3D et une représentation 2D des mesures
     #après PCA et coloration en fonction du cluster d'appartenance
     def trace(self,path:str,filename,url_base=""):
-
         code=self.to3DHTML(0,False)
 
         save(code+"<br><h2>Composition des clusters</h2>"+self.print_cluster("<br><br>"),path + "/" + filename+self.name+ ".html")
@@ -233,9 +232,8 @@ class model:
 
         return rc
 
-
+    #Initialise les metriques d'un model sur la base du clustering labels_true
     def init_metrics(self,labels_true):
-
         mes=self.mesures()
         for c in self.clusters:
             c.init_metrics(mes)

@@ -216,7 +216,7 @@
         var job_name="job"+new Date().getTime();
 
         if(!multiple){
-            url="http://"+domain+"/engine/job/"+algo+"/"+params+"?url="+file+"&pca="+pca;
+            url="http://"+domain+"/engine/jobs/"+algo+"/"+params+"?url="+file+"&pca="+pca;
 
             if(notif.length>0)url+="&notif="+notif;
 
@@ -228,9 +228,10 @@
 
             return url;
         } else {
+            //Traitement simple
             urls=[];
             cutParams(params).forEach((p)=>{
-                url="http://"+domain+"/engine/job/"+algo+"/"+p+"?url="+file+"&pca="+pca+"&notif="+notif;
+                url="http://"+domain+"/engine/jobs/"+algo+"/"+p+"?url="+file+"&pca="+pca+"&notif="+notif;
                 urls.push(url);
             });
             return urls;

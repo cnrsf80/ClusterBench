@@ -1,13 +1,25 @@
 {#Utilisé pour le rendu de chaque modele algo#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
 <style>
     table, th, td {
         border: 1px solid lightgray;
         padding: 0px;
         margin:0px;
 
-}
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+    }
 </style>
-<h3>{{title}}</h3>
+<body>
+<h3 id="title">{{title}}</h3>
 <iframe
         style="border-style: none;margin:0px;"
         id="{{name_zone}}" src={{ url_to_render|safe }}
@@ -16,6 +28,9 @@
 
 <script>
     setTimeout(()=>{
+        if(document.getElementById("title").innerHTML=="")
+            document.getElementById("title").style.visible="hidden";
+
         document.getElementById("{{name_zone|safe}}").contentWindow.postMessage({
                 title:"{{title|safe}}",
                 datas:{{datas|safe}},
@@ -27,3 +42,4 @@
     },2000);
     //document.getElementById("cluster_list").innerHTML="{{cluster_list|safe}}";
 </script>
+</body>

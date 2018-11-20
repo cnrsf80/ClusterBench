@@ -15,22 +15,26 @@ class simulation:
 
     models=[]
 
-    def __init__(self,data:pd.DataFrame,no_metric=False):
+    #Créer la colonne de cluster de reference en fonction des noms des mesures
+    #Utilisé par le constructeur
+    def create_ref_cluster_from_name(self,data, label_col):
+        rc = tools.tokenize(list(data[label_col]))
+        return rc
 
+
+    def __init__(self,data:pd.DataFrame,no_metric=False):
+        self.data = data
+
+        self.col_name = self.data.columns[0]  # Le libellé des mesures est pris sur la premiere colonne
+        if not list(self.data.columns).__contains__("ref_cluster"):
+            self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, self.col_name)
+
+        self.dimensions = len(self.data.columns) - 2  # Les composantes sont les colonnes suivantes
+
+        self.ref_model: algo.model = self.init_reference_model()
         if not no_metric:
             self.ref_model.init_metrics(self.ref_model.cluster_toarray())
 
-        self.data=data
-        self.col_name= self.data.columns[0]  # Le libellé des mesures est pris sur la premiere colonne
-        if not list(self.data.columns).__contains__("ref_cluster"):
-            self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, self.label_col)
-
-        self.dimensions = len(self.data.columns) - 2  # Les composantes sont les colonnes suivantes
-        self.ref_model: algo.model = self.init_reference_model(data, self.col_name, self.dimensions)
-
-    def create_ref_cluster_from_name(data, label_col):
-        rc = tools.tokenize(list(data[label_col]))
-        return rc
 
     # Fonction principale d'exécution des algorithmes de clustering
     # retourne le code HTML résultat de l'éxécution des algorithmes
@@ -99,14 +103,14 @@ class simulation:
         else:
             return ""
 
-
+    #Créé le modele de référence à partir des données
     def init_reference_model(self):
         print(str(len(self.data)) + " mesures à traiter")
         print("Colonne de utilisé pour le nom " + self.col_name)
 
         self.data["Ref"] = self.data.index
         self.data.index = range(len(self.data))
-        mod = algo.model(self.data, self.col_name, self.n_mesures)
+        mod = algo.model(self.data, self.col_name, self.dimensions)
 
         # Usage d'une autre fonction de distance que la distance euclidienne
         # mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))

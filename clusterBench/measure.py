@@ -1,9 +1,6 @@
 import os
 from flask import request
-from flask_restplus import Namespace, Resource, reqparse, abort
-
-from werkzeug.datastructures import FileStorage
-
+from flask_restplus import Namespace, Resource, abort
 import clusterBench.tools as tools
 
 api = Namespace('datas', description='Datas related operations to add / remove file on server')
