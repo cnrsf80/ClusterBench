@@ -28,14 +28,17 @@
 
 <script>
     setTimeout(()=>{
+        document.body.style.margin="0";
+        document.body.style.padding="0";
         if(document.getElementById("title").innerHTML=="")
-            document.getElementById("title").style.visible="hidden";
+            document.getElementById("title").style.height="0px";
 
         document.getElementById("{{name_zone|safe}}").contentWindow.postMessage({
                 title:"{{title|safe}}",
                 datas:{{datas|safe}},
                 data_source:{{data_source|safe}},
                 facets:{{facets|safe}},
+                edges:{{ edges|safe }},
                 facets_ref:{{facets_ref|safe}}
             },
             "*");

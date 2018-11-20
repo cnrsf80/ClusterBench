@@ -181,7 +181,7 @@ class Game {
         sphere.cluster_name=obj.cluster;
         sphere.ref_cluster=obj.ref_cluster;
         sphere.name=obj.name;
-        sphere.cluster_distance=JSON.parse(obj.cluster_distance);
+        if(obj.hasOwnProperty("cluster_distance"))sphere.cluster_distance=JSON.parse(obj.cluster_distance);
 
         this.prepareButton(sphere);
         this.spheres.push(sphere);
@@ -326,15 +326,21 @@ class Game {
         clusters.forEach(facets=>{
             facets.forEach((facet)=>{
                 if(facet[1]==offset && (filter==null || facet[0].indexOf(filter)>-1)){
-                var k=2;
-                var shape = [
-                        new BABYLON.Vector3((facet[k][0]+translate)*this.scale, (facet[k][1]+translate)*this.scale,(facet[k][2]+translate)*this.scale),
-                        new BABYLON.Vector3((facet[k+1][0]+translate)*this.scale, (facet[k+1][1]+translate)*this.scale,(facet[k+1][2]+translate)*this.scale),
-                        new BABYLON.Vector3((facet[k+2][0]+translate)*this.scale, (facet[k+2][1]+translate)*this.scale,(facet[k+2][2]+translate)*this.scale)
-                  ];
+                    var k=3;
+                    var shape = [
+                            new BABYLON.Vector3((facet[k][0]+translate)*this.scale, (facet[k][1]+translate)*this.scale,(facet[k][2]+translate)*this.scale),
+                            new BABYLON.Vector3((facet[k+1][0]+translate)*this.scale, (facet[k+1][1]+translate)*this.scale,(facet[k+1][2]+translate)*this.scale),
+                            new BABYLON.Vector3((facet[k+2][0]+translate)*this.scale, (facet[k+2][1]+translate)*this.scale,(facet[k+2][2]+translate)*this.scale)
+                      ];
 
-                var lines=[[shape[0],shape[1]],[shape[1],shape[2]],[shape[0],shape[2]]];
-                var polygon=BABYLON.MeshBuilder.CreateLineSystem("line"+facet[0],{lines:lines},this._scene);
+
+                    var lines=[[shape[0],shape[1]],[shape[1],shape[2]],[shape[0],shape[2]]];
+                    var polygon=BABYLON.MeshBuilder.CreateLineSystem(
+                        "line"+facet[0],
+                        {lines:lines},
+                        this._scene);
+                    polygon.color=new BABYLON.Color3(facet[2][0],facet[2][1],facet[2][2]);
+
 
                 this.polygons.push(polygon);
                 }
@@ -367,15 +373,22 @@ class Game {
         });
     }
 
-    mesureConnection() {
-        this.getVisibleMesure().forEach((m)=>{
-            if(m.cluster_name!="noise"){
-                this.spheres.forEach((s)=>{
-                   if(s.ref_cluster==m.ref_cluster && s.cluster_name!="noise")
-                       this.linkSphere(s,m);
-                });
-            }
-        });
+    mesureConnection(edges=null) {
+        if(edges==null){
+            this.getVisibleMesure().forEach((m)=>{
+                if(m.cluster_name!="noise"){
+                    this.spheres.forEach((s)=>{
+                       if(s.ref_cluster==m.ref_cluster && s.cluster_name!="noise")
+                           this.linkSphere(s,m);
+                    });
+                }
+            });
+        } else {
+            edges.forEach(e=>{
+                this.linkSphere(this.spheres[e.start],this.spheres[e.end]);
+            });
+        }
+
     }
 
     startAutoRotation(){
@@ -447,7 +460,7 @@ var facets=[];
 var facets_ref=[];
 var datas:any=null;
 var data_source:any=null;
-
+var edges=[]
 
 /**
  * Affichage des points contenu dans datas
@@ -465,6 +478,9 @@ window.addEventListener("message", (evt)=> {
 
         facets=evt.data.facets;
         facets_ref=evt.data.facets_ref;
+        edges=evt.data.edges;
+
+        game.mesureConnection(edges);
     }
 }, false);
 

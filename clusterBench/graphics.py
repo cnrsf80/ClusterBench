@@ -16,6 +16,6 @@ class graphics(Resource):
     def get(self,url,algo,params):
         data = tools.get_data_from_url(url)
         sim: simulation = simulation.simulation(data=data,no_metric=True)
-        sim.run_algo(params,algo,False,False)
+        sim.run_algo(params,algo)
         html=draw.trace_artefact_GL(sim.models[0])
         return Response(html,"text/html")

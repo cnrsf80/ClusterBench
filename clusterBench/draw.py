@@ -110,8 +110,8 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
     return code
 
 
-def draw_with_babylon(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
-    df_data = pd.DataFrame(li_data)
+# def draw_with_babylon(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
+#     df_data = pd.DataFrame(li_data)
 
 #Projection 3D des cluster et cluster de référence + calcul des enveloppes
 def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
@@ -153,6 +153,25 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
 
     return li_data,facets
 
+def to3D(G:nx.Graph,positions:dict):
+    li_data=[]
+    for p in positions.keys():
+        li_data.append({
+            'x':positions[p][0],'y':positions[p][1],'z':positions[p][2],
+            'label':p,
+            'name':p,
+            'style':[0.5,0.5,0.5],
+            'cluster':p
+        })
+
+    edges=[]
+    l_positions=list(positions.keys())
+    for e in G.graph.edges:
+        edges.append({"start":l_positions.index(e[0]),"end":l_positions.index(e[1])})
+
+    return li_data,edges
+
+
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
 def trace_artefact_3d(data, clusters, ref_cluster,title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
     #TODO: a corriger
@@ -188,7 +207,7 @@ def trace_artefact(G, clusters):
 
         # nx.draw_networkx_edges(G, pos, alpha=0.5)
     else:
-        nx.draw(G)
+      nx.draw(G)
 
     plt.axis('off')
     # plt.savefig('graph.pdf', format="pdf")
@@ -218,5 +237,19 @@ def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0):
                          data_source=toList,
                          facets_ref=facets_ref,
                          facets=facets,
+                         edges=[],
                          url_to_render="/static/rendering/render.html?offset="+str(pca_offset))
+    return code
+
+def trace_graph(G:nx.Graph,positions:dict):
+    li_data,edges=to3D(G,positions)
+    code = render_template("modele.html",
+                           title="",
+                           name_zone="zone",
+                           datas=li_data,
+                           data_source=[],
+                           facets_ref=[],
+                           facets=[],
+                           edges=edges,
+                           url_to_render="/static/rendering/render.html")
     return code

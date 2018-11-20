@@ -32,13 +32,14 @@ class simulation:
         self.dimensions = len(self.data.columns) - 2  # Les composantes sont les colonnes suivantes
 
         self.ref_model: algo.model = self.init_reference_model()
+
         if not no_metric:
             self.ref_model.init_metrics(self.ref_model.cluster_toarray())
 
 
     # Fonction principale d'exécution des algorithmes de clustering
     # retourne le code HTML résultat de l'éxécution des algorithmes
-    def run_algo(self,params: str, name_algo: str, no_text=False, no_metric=False):
+    def run_algo(self,params: str, name_algo: str):
 
         self.raz()
 
@@ -82,26 +83,25 @@ class simulation:
                     m.help = "https://github.com/AdrienGuille/GrowingNeuralGas"
                     self.append_modeles(m)
 
-        if not no_metric:
-            self.init_metrics(False)
-            if not no_text:
-                code = self.print_infos() + "<br>synthese<br>"
-            else:
-                code = ""
+        if name_algo.upper().__contains__("NOTREATMENT") or name_algo.upper().__contains__("NO"):
+            m=copy.deepcopy(self.ref_model)
+            m.params=params
+            m.setname("NOTREATMENT")
+            self.append_modeles(m)
 
-            try:
-                n_pca = int(request.args["pca"])
-            except:
-                n_pca = 2
 
-            code = code + self.get3d_html(n_pca, no_text)
 
-            if not no_text:
-                code = code.replace("synthese", self.synthese())
+    #Retourne une version HTML de la simulation
+    def toHTML(self):
+        code = self.print_infos() + "<br>synthese<br>"
+        try:
+            n_pca = int(request.args["pca"])
+        except:
+            n_pca = 2
+        code = code + self.get3d_html(n_pca)
+        code = code.replace("synthese", self.synthese())
+        return code
 
-            return code
-        else:
-            return ""
 
     #Créé le modele de référence à partir des données
     def init_reference_model(self):

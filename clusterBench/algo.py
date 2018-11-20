@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from networkx.algorithms import community
 from clusterBench.tools import tirage,save
-
+import copy
 
 colors=[]
 for i in range(200):colors.append(i)
@@ -27,6 +27,7 @@ class model:
     delay:int=0 #delay en secondes
     silhouette_score:int=0
     score:int=0
+    clusters=[]
     url=""
     url2d=""
     help=""
@@ -38,15 +39,26 @@ class model:
     dimensions:int=0
     clusters_distance:pd.DataFrame=None
 
-    def __init__(self, data,name_col,dimensions):
-        #Thread.__init__(self)
-        self.name_col=name_col
-        self.clusters=[]
-        self.dimensions=dimensions
-        self.data=data
-        s = ""
-        for a in list(self.data.keys()): s = s + str(a)
-        self.hash=hashlib.md5(s.encode()).hexdigest()
+
+
+    def __init__(self, data,name_col:str=None,dimensions:int=None,positions=None):
+
+        if type(data)==nx.Graph:
+            d=list(data.nodes.keys())
+            #self.data: pd.DataFrame = pd.DataFrame({"name":d})
+            self.data: pd.DataFrame = pd.DataFrame.from_dict(positions,orient="index")
+            self.data["name"]=self.data.sort_index
+            self.dimensions = 3
+            self.name_col = "name"
+        else:
+            self.name_col=name_col
+            self.dimensions=dimensions
+            self.data=data
+
+            s = ""
+            for a in list(self.data.keys()): s = s + str(a)
+
+            self.hash=hashlib.md5(s.encode()).hexdigest()
 
 
     #Calcul de la matrice de distance
@@ -294,7 +306,7 @@ class model:
         for i in range(n_clusters_):
             if i>=len(draw.colors):i=1
             color=draw.colors[i]
-            c=cluster(name + str(i), [], color,i)
+            c:cluster=cluster(name + str(i), [], color,i)
             self.clusters.append(c)
 
         i = 0
@@ -303,6 +315,11 @@ class model:
                 self.clusters[l].add_index(i, self.data, self.name_col)
             i = i + 1
 
+        for c in copy.deepcopy(self.clusters):
+            if len(c.index)==0:self.clusters.remove(c)
+
+        for c in self.clusters:
+            c.findBestName(self.data[self.name_col])
 
     # def init_thread(self,algo_name,url,algo_func,p:dict):
     #     self.parameters=p
@@ -481,11 +498,11 @@ class cluster:
 
             for p in hull.simplices:
                 k:list=list(p)
-                facet=[self.name,offset,list(pts[k[0]]),list(pts[k[1]]),list(pts[k[2]])]
+                facet=[self.name,offset,self.color,list(pts[k[0]]),list(pts[k[1]]),list(pts[k[2]])]
                 facets.append(facet)
 
         if len(pts)==3:
-            facet = [self.name, offset,list(pts[0]), list(pts[1]), list(pts[2])]
+            facet = [self.name, offset,self.color,list(pts[0]), list(pts[1]), list(pts[2])]
             facets.append(facet)
 
         return facets
@@ -522,6 +539,45 @@ class cluster:
             return True
         else:
             return False
+
+    def findBestName(self, labels,prefixe="cl_"):
+        rc=""
+        for m in labels[self.index]:
+            if len(m)>10:
+                lib=str(m)[:10]
+            else:
+                lib=str(m)
+            lib=str.replace(lib," ","")
+            if not rc.__contains__(lib):rc=rc+lib+" "
+
+        if len(rc)>50:rc=hashlib.md5(bytes(rc,"utf-8")).hexdigest()
+        self.name=prefixe+str.strip(rc)
+
+
+class network:
+    graph=None
+    positions=None
+
+    def __init__(self,nodes,edges):
+        self.graph=nx.Graph()
+        self.graph.add_node(nodes)
+        self.graph.add_edge(edges)
+
+    def __init__(self,url:str):
+        self.graph=nx.read_gml(url)
+
+
+    def relocate(self,dim=3,scale=3):
+        if self.positions is None:
+            self.positions=nx.spectral_layout(self.graph,dim=dim,scale=scale)
+
+    def findClusters(self):
+        comm=nx.algorithms.community.girvan_newman(self.graph)
+        self.relocate()
+        m=model(self.graph,positions=self.positions)
+        self.clusters=m.clusters_from_labels(comm)
+
+
 
 
 def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_toremove_edge=8):

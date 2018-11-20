@@ -28,7 +28,10 @@ class job(Resource):
 
         sim: simulation = simulation.simulation(data=data)
 
-        html = sim.run_algo(params, algo, arguments["no_text"], arguments["no_metric"])
+        sim.run_algo(params, algo)
+        if not arguments["no_metric"]:sim.init_metrics(False)
+        html=sim.toHTML()
+
         delay = (time.time() - start)
 
         if delay > 10 and len(arguments["notif"])> 0:
