@@ -544,7 +544,7 @@ class cluster:
         if len(rc)>50:rc=hashlib.md5(bytes(rc,"utf-8")).hexdigest()
         self.name=prefixe+str.strip(rc)
 
-
+#Representation d'un graphe
 class network(model):
     graph=None
     positions=None
@@ -559,7 +559,7 @@ class network(model):
         self.graph=nx.read_gml(url)
 
         tools.progress(10, 100, "positionnement des noeuds")
-        pos=self.relocate(method="fr")
+        pos=self.relocate(method="circular")
 
         tools.progress(90,100,"Préparation")
         self.data: pd.DataFrame = pd.DataFrame(list(pos.values()))
@@ -570,12 +570,40 @@ class network(model):
         self.dimensions = 3
         self.name_col = "name"
 
-
+    # Positionnement des noeuds du graphe suivant l'algorithme gn,modularity,circular
     def relocate(self,dim=3,scale=3,method="spectral"):
         if method=="spectral":d=nx.spectral_layout(self.graph,dim=dim,scale=scale)
         if method=="fr":d=nx.fruchterman_reingold_layout(self.graph,iterations=50,dim=3)
+        if method=="circular":
+            d=nx.circular_layout(self.graph,scale=2,dim=3)
         self.position=list(d.values())
         return d
+
+
+    def node_treatments(self):
+        G=self.graph
+        tools.progress(0,100,"Degree de centralité")
+        nx.set_node_attributes(G,nx.degree_centrality(G),"centrality")
+
+        tools.progress(20, 100, "Degree de betweeness")
+        nx.set_node_attributes(G, nx.betweenness_centrality(G), "betweenness")
+
+        tools.progress(40, 100, "Degree de closeness")
+        nx.set_node_attributes(G, nx.closeness_centrality(G), "closeness")
+
+        tools.progress(60, 100, "Page rank")
+        nx.set_node_attributes(G, nx.pagerank(G), "pagerank")
+
+        tools.progress(80, 100, "Hub and autorities")
+        hub, aut = nx.hits(G)
+        nx.set_node_attributes(G, hub, "hub")
+        nx.set_node_attributes(G, aut, "autority")
+
+        tools.progress(90, 100, "Excentricity")
+        nx.set_node_attributes(G, nx.eccentricity(G), "eccentricity")
+
+        tools.progress(100, 100, "Fin des traitements")
+
 
 
     def findClusters(self,prefixe="cl_",method="gn"):

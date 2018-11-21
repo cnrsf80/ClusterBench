@@ -145,6 +145,8 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
                 'style': c.color,
                 'label': labels[c.index[k]],
                 'name': labels[c.index[k]],
+                'size':1,
+                'form':'sphere',
                 'cluster': c.name,
                 'ref_cluster':ref_cluster[c.index[k]],
                 'cluster_distance':ss
@@ -152,18 +154,22 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
 
     return li_data,facets
 
+#Representation 3d du graph
 def to3D(G:algo.network):
     li_data=[]
     for c in G.clusters:
         for p in c.index:
             row=G.data.iloc[[p]]
-            li_data.append({
+            sp={
                 'x':float(row[0]),'y':float(row[1]),'z':float(row[2]),
                 'label':G.data[G.name_col][p],
                 'name':G.data[G.name_col][p],
                 'style':c.color,
-                'cluster':c.name
-            })
+                'cluster':c.name,
+                'form': 'sphere'
+            }
+            n=G.graph.nodes[p]
+            li_data.append({**sp,**n})
 
     edges=[]
     for e in G.graph.edges:

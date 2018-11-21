@@ -9,6 +9,19 @@ const _SIZE=50;
 var ScatterPlot:any;
 var showAxis:Function;
 
+function toString(obj:any){
+    var s="";
+    var i=0;
+    for(let p in obj){
+        i++;
+        var ss=""+obj[p];
+        if(ss.length>5)ss=ss.substr(0,5);
+        s=s+i+":"+p+"="+ss+"\n";
+    }
+
+
+    return s;
+}
 
 class Game {
 
@@ -36,6 +49,8 @@ class Game {
     }
 
 
+
+
     showCluster(cluster_name,show=true,explicit=true){
         if(cluster_name==null)cluster_name="";
         for (let s of this.spheres) {
@@ -47,7 +62,7 @@ class Game {
                     s.material.alpha = _HIDDEN;
             }
         }
-        //this.showEdge();
+        this.showEdge();
     }
 
     showMesure(mes_name,show=true){
@@ -59,15 +74,15 @@ class Game {
                 else
                     s.material.alpha = _HIDDEN;
         }
-        //this.showEdge();
+        this.showEdge();
     }
 
     showEdge(){
         this.links.forEach(l=>{
             if(this.spheres[l.start].material.alpha==_HIDDEN || this.spheres[l.end].material.alpha==_HIDDEN)
-                l.edgesColor.alpha=_HIDDEN;
+                l.material.alpha=_HIDDEN;
             else
-                l.edgesColor.alpha=_VISIBLE;
+                l.material.alpha=_VISIBLE;
         });
     }
 
@@ -155,6 +170,7 @@ class Game {
                     document.getElementById("row1").innerText=target.name;
                     document.getElementById("row2").innerText=target.cluster_name;
                     document.getElementById("row4").innerText=target.ref_cluster;
+                    document.getElementById("row5").innerText=toString(target.params);
                     document.getElementById("row3").innerText=
                         Math.round(target.position.x*100)/100+","+
                         Math.round(target.position.y*100)/100+","+
@@ -170,7 +186,7 @@ class Game {
                 },
                 (evt) => {
                     let target:any=evt.meshUnderPointer;
-                    for(var i=1;i<5;i++)
+                    for(var i=1;i<6;i++)
                         document.getElementById("row"+i).innerText="";
 
                 }
@@ -178,21 +194,29 @@ class Game {
         );
     }
 
-    createMesure(obj:any,color:BABYLON.Color3):void {
+    createMesure(obj:any):void {
         var materialSphere = new BABYLON.StandardMaterial("texture2", this._scene);
-        materialSphere.diffuseColor = color;
+        materialSphere.diffuseColor = new BABYLON.Color3(obj.style[0],obj.style[1],obj.style[2]);
         materialSphere.alpha = 0.9;
+        obj.style=null;
 
-        let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: 1}, this._scene);
-
-        sphere.position.x = (obj.x)*this.scale;
-        sphere.position.y = (obj.y)*this.scale;
-        sphere.position.z = (obj.z)*this.scale;
+        let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: obj.size}, this._scene);
+        sphere.position.x = (obj.x)*this.scale;obj.x=null;
+        sphere.position.y = (obj.y)*this.scale;obj.y=null;
+        sphere.position.z = (obj.z)*this.scale;obj.z=null;
         sphere.material=materialSphere;
-        sphere.cluster_name=obj.cluster;
-        sphere.ref_cluster=obj.ref_cluster;
-        sphere.name=obj.name;
-        sphere.index=obj.index;
+        sphere.cluster_name=obj.cluster;obj.cluster=null;
+        sphere.ref_cluster=obj.ref_cluster;obj.ref_cluster=null;
+        sphere.name=obj.name;obj.name=null;
+        sphere.index=obj.index;obj.index=null;
+        sphere.size=obj.size;obj.size=null;
+        sphere.params={};
+
+        for(let p in obj){
+            if(obj[p]!=null && sphere.params[p]==null)
+                sphere.params[p]=obj[p];
+        }
+
         if(obj.hasOwnProperty("cluster_distance"))sphere.cluster_distance=JSON.parse(obj.cluster_distance);
 
         this.prepareButton(sphere);
@@ -466,6 +490,18 @@ class Game {
          });
         return rc;
     }
+
+    setSizeTo(n_prop) {
+        this.spheres.forEach((s:any)=> {
+           if(n_prop==null)
+               s.scaling=new BABYLON.Vector3(1, 1, 1);
+           else{
+            var v=Number(Object.values(s.params)[n_prop]);
+            if(v>0 && v<=1)
+                s.scaling=new BABYLON.Vector3(5*v, 5*v, 5*v);
+           }
+        });
+    }
 }
 
 let game:Game=null;
@@ -486,11 +522,10 @@ var facets=[];
 var facets_ref=[];
 var datas:any=null;
 var data_source:any=null;
-var edges=[]
+var edges=[];
 
 /**
  * Affichage des points contenu dans datas
- *
  */
 window.addEventListener("message", (evt)=> {
     datas = evt.data.datas;
@@ -502,7 +537,7 @@ window.addEventListener("message", (evt)=> {
         var i=0;
         for (let p of datas){
             p.index=i;
-            game.createMesure(p,new BABYLON.Color3(p.style[0],p.style[1],p.style[2]));
+            game.createMesure(p);
             i=i+1
         }
 
@@ -654,6 +689,13 @@ window.addEventListener("keypress", (evt)=> {
 
    if(evt.key=="M"){
        game.showMesure(prompt("Measure name"),false);
+   }
+
+   if(""+Number(evt.key)==evt.key){
+       if(evt.key=="0")
+           game.setSizeTo(null);
+       else
+           game.setSizeTo(Number(evt.key));
    }
 
 
