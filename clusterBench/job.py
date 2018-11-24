@@ -18,8 +18,6 @@ class job(Resource):
 
         data = tools.get_data_from_url(url)
 
-        if not params.__contains__("="):
-            return "erreur sur les parametres " + params
 
         start = time.time()
 
