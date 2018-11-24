@@ -644,9 +644,9 @@ class network(model):
         if len(nx.get_node_attributes(G,"centrality"))==0:
             nx.set_node_attributes(G,nx.degree_centrality(G),"centrality")
 
-        # tools.progress(20, 100, "Degree de betweeness")
-        # if len(nx.get_node_attributes(G, "betweenness")) == 0:
-        #     nx.set_node_attributes(G, nx.betweenness_centrality(G), "betweenness")
+        tools.progress(20, 100, "Degree de betweeness")
+        if len(nx.get_node_attributes(G, "betweenness")) == 0:
+            nx.set_node_attributes(G, nx.betweenness_centrality(G), "betweenness")
 
         tools.progress(40, 100, "Degree de closeness")
         if len(nx.get_node_attributes(G, "closeness")) == 0:
@@ -674,10 +674,11 @@ class network(model):
             tools.progress(0, 100, "Recherche des communautés avec "+method)
 
             #Initialisation a un cluster unique
-            comm=[range(0,len(self.graph.nodes))]
+            comm=[set(range(0,len(self.graph.nodes)))]
 
             if method.startswith("gn"):
-                comm=nx.algorithms.community.girvan_newman(self.graph)
+                tmp=nx.algorithms.community.girvan_newman(self.graph)
+                comm=tuple(sorted(c) for c in next(tmp))
 
             if method.startswith("lab"):
                 comm=nx.algorithms.community.label_propagation_communities(self.graph)

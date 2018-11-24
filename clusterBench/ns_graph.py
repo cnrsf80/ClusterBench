@@ -16,10 +16,10 @@ class graph(Resource):
     def get(self,url:str,algo_loc:str):
         graph = algo.network(url=url,algo_loc=algo_loc)
         if not graph is None:
+            if request.args.get("metrics", "true", str)=="true":graph.node_treatments()
 
-            graph.node_treatments()
             graph.findClusters(
-                method=request.args.get("algo_comm","gn",str),
+                method=request.args.get("algo_comm","",str),
                 number_of_comm=request.args.get("number_of_community",5,int)
             )
 
