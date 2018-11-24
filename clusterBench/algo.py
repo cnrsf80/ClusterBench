@@ -1,7 +1,7 @@
-import itertools
+import base64
 
 from scipy.spatial.qhull import ConvexHull
-
+import tokenize
 from clusterBench.gng import GrowingNeuralGas
 import os
 import hashlib
@@ -27,6 +27,7 @@ class model:
     silhouette_score:int=0
     score:int=0
     clusters=[]
+    infos=dict()
     url=""
     url2d=""
     help=""
@@ -41,7 +42,6 @@ class model:
 
 
     def __init__(self, data,name_col:str=None,dimensions:int=None,positions=None):
-
       self.name_col=name_col
       self.dimensions=dimensions
       self.data=data
@@ -138,8 +138,8 @@ class model:
     def end_treatment(self):
         self.delay=round((time.time()-self.delay)*10)/10
 
-    def getLink(self,domain:str,data_source:str,param:str):
-        rc="http://"+domain+":5000/"
+    def getLink(self,domain:str,data_source:str,param:str,port="5000"):
+        rc="http://"+domain+":"+port+"/"
         rc=rc+self.type+"/"
         rc=rc+param
         rc=rc+data_source.encode()
@@ -171,17 +171,24 @@ class model:
         return rc
 
     #Enregistre le clustering dans un fichier au format binaire
-    def save_cluster(self):
-        if len(self.name)==0:return False
-        res:np.ndarray=self.cluster_toarray()
-        res.tofile("./clustering/"+self.hash+"_"+self.name+".array")
+    def save_cluster(self,filename=None):
+        res: np.ndarray = self.cluster_toarray()
+        if filename is None:
+            if len(self.name)==0:return False
+            res.tofile("./clustering/"+self.hash+"_"+self.name+".array")
+        else:
+            res.tofile("./clustering/"+filename+".array")
         return True
 
 
     #Charge le clustering depuis un fichier si celui-ci existe
-    def load_cluster(self):
+    def load_cluster(self,filename=None):
         try:
-            res=np.fromfile("./clustering/"+self.hash+"_"+self.name+".array",np.int,-1)
+            if filename is None:
+                res=np.fromfile("./clustering/"+self.hash+"_"+self.name+".array",np.int,-1)
+            else:
+                res=np.fromfile("./clustering/"+filename+".array",np.int,-1)
+
             self.clusters_from_labels(res)
             self.init_distance_cluster()
             return True
@@ -229,7 +236,7 @@ class model:
 
         v=self.cluster_toarray()
         for i in range(len(v)):
-            obj[self.data[self.name_col][i]+"_"+str(i)]=v[i]
+            obj[str(self.data[self.name_col][i])+"_"+str(i)]=v[i]
 
         rc=pd.DataFrame(data=obj)
 
@@ -293,24 +300,28 @@ class model:
 
 
     def clusters_from_labels(self, labels,name="cl_"):
-        n_clusters_ = round(max(labels) + 1)
-        for i in range(n_clusters_):
-            if i>=len(draw.colors):i=1
-            color=draw.colors[i]
+        tools.progress(0,100,"Construction des clusters");
+        #offset=min(old_labels)+10000
+        #labels=[x+offset for x in old_labels]
+
+        d=dict()
+        for i in range(0,max(labels)+1):
+            color=draw.colors[i % len(draw.colors)]
             c:cluster=cluster(name + str(i), [], color,i)
-            self.clusters.append(c)
+            d[i]=c
 
         i = 0
         for l in labels:
+            tools.progress(i, len(labels));
             if l >= 0:
-                self.clusters[l].add_index(i, self.data, self.name_col)
+                d[l].add_index(i, self.data, self.name_col)
             i = i + 1
 
-        for c in copy.deepcopy(self.clusters):
-            if len(c.index)==0:self.clusters.remove(c)
-
-        for c in self.clusters:
-            c.findBestName(self.data[self.name_col])
+        self.clusters=[]
+        for c in list(d.values()):
+            if len(c.index)>0:
+                c.findBestName(self.data[self.name_col])
+                self.clusters.append(c)
 
     # def init_thread(self,algo_name,url,algo_func,p:dict):
     #     self.parameters=p
@@ -520,9 +531,9 @@ class cluster:
         rgb:str="rgb("+str(self.color[0]*255)+","+str(self.color[1]*255)+","+str(self.color[2]*255)+")"
         s=("<td style='background-color:"+rgb+"'><strong>"+self.name+"&nbsp;&nbsp;</strong></td>")
         s = s + "<td>"+str(len(self.index))+"</td><td>"
-        s=s+self.near_cluster()+"</td><td>"
-        s=s+("</td><td>".join(data[label_col][self.index]))
-        return s+"</td>"
+        s=s+self.near_cluster()+"</td><td></td>"
+        if len(self.index)>0:s=s+("<td>".join(data[label_col][self.index]))+"</td>"
+        return s
 
 
     def __eq__(self, other):
@@ -534,7 +545,7 @@ class cluster:
     def findBestName(self, labels,prefixe="cl_"):
         rc=""
         for m in labels[self.index]:
-            if len(m)>10:
+            if len(str(m))>10:
                 lib=str(m)[:10]
             else:
                 lib=str(m)
@@ -554,69 +565,139 @@ class network(model):
     #     self.graph.add_node(nodes)
     #     self.graph.add_edge(edges)
 
-    def __init__(self,url:str):
+    def __init__(self,url:str,algo_loc:str):
+        self.clusters.clear()
         tools.progress(0,100,"Chargement du graphe")
-        self.graph=nx.read_gml(url)
-
-        tools.progress(10, 100, "positionnement des noeuds")
-        pos=self.relocate(method="circular")
+        if not self.load(url,algo_loc):
+            self.graph = nx.convert_node_labels_to_integers(self.graph, label_attribute="name")
 
         tools.progress(90,100,"Préparation")
-        self.data: pd.DataFrame = pd.DataFrame(list(pos.values()))
-
-        self.data["name"] = list(pos.keys())
-        self.graph=nx.convert_node_labels_to_integers(self.graph)
+        self.data: pd.DataFrame = pd.DataFrame(index=list(range(0,len(self.graph.nodes))))
+        self.data["name"] = nx.get_node_attributes(self.graph,"name")
 
         self.dimensions = 3
         self.name_col = "name"
 
+
     # Positionnement des noeuds du graphe suivant l'algorithme gn,modularity,circular
     def relocate(self,dim=3,scale=3,method="spectral"):
+        if method == "circular": d = nx.circular_layout(self.graph, scale=2, dim=3)
         if method=="spectral":d=nx.spectral_layout(self.graph,dim=dim,scale=scale)
         if method=="fr":d=nx.fruchterman_reingold_layout(self.graph,iterations=50,dim=3)
-        if method=="circular":
-            d=nx.circular_layout(self.graph,scale=2,dim=3)
+        i=1
+        pos=[]
+        for n in self.graph.nodes:
+            if method=="fr" or method=="circular":
+                pos.append(str(list(d.get(i-1))))
+            else:
+                pos.append(str(list(d.get(str(i)))))
+            i = i + 1
+
+        nx.set_node_attributes(self.graph, pos, "location")
+
         self.position=list(d.values())
         return d
+
+
+    def save(self):
+        path="./clustering/"+self.url+".gpickle"
+        nx.write_gpickle(self.graph,path)
+
+
+    def create_graph_from_dataframe(self,df:pd.DataFrame):
+        df=df.apply(lambda x:(0,1)[x>self.seuil])
+        self.graph=nx.from_numpy_matrix(df.as_matrix())
+
+
+    def load(self,url,algo_loc):
+        self.url=bytes(base64.encodebytes(bytes(url+algo_loc,encoding="utf-8"))).hex()
+        if os.path.exists("./clustering/"+self.url+".gpickle"):
+            tools.progress(50,100,"Chargement depuis le cache")
+            self.graph = nx.read_gpickle("./clustering/"+self.url+".gpickle")
+            return True
+        else:
+            if url.endswith(".gml"):
+                tools.progress(50, 100, "Chargement du fichier au format GML")
+                if not url.startswith("http"): url = "./datas/" + url
+                try:
+                    self.graph =nx.read_gml(url)
+                except:
+                    self.graph=nx.read_graphml(url)
+            else:
+                tools.progress(50, 100, "Chargement depuis la matrice de distance")
+                self.data: pd.DataFrame = tools.get_data_from_url(url)
+                if not self.data is None:
+                    self.create_graph_from_dataframe(data)
+            return False
 
 
     def node_treatments(self):
         G=self.graph
         tools.progress(0,100,"Degree de centralité")
-        nx.set_node_attributes(G,nx.degree_centrality(G),"centrality")
+        if len(nx.get_node_attributes(G,"centrality"))==0:
+            nx.set_node_attributes(G,nx.degree_centrality(G),"centrality")
 
-        tools.progress(20, 100, "Degree de betweeness")
-        nx.set_node_attributes(G, nx.betweenness_centrality(G), "betweenness")
+        # tools.progress(20, 100, "Degree de betweeness")
+        # if len(nx.get_node_attributes(G, "betweenness")) == 0:
+        #     nx.set_node_attributes(G, nx.betweenness_centrality(G), "betweenness")
 
         tools.progress(40, 100, "Degree de closeness")
-        nx.set_node_attributes(G, nx.closeness_centrality(G), "closeness")
+        if len(nx.get_node_attributes(G, "closeness")) == 0:
+            nx.set_node_attributes(G, nx.closeness_centrality(G), "closeness")
 
         tools.progress(60, 100, "Page rank")
-        nx.set_node_attributes(G, nx.pagerank(G), "pagerank")
+        if len(nx.get_node_attributes(G, "pagerank")) == 0:
+            nx.set_node_attributes(G, nx.pagerank(G), "pagerank")
 
         tools.progress(80, 100, "Hub and autorities")
-        hub, aut = nx.hits(G)
-        nx.set_node_attributes(G, hub, "hub")
-        nx.set_node_attributes(G, aut, "autority")
+        if len(nx.get_node_attributes(G, "hub")) == 0:
+            hub, aut = nx.hits(G)
+            nx.set_node_attributes(G, hub, "hub")
+            nx.set_node_attributes(G, aut, "autority")
 
-        tools.progress(90, 100, "Excentricity")
-        nx.set_node_attributes(G, nx.eccentricity(G), "eccentricity")
+        #tools.progress(90, 100, "Excentricity")
+        #nx.set_node_attributes(G, nx.eccentricity(G), "eccentricity")
 
+        self.node_treatment=True
         tools.progress(100, 100, "Fin des traitements")
 
 
+    def findClusters(self,prefixe="cl_",method="gn",number_of_comm=5):
+        if not self.load_cluster(self.url+"_"+method+str(number_of_comm)):
+            tools.progress(0, 100, "Recherche des communautés avec "+method)
 
-    def findClusters(self,prefixe="cl_",method="gn"):
-        tools.progress(0, 100, "Recherche des communautés")
-        if method=="gn":comm=nx.algorithms.community.girvan_newman(self.graph)
-        if method=="modularity":comm=nx.algorithms.community.modularity(self.graph)
+            #Initialisation a un cluster unique
+            comm=[range(0,len(self.graph.nodes))]
 
-        tools.progress(70, 100, "Fabrication des clusters")
-        i=0
-        for c in next(comm):
-            cl=cluster(prefixe+str(i),index=list(c),color=draw.colors[i % len(draw.colors)])
-            i=i+1
-            self.clusters.append(cl)
+            if method.startswith("gn"):
+                comm=nx.algorithms.community.girvan_newman(self.graph)
+
+            if method.startswith("lab"):
+                comm=nx.algorithms.community.label_propagation_communities(self.graph)
+
+            if method.startswith("mod"):
+                comm=nx.algorithms.community.greedy_modularity_communities(self.graph)
+
+            if method.startswith("async"):
+                try:
+                    comm = nx.algorithms.community.asyn_fluidc(self.graph,k=number_of_comm)
+                except:
+                    tools.progress(100,100,"Impossible d'exécuter async_fluid")
+
+
+            i=0
+            for c in comm:
+                cl=cluster(prefixe+str(i),index=list(c),color=draw.colors[i % len(draw.colors)])
+                i=i+1
+                tools.progress(i, 100, "Fabrication des clusters")
+                self.clusters.append(cl)
+
+            tools.progress(100, 100, "Clustering terminé")
+            self.save_cluster(self.url+"_"+method)
+
+        else:
+            tools.progress(100,100,"Chargement des clusters")
+
 
 
 

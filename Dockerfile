@@ -3,8 +3,8 @@
 
 #x86
 FROM python:3
-#docker build -t f80hub/cluster_bench_x86 . & docker push f80hub/cluster_bench_x86:latest
-#docker rm -f clusterbench && docker pull f80hub/cluster_bench_x86:latest && docker run --restart=always -v /clustering:/app/clustering -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_x86:latest
+#docker build -t f80hub/cluster_bench_v2_x86 . & docker push f80hub/cluster_bench_v2_x86:latest
+#docker rm -f clusterbench && docker pull f80hub/cluster_bench_v2_x86:latest && docker run --restart=always -v /datas:/app/datas -v /clustering:/app/clustering -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_v2_x86:latest
 
 #arm
 #FROM arm32v7/python
@@ -47,6 +47,7 @@ WORKDIR /app
 
 COPY requirements.txt /app/requirements.txt
 COPY datas /app/datas
+COPY clustering /app/clustering
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 

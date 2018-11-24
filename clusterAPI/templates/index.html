@@ -202,9 +202,15 @@
 
 
     function showlink(multiple=false){
-        var file=encodeURIComponent(document.getElementById("url").value)
-        var algo=document.getElementById("algo").value.split(":")[0];
+        var domain=document.location.host;
+        if(!domain.endsWith("/"))domain=domain+"/";
+
         var notif=document.getElementById("email").value;
+
+        var file=encodeURIComponent(document.getElementById("url").value)
+
+        var algo=document.getElementById("algo").value.split(":")[0];
+
         var pca=document.getElementById("pca").value;
         var params=document.getElementById("params").value;
         for(var i=0;i<10;i++)params=params.replace("\n"," ").replace("<br>"," ");
@@ -212,33 +218,31 @@
         for(var i=0;i<10;i++)params=params.replace(" ","&");
         if(params[0]==' ')params=params.substr(1,params.length);
 
-        var domain=document.location.host;
         var job_name="job"+new Date().getTime();
 
         if(!multiple){
-            url="http://"+domain+"/job/"+file+"/"+algo+"/"+params+"?&pca="+pca;
+            if(file.endsWith(".gml")){
+                url="http://"+domain+"graph/"+file+"/fr?algo_comm=gn";
+            } else {
+                url="http://"+domain+"job/"+file+"/"+algo+"/"+params+"?&pca="+pca;
+            }
 
             if(notif.length>0)url+="&notif="+notif;
-
             var notext=document.getElementById("notext").checked;
             if(notext)url=url+"&notext";
 
-
             document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
-
             return url;
         } else {
             //Traitement simple
             urls=[];
             cutParams(params).forEach((p)=>{
-                url="http://"+domain+"/job/"+file+"/"+algo+"/"+p+"?pca="+pca+"&notif="+notif;
+                url="http://"+domain+"job/"+file+"/"+algo+"/"+p+"?pca="+pca+"&notif="+notif;
                 urls.push(url);
             });
             return urls;
         }
     }
-
-
 
     function showParameters(){
         var algo=document.getElementById("algo").value.split("::")[0];
@@ -254,16 +258,12 @@
     }
 
 
-
-
     function testDownload(){
         var file=document.getElementById("url").value;
         if(file.indexOf("http")!=0)
             file="http://45.77.160.220:5000/datas/"+file;
         window.open(file,"blank_");
     }
-
-
 
 
 
@@ -285,7 +285,7 @@
                 return response.json();
             })
             .then(r => {
-                document.getElementById("url").value=r.url;
+                document.getElementById("url").value=file.name;
                 showlink();
             }).catch((r)=>{
                 alert("Pas de connexion"+r);

@@ -3,7 +3,7 @@
 import float = BABYLON.float;
 
 const _VISIBLE=0.9;
-const _HIDDEN=0.2;
+const _HIDDEN=0.08;
 const _SIZE=50;
 
 var ScatterPlot:any;
@@ -47,8 +47,6 @@ class Game {
         if(BABYLON.VideoRecorder.IsSupported(this._engine))
             this._recorder = new BABYLON.VideoRecorder(this._engine)
     }
-
-
 
 
     showCluster(cluster_name,show=true,explicit=true){
@@ -104,21 +102,21 @@ class Game {
                     }
 
 
-                    if(evt.sourceEvent.altKey){
+                    if(evt.sourceEvent.altKey && !evt.sourceEvent.ctrlKey){
                         for (let s of this.spheres) {
                             if (s.name == target.name ){
                                 if (s.increase) {
                                         s.scaling = new BABYLON.Vector3(1, 1, 1);
                                         s.increase = false;
                                 } else {
-                                            s.scaling = new BABYLON.Vector3(2, 2, 2);
-                                            s.increase=true;
-                                        }
+                                        s.scaling = new BABYLON.Vector3(2, 2, 2);
+                                        s.increase=true;
+                                }
                             }
                         }
                     }
 
-                    if(evt.sourceEvent.ctrlKey){
+                    if(evt.sourceEvent.ctrlKey && !evt.sourceEvent.altKey){
                         for (let s of this.spheres) {
                             if (s.ref_cluster == target.ref_cluster ){
                                 if (s.increase) {
@@ -131,6 +129,14 @@ class Game {
                             }
                         }
                     }
+
+                    if(evt.sourceEvent.ctrlKey && evt.sourceEvent.altKey){
+                        var index=this.spheres.indexOf(target);
+                        if(target.material.alpha==_VISIBLE)
+                            this.spheres[index].material.alpha=_HIDDEN;
+                        else
+                            this.spheres[index].material.alpha=_VISIBLE;
+                    }
                 }
             )
         );
@@ -140,7 +146,7 @@ class Game {
                 {
                     trigger: BABYLON.ActionManager.OnDoublePickTrigger
                 },
-                (evt)=>{
+                (evt:any)=>{
                     let target:any=evt.meshUnderPointer;
                     this.showCluster(null,false);
                     this.showCluster(target.cluster_name);
@@ -195,10 +201,13 @@ class Game {
     }
 
     createMesure(obj:any):void {
+
         var materialSphere = new BABYLON.StandardMaterial("texture2", this._scene);
         materialSphere.diffuseColor = new BABYLON.Color3(obj.style[0],obj.style[1],obj.style[2]);
         materialSphere.alpha = 0.9;
         obj.style=null;
+
+
 
         let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: obj.size}, this._scene);
         sphere.position.x = (obj.x)*this.scale;obj.x=null;
@@ -223,7 +232,7 @@ class Game {
         this.spheres.push(sphere);
     }
 
-    linkSphere(s1:any,s2:any):void {
+    linkSphere(s1:any,s2:any,radius=0.04):void {
         let path = [
             new BABYLON.Vector3(s1.position.x, s1.position.y, s1.position.z),
             new BABYLON.Vector3(s2.position.x, s2.position.y, s2.position.z)
@@ -232,13 +241,13 @@ class Game {
         var tube:any = BABYLON.MeshBuilder.CreateTube("link"+s1.name+"_"+s2.name,
             {
                 path: path,
-                radius: 0.04,
-                tessellation:12,
+                radius: radius,
+                tessellation:8 ,
             },
             this._scene);
 
         tube.material=new BABYLON.StandardMaterial("texture2", this._scene);
-        tube.material.diffuseColor = new BABYLON.Color3(0.8,0.8,0.8);
+        tube.material.diffuseColor = new BABYLON.Color3(0.9,0.9,0.9);
         tube.material.alpha = _VISIBLE;
 
         tube["start"]=s1.index;
@@ -322,8 +331,9 @@ class Game {
 
 
     clearMesures() {
+        this.spheres.forEach((s:any)=> {s.dispose();});
         this.spheres=[];
-        this.links=[];
+        this.clearLinks();
     }
 
 
@@ -383,7 +393,6 @@ class Game {
                             new BABYLON.Vector3((facet[k+2][0]+translate)*this.scale, (facet[k+2][1]+translate)*this.scale,(facet[k+2][2]+translate)*this.scale)
                       ];
 
-
                     var lines=[[shape[0],shape[1]],[shape[1],shape[2]],[shape[0],shape[2]]];
                     var polygon=BABYLON.MeshBuilder.CreateLineSystem(
                         "line"+facet[0],
@@ -407,9 +416,7 @@ class Game {
     }
 
     clearLinks() {
-        this.links.forEach((l)=>{
-            l.dispose();
-        });
+        this.links.forEach((l)=>{l.dispose();});
         this.links=[];
     }
 
@@ -460,16 +467,28 @@ class Game {
         this._recorder.stopRecording();
     }
 
+    message(s:string,delayInSec=10){
+        document.getElementById("message").innerHTML=s;
+        setTimeout(()=>{
+            document.getElementById("message").innerHTML="";
+        },delayInSec*1000);
+    }
+
 
     setCameraToTarget(x: string, y: string, z: string) {
         this._camera.setTarget(new BABYLON.Vector3(Number(x),Number(y),Number(z)));
     }
 
-    updateScale(step: number,datas:any[]) {
+    updateScale(step: number,datas:any[],edges:any[]) {
+        this.clearLinks();
          this.spheres.forEach((s:any)=> {
             s.position.x=s.position.x*step;
             s.position.y=s.position.y*step;
             s.position.z=s.position.z*step;
+         });
+
+         edges.forEach(e=>{
+                this.linkSphere(this.spheres[e.start],this.spheres[e.end]);
          });
     }
 
@@ -477,7 +496,7 @@ class Game {
         //Créer la ligne des mesures
         if(datas.length==0)return("");
 
-        var rc="Ref"+sep;
+        var rc="Names"+sep;
         for(var k=0;k<datas[0].length-1;k++)rc=rc+"Mesure"+k+sep;
         rc=rc.substr(0,rc.length-1)+end_line;
 
@@ -492,15 +511,37 @@ class Game {
     }
 
     setSizeTo(n_prop) {
+        var max=-1000;
+        this.spheres.forEach((s:any)=> {
+            var v=Number(Object.values(s.params)[n_prop-1]);
+            if(v>max)max=v;
+        });
+        var fact=8/max;
+
         this.spheres.forEach((s:any)=> {
            if(n_prop==null)
                s.scaling=new BABYLON.Vector3(1, 1, 1);
            else{
-            var v=Number(Object.values(s.params)[n_prop]);
+            var v=Number(Object.values(s.params)[n_prop-1]);
             if(v>0 && v<=1)
-                s.scaling=new BABYLON.Vector3(5*v, 5*v, 5*v);
+                s.scaling=new BABYLON.Vector3(fact*v, fact*v, fact*v);
            }
         });
+    }
+
+    propage(alpha: number) {
+        var l_s=[];
+        this.links.forEach((l:any)=> {
+            var s1=this.spheres[l.start];
+            var s2=this.spheres[l.end];
+            if(s1.material.alpha!=s2.material.alpha){
+                l_s.push(s1);
+                l_s.push(s2);
+            }
+        });
+
+        l_s.forEach((s)=>{s.material.alpha=alpha;})
+        this.showEdge();
     }
 }
 
@@ -535,13 +576,13 @@ window.addEventListener("message", (evt)=> {
     if (datas!=null && datas.length>0) {
         game.clearMesures();
         var i=0;
+        game.message("Création de "+datas.length+" mesures",2);
         for (let p of datas){
             p.index=i;
             game.createMesure(p);
             i=i+1
         }
-
-
+        if(evt.data.autorotate)game.startAutoRotation();
         facets=evt.data.facets;
         facets_ref=evt.data.facets_ref;
         edges=evt.data.edges;
@@ -572,8 +613,8 @@ window.addEventListener("keypress", (evt)=> {
        game.showCluster("noise",false);
    }
 
-   if(evt.key=="+")game.updateScale(1.05,datas);
-   if(evt.key=="-")game.updateScale(0.95,datas);
+   if(evt.key=="+")game.updateScale(1.05,datas,edges);
+   if(evt.key=="-")game.updateScale(0.95,datas,edges);
 
    if(evt.key=="n"){
        game.showCluster("noise",true);
@@ -600,9 +641,12 @@ window.addEventListener("keypress", (evt)=> {
         document.getElementById("message").innerHTML="";
     }
 
+    if(evt.key=="x")game.propage(_VISIBLE);
+    if(evt.key=="X")game.propage(_HIDDEN);
+
     if(evt.key=="h"){
         var text="" +
-            "            <br>Commandes sur la visu 3d:<br>\n" +
+            "            <h3>Commandes sur la visu 3d:</h3>>" +
             "            - <strong>'s'</strong> et SHIFT+'s' respectivement montre et cache toutes les mesures<br>\n" +
             "            - <strong>'m'</strong> et SHIFT+'m' opere un filtre sur les mesures pour les montrer / cacher<br>\n" +
             "            - <strong>'c'</strong> et SHIFT+'c' opere un filtre sur les clusters pour les montrer / cacher<br>\n" +
@@ -612,6 +656,7 @@ window.addEventListener("keypress", (evt)=> {
             "            - <strong>'+'</strong> et '-' écarte/réduit les mesure par changement d'échelle <br>\n" +
             "            - <strong>'e'</strong> export les données visibles au format CSV dans le presse papier<br>\n" +
             "            - <strong>'p'</strong> et SHIFT+'p' entoure les clusters visible (patatoides) <br>\n" +
+            "            - <strong>'x'</strong> et SHIFT+'x' propagation des mesures visiblesh / cachées <br>\n" +
             "            - <strong>'o'</strong> entoure les clusters de référence<br>\n" +
             "            - <strong>'r'</strong> supprime définitivement le bruit (permet d'accéler la navigation)<br>\n" +
             "            - <strong>'k'</strong> connecte entre elles les mesures du même nom<br>\n" +
@@ -621,10 +666,9 @@ window.addEventListener("keypress", (evt)=> {
             "            - 'ALT+click' permet grossis / réduit les mesures du même nom<br>\n" +
             "            - 'click droit' permet d'enregistrer la visu en format image";
 
-        document.getElementById("message").innerHTML=text;
-        setTimeout(()=>{
-            document.getElementById("message").innerHTML="";
-        },10000);
+        game.message(text,10);
+
+
     }
 
     if(evt.key=="P"){
@@ -689,6 +733,10 @@ window.addEventListener("keypress", (evt)=> {
 
    if(evt.key=="M"){
        game.showMesure(prompt("Measure name"),false);
+   }
+
+   if(evt.key=="L"){
+       game.clearLinks();
    }
 
    if(""+Number(evt.key)==evt.key){

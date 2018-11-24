@@ -155,11 +155,15 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
     return li_data,facets
 
 #Representation 3d du graph
-def to3D(G:algo.network):
+def to3D(G:algo.network,positions=None):
     li_data=[]
     for c in G.clusters:
         for p in c.index:
-            row=G.data.iloc[[p]]
+            if positions is None:
+                row=G.data.iloc[[p]]
+            else:
+                row=positions[p]
+
             sp={
                 'x':float(row[0]),'y':float(row[1]),'z':float(row[2]),
                 'label':G.data[G.name_col][p],
@@ -222,7 +226,7 @@ def trace_artefact(G, clusters):
 from flask import render_template
 
 #Production du fichier à destination du tracé 3d
-def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0):
+def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0,autorotate="false"):
     li_data,facets= pca_totrace(mod.mesures(), mod.clusters,mod.names(),mod.data['ref_cluster'],pca_offset)
 
     if ref_model is None:
@@ -240,6 +244,7 @@ def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0):
                          title=title,
                          name_zone="zone"+id,
                          datas=li_data,
+                         autorotate=autorotate,
                          data_source=toList,
                          facets_ref=facets_ref,
                          facets=facets,
@@ -247,10 +252,11 @@ def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0):
                          url_to_render="/static/rendering/render.html?offset="+str(pca_offset))
     return code
 
-def trace_graph(G:algo.network):
-    li_data,edges=to3D(G)
+def trace_graph(G:algo.network,positions=None,autorotate=False):
+    li_data,edges=to3D(G,positions)
     code = render_template("modele.html",
                            title="",
+                           autorotate=autorotate,
                            name_zone="zone",
                            datas=li_data,
                            data_source=[],

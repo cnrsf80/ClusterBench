@@ -11,7 +11,7 @@ def progress(count, total, suffix=''):
     filled_len = int(round(bar_len * count / float(total)))
     percents = round(100.0 * count / float(total), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
-    sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', suffix))
+    sys.stdout.write('[%s] %s%s ...%s                                          \r' % (bar, percents, '%', suffix))
     sys.stdout.flush()  # As suggested by Rom Ruben
 
 
@@ -180,8 +180,11 @@ def get_data_from_url(url:str):
         if format == "dbf": data = Dbf5(url).to_dataframe()
         if format == "csv":
             data = pd.read_csv(url, sep=";", decimal=",")
-            if not data is None and not type(data.iloc[3][3]) is float: data = pd.read_csv(url, sep=",", decimal=".")
-            if not data is None and not type(data.iloc[3][3]) is float: data = pd.read_csv(url, sep=";", decimal=".")
+            if len(data.loc[[]].columns)<2 or (not data is None and not type(data.iloc[3][3]) is float):
+                data = pd.read_csv(url, sep=",", decimal=".")
+
+            if len(data.loc[[]].columns)<2 or (not data is None and not type(data.iloc[3][3]) is float):
+                data = pd.read_csv(url, sep=";", decimal=".")
     except:
         data = None
 
@@ -194,8 +197,8 @@ import math
 def chk_integrity(data:pd.DataFrame):
     for row in data.values:
         for cel in row:
-            if cel is None:return False
-            if is_number(cel) and math.isnan(cel):return False
+            if not type(cel) is str:
+                if not is_number(cel):return False
 
     return True
 
@@ -209,9 +212,9 @@ def tokenize(items:list):
     return rc
 
 
-def add_default_value(args:dict, param):
+def add_default_value(args_from_url:dict, param):
     for p in param:
-        if not p in args:
-            args[p]=param[p]
+        if not p in args_from_url:
+            args_from_url[p]=param[p]
 
-    return args
+    return args_from_url

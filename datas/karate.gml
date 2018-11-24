@@ -1,4 +1,3 @@
-Creator "Mark Newman on Fri Jul 21 12:39:27 2006"
 graph
 [
   node

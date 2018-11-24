@@ -10,7 +10,6 @@ import hdbscan
 
 from flask import request
 
-
 class simulation:
 
     models=[]
@@ -48,9 +47,9 @@ class simulation:
             self.execute(algo_name="HDBSCAN",
                         url="https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
                         func=lambda x:
-                        hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"],
-                                        min_samples=x["min_samples"],
-                                        alpha=x["alpha"]),
+                            hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"],
+                                            min_samples=x["min_samples"],
+                                            alpha=x["alpha"]),
                         ps=parameters)
 
         if name_algo.upper().__contains__("MEANSHIFT"):
@@ -92,13 +91,13 @@ class simulation:
 
 
     #Retourne une version HTML de la simulation
-    def toHTML(self):
+    def toHTML(self,autorotate="false"):
         code = self.print_infos() + "<br>synthese<br>"
         try:
             n_pca = int(request.args["pca"])
         except:
             n_pca = 2
-        code = code + self.get3d_html(n_pca)
+        code = code + self.get3d_html(n_pca,autorotate=autorotate)
         code = code.replace("synthese", self.synthese())
         return code
 
@@ -275,7 +274,7 @@ class simulation:
         return str(len(self.models))+" modeles calculés"
 
 
-    def get3d_html(self,n_pca=1,no_text=False):
+    def get3d_html(self,n_pca=1,no_text=False,autorotate="false"):
         code=""
         for i in range(0, len(self.models)):
             m:algo.model=self.models[i]
@@ -287,7 +286,7 @@ class simulation:
                                                      m.id+"_pca"+str(pca_offset),
                                                      m.name+" Axe="+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2),
                                                      self.ref_model,
-                                                     pca_offset)
+                                                     pca_offset,autorotate=autorotate)
 
             if not no_text:code=code+"<br><br>"+m.print_perfs("<br>")
 
@@ -301,7 +300,7 @@ class simulation:
     def getLinks(self,data_source:str,param:str):
         rc=[]
         for m in self.models:
-            rc.append("<a href='"+m.getLink("localhost",data_source,param)+"'>"+m.name+"</a>")
+            rc.append("<a href='"+m.getLink("localhost",data_source,param,"5000")+"'>"+m.name+"</a>")
         return rc
 
     def synthese(self):

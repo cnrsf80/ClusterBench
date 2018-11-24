@@ -11,4 +11,5 @@ xlrd
 openpyxl
 hdbscan
 Flask
+flask_restplus
 simpledbf

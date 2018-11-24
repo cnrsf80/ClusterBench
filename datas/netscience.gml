@@ -1,4 +1,3 @@
-Creator "Mark Newman on Sat Jul 22 06:24:59 2006"
 graph
 [
   directed 0
