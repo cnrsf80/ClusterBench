@@ -318,9 +318,11 @@ class model:
             i = i + 1
 
         self.clusters=[]
+        i=0
         for c in list(d.values()):
+            i=i+1
             if len(c.index)>0:
-                c.findBestName(self.data[self.name_col])
+                c.findBestName(self.data[self.name_col],"cl"+str(i)+"_")
                 self.clusters.append(c)
 
     # def init_thread(self,algo_name,url,algo_func,p:dict):
@@ -552,7 +554,12 @@ class cluster:
             lib=str.replace(lib," ","")
             if not rc.__contains__(lib):rc=rc+lib+" "
 
-        if len(rc)>50:rc=hashlib.md5(bytes(rc,"utf-8")).hexdigest()
+        if len(rc)>40:
+            if prefixe!="cl_":
+                rc=rc[0:40]
+            else:
+                rc=hashlib.md5(bytes(rc,"utf-8")).hexdigest()
+
         self.name=prefixe+str.strip(rc)
 
 #Representation d'un graphe
