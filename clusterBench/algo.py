@@ -504,7 +504,8 @@ class cluster:
                 return facets
 
             for p in hull.simplices:
-                k:list=list(p)
+                k=[]
+                for i in list(p):k.append(self.index[i])
                 facet=[self.name,offset,self.color,k]
                 facets.append(facet)
 

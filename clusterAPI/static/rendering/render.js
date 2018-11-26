@@ -309,15 +309,14 @@ var Game = /** @class */ (function () {
         clusters.forEach(function (facets) {
             facets.forEach(function (facet) {
                 if (facet[1] == offset && (filter == null || facet[0].indexOf(filter) > -1)) {
-                    var k = 3;
                     var positions = [];
-                    facet[k].forEach(function (f) {
+                    facet[3].forEach(function (f) {
                         positions.push(_this.spheres[f].position);
                     });
                     var shape = [
-                        new BABYLON.Vector3(positions[0].x, (positions[0].y + translate), (positions[0].z + translate)),
-                        new BABYLON.Vector3(positions[1].x, (positions[1].y + translate), (positions[1].z + translate)),
-                        new BABYLON.Vector3(positions[2].x, (positions[2].y + translate), (positions[2].z + translate))
+                        new BABYLON.Vector3(positions[0].x, positions[0].y, positions[0].z),
+                        new BABYLON.Vector3(positions[1].x, positions[1].y, positions[1].z),
+                        new BABYLON.Vector3(positions[2].x, positions[2].y, positions[2].z)
                     ];
                     var lines = [[shape[0], shape[1]], [shape[1], shape[2]], [shape[0], shape[2]]];
                     var polygon = BABYLON.MeshBuilder.CreateLineSystem("line" + facet[0], { lines: lines }, _this._scene);
