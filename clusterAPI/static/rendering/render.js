@@ -170,11 +170,17 @@ var Game = /** @class */ (function () {
         obj.ref_cluster = null;
         sphere.name = obj.name;
         obj.name = null;
+        sphere.label = obj.name;
+        obj.label = null;
         sphere.index = obj.index;
         obj.index = null;
         sphere.size = obj.size;
         obj.size = null;
         sphere.params = {};
+        //Certaines propriétés sont supprimées du paramétres de la sphere (voir traitement suivant)
+        obj.form = null;
+        obj.Ref = null;
+        obj.cluster_distance = null;
         for (var p in obj) {
             if (obj[p] != null && sphere.params[p] == null)
                 sphere.params[p] = obj[p];
@@ -304,10 +310,14 @@ var Game = /** @class */ (function () {
             facets.forEach(function (facet) {
                 if (facet[1] == offset && (filter == null || facet[0].indexOf(filter) > -1)) {
                     var k = 3;
+                    var positions = [];
+                    facet[k].forEach(function (f) {
+                        positions.push(_this.spheres[f].position);
+                    });
                     var shape = [
-                        new BABYLON.Vector3((facet[k][0] + translate) * _this.scale, (facet[k][1] + translate) * _this.scale, (facet[k][2] + translate) * _this.scale),
-                        new BABYLON.Vector3((facet[k + 1][0] + translate) * _this.scale, (facet[k + 1][1] + translate) * _this.scale, (facet[k + 1][2] + translate) * _this.scale),
-                        new BABYLON.Vector3((facet[k + 2][0] + translate) * _this.scale, (facet[k + 2][1] + translate) * _this.scale, (facet[k + 2][2] + translate) * _this.scale)
+                        new BABYLON.Vector3(positions[0].x, (positions[0].y + translate), (positions[0].z + translate)),
+                        new BABYLON.Vector3(positions[1].x, (positions[1].y + translate), (positions[1].z + translate)),
+                        new BABYLON.Vector3(positions[2].x, (positions[2].y + translate), (positions[2].z + translate))
                     ];
                     var lines = [[shape[0], shape[1]], [shape[1], shape[2]], [shape[0], shape[2]]];
                     var polygon = BABYLON.MeshBuilder.CreateLineSystem("line" + facet[0], { lines: lines }, _this._scene);

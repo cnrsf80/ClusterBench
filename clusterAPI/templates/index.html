@@ -106,7 +106,19 @@
                     </td>
                 </tr>
 
+                <tr>
+                    <td>Filter</td>
+                    <td>
+                        <input size="60"
+                               value="" id="filter" type="text"
+                               onchange="showlink()"
+                        >
+                    </td>
+                </tr>
+
                 <tr><td><br></td></tr>
+
+
 
                 <tr>
                     <td>Nombre de vues</td>
@@ -213,6 +225,7 @@
         if(!domain.endsWith("/"))domain=domain+"/";
 
         var notif=document.getElementById("email").value;
+        var filter=document.getElementById("filter").value;
 
         var file=encodeURIComponent(document.getElementById("url").value)
 
@@ -235,7 +248,7 @@
             }
 
             if(notif.length>0)url+="&notif="+notif;
-            var notext=document.getElementById("notext").checked;
+            if(filter.length>0)url+="&filter="+filter;var notext=document.getElementById("notext").checked;
             if(notext)url=url+"&notext";
 
             document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";

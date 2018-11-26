@@ -505,11 +505,11 @@ class cluster:
 
             for p in hull.simplices:
                 k:list=list(p)
-                facet=[self.name,offset,self.color,list(pts[k[0]]),list(pts[k[1]]),list(pts[k[2]])]
+                facet=[self.name,offset,self.color,k]
                 facets.append(facet)
 
         if len(pts)==3:
-            facet = [self.name, offset,self.color,list(pts[0]), list(pts[1]), list(pts[2])]
+            facet = [self.name, offset,self.color,self.index]
             facets.append(facet)
 
         return facets
