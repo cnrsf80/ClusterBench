@@ -722,6 +722,15 @@ window.addEventListener("keypress", (evt)=> {
        });
    }
 
+    if(evt.key=="E"){
+       var code=game.toCSV(data_source);
+       fetch("./measure/temp.csv",{method:"POST",body:code}).then(r=>{
+           debugger;
+       }).catch((err=>{
+           debugger;
+       }))
+   }
+
 
     if(evt.key=="k"){
        game.mesureConnection();

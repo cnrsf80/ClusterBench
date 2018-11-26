@@ -4,13 +4,13 @@ import clusterBench.tools as tools
 import clusterBench.algo as algo
 import clusterBench.draw as draw
 
-ns_graph = Namespace('graph', description='Job related operations to calculation')
+ns_graph = Namespace('graph', description='Graph module')
 
 #test:http://localhost:5000/graph/netscience.gml/fr?algo_comm=asyncfluid
 @ns_graph.route("/<string:url>/<string:algo_loc>")
 @ns_graph.param("algo_comm","Clustering algorithm : lab,mod,async")
 @ns_graph.param("number_of_comm","Community number for async_fluid algorithm")
-@ns_graph.param("seuil","seuil to use to transform an distance matrix to graph")
+@ns_graph.param("threshold","threshold to use to transform an distance matrix to graph")
 @ns_graph.param("autorotate","Autostart the rotation of the graphique")
 class graph(Resource):
     def get(self,url:str,algo_loc:str):

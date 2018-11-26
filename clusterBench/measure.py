@@ -1,7 +1,9 @@
 import os
+
 from flask import request
 from flask_restplus import Namespace, Resource, abort
 import clusterBench.tools as tools
+import pandas as pd
 
 api = Namespace('datas', description='Datas related operations to add / remove file on server')
 
@@ -29,17 +31,23 @@ class Measure(Resource):
         file= request.files["files"];
 
         if file and self.allowed_file(name):
-            filename = name
 
-            url = os.path.join("./datas", filename)
+            url = os.path.join("./datas", name)
             file.save(url)
 
-            data = tools.get_data_from_url(filename)
+            data = tools.get_data_from_url(name)
             if not tools.chk_integrity(data):
                 os.remove(url)
                 return "Le fichier contient des valeurs incorrectes",401
             else:
                 return "",201
+
+        if request.data:
+            url = os.path.join("./datas", name)
+            with open(url,"w") as text_file:
+                text_file.write(request.data)
+            return "",201
+
 
     @api.doc(responses={201: 'The file exist'})
     @api.doc(params={'name':'Name of the file to check'})

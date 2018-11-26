@@ -18,9 +18,7 @@ class job(Resource):
 
         data = tools.get_data_from_url(url)
 
-
         start = time.time()
-
 
         sim: simulation = simulation.simulation(data=data)
 

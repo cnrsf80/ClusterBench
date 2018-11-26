@@ -10,7 +10,7 @@ api=Api(
     version="1.0",
     title="3DataAPI",
     doc="/api",
-    description="3D representation of cluster and graph"
+    description="An interactive 3D representation of clusters and graphs"
 )
 
 api.add_namespace(measure_ns)

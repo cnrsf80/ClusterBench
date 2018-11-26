@@ -1,9 +1,5 @@
 import os
 from flask import Flask,request,g,render_template
-import clusterBench.simulation as simulation
-import clusterBench.algo as algo
-import pandas as pd
-import main
 
 
 #http://45.77.160.220:5000/algo/NEURALGAS/Pour%20clustering2%20(1).xlsx/passes=30&distance_toremove_edge=50/modele.html?pca=2&notif=hhoareau%40gmail.com
