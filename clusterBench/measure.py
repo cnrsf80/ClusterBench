@@ -12,7 +12,7 @@ def abort_if_file_doesnt_exist(name):
     if not os.path.isfile(url):
         abort(404, message=name+" doesn't exist")
 
-
+#test:http://localhost:5000/measure/lycee?
 #Représentation des fichiers à traiter
 @api.route("/measure/<string:name>")
 class Measure(Resource):
@@ -31,11 +31,12 @@ class Measure(Resource):
         file= request.files["files"];
 
         if file and self.allowed_file(name):
-
             url = os.path.join("./datas", name)
             file.save(url)
-
             data = tools.get_data_from_url(name)
+
+            data = tools.filter(data,request.args.get("filter", "", str))
+
             if not tools.chk_integrity(data):
                 os.remove(url)
                 return "Le fichier contient des valeurs incorrectes",401

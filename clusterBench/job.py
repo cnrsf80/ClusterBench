@@ -6,7 +6,9 @@ import time
 
 ns_job = Namespace('job', description='Job related operations to calculation')
 
-#test:http://localhost:5000/engine/job/Armure_Resultats.xlsx/HDBSCAN/min_samples=2&min_cluster_size=3&alpha=0.5&?pca=1
+#test:http://localhost:5000/job/Armure_Resultats.xlsx/HDBSCAN/min_samples=2&min_cluster_size=3&alpha=0.5?pca=1
+#test:http://localhost:5000/job/lycees.csv/HDBSCAN/min_samples=3&min_cluster_size=6&alpha=0.5&?pca=1&filter=1,2,8,9,10,11,20,21,22,23,60,61,62,90,91,92
+
 @ns_job.route("/<string:url>/<string:algo>/<string:params>")
 @ns_job.param("url","url address of the file to treat")
 @ns_job.param("algo","name of the algo to run. Name must be in HDBSCAN,SPECTRAL,HAC,NEURALGAS")
@@ -16,7 +18,12 @@ class job(Resource):
     def get(self,url,algo,params):
         #arguments = tools.add_default_value(request.args,{"no_text": False,"no_metric": False,"pca":1,"notif":""})
 
-        data = tools.get_data_from_url(url)
+        tmp_data=tools.get_data_from_url(url)
+        tools.print_columns_name(tmp_data)
+        data = tools.removeNan(tools.filter(tmp_data,request.args.get("filter","")))
+
+        if len(data)==0:
+            return "No data after filtering",501
 
         start = time.time()
 

@@ -9,7 +9,7 @@ import random
 
 #Palette de couleurs
 from clusterBench import algo
-
+import clusterBench.tools as tools
 
 def color_distance(c1,c2):
     s=0
@@ -113,15 +113,18 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
 #     df_data = pd.DataFrame(li_data)
 
 #Projection 3D des cluster et cluster de référence + calcul des enveloppes
-def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
+def pca_totrace(mod:algo.model,ref_cluster,pca_offset=0):
+    labels=mod.names()
+    mesures=tools.normalize(mod.mesures())
+
     pca: decomp.pca.PCA = decomp.pca.PCA(n_components=3 + pca_offset)
-    pca.fit(data)
-    newdata = pca.transform(data)
+    pca.fit(mesures)
+    newdata = pca.transform(mesures)
 
     li_data:list = []
     facets=[]
 
-    for c in clusters:
+    for c in mod.clusters:
         if len(c.clusters_distances)>0:
             distances: pd.DataFrame = pd.DataFrame.from_dict(c.clusters_distances,orient="index",columns=["distance","p1","p2"])
             distances=distances.sort_values("distance")
@@ -138,7 +141,7 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
             x=newdata[c.index[k], pca_offset]
             y=newdata[c.index[k], pca_offset + 1]
             z=newdata[c.index[k], pca_offset + 2]
-            li_data.append({
+            sp={
                 'x': x,
                 'y': y,
                 'z': z,
@@ -150,7 +153,10 @@ def pca_totrace(data:pd.DataFrame,clusters,labels,ref_cluster,pca_offset=0):
                 'cluster': c.name,
                 'ref_cluster':ref_cluster[c.index[k]],
                 'cluster_distance':ss
-            })
+            }
+            tmp:pd.DataFrame=mod.data.iloc[[c.index[k]]]
+            n=tmp.to_dict(orient="index")[c.index[k]]
+            li_data.append({**sp, **n})
 
     return li_data,facets
 
@@ -185,11 +191,12 @@ def to3D(G:algo.network,positions=None):
 #Production des fichiers HTML de représentation en 3d dynamique des mesures avec coloration par cluster
 def trace_artefact_3d(data, clusters, ref_cluster,title="",label_col="",for_jupyter=False,pca_offset=0,w="800px",h="800px"):
     #TODO: a corriger
-    li_data=pca_totrace(data,clusters,[],pca_offset,ref_cluster)
-    code=""
-    if len(title)>0:code="<h1>"+title+"</h1>"
-    code=code+"<h3>Réprésentation 3d sur les axes "+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2)+"</h3>"
-    return code+draw_3D(li_data,for_jupyter=for_jupyter,lines=None,w=w,h=h)
+    # li_data=pca_totrace(data,clusters,[],pca_offset,ref_cluster)
+    # code=""
+    # if len(title)>0:code="<h1>"+title+"</h1>"
+    # code=code+"<h3>Réprésentation 3d sur les axes "+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2)+"</h3>"
+    # return code+draw_3D(li_data,for_jupyter=for_jupyter,lines=None,w=w,h=h)
+    pass
 
 
 
@@ -223,16 +230,20 @@ def trace_artefact(G, clusters):
     # plt.savefig('graph.pdf', format="pdf")
     plt.show()
 
+
+
+
+
 from flask import render_template
 
 #Production du fichier à destination du tracé 3d
 def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0,autorotate="false"):
-    li_data,facets= pca_totrace(mod.mesures(), mod.clusters,mod.names(),mod.data['ref_cluster'],pca_offset)
+    li_data,facets= pca_totrace(mod,mod.data['ref_cluster'],pca_offset)
 
     if ref_model is None:
         facets_ref=[]
     else:
-        tmp_li_data,facets_ref=pca_totrace(ref_model.mesures(), ref_model.clusters,ref_model.names(),ref_model.data['ref_cluster'],pca_offset)
+        tmp_li_data,facets_ref=pca_totrace(ref_model,ref_model.data['ref_cluster'],pca_offset)
 
     d=pd.concat([mod.data.ix[:,0],mod.mesures()],axis=1,sort=False)
 

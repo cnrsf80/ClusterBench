@@ -4,6 +4,7 @@ import shutil
 import os
 import sys
 import pandas
+from sklearn import preprocessing
 
 #Permet l'affichage d'un barre de progression
 def progress(count, total, suffix=''):
@@ -180,10 +181,10 @@ def get_data_from_url(url:str):
         if format == "dbf": data = Dbf5(url).to_dataframe()
         if format == "csv":
             data = pd.read_csv(url, sep=";", decimal=",")
-            if len(data.loc[[]].columns)<2 or (not data is None and not type(data.iloc[3][3]) is float):
+            if len(data.columns)<3:
                 data = pd.read_csv(url, sep=",", decimal=".")
 
-            if len(data.loc[[]].columns)<2 or (not data is None and not type(data.iloc[3][3]) is float):
+            if len(data.columns)<3:
                 data = pd.read_csv(url, sep=";", decimal=".")
     except:
         data = None
@@ -224,3 +225,37 @@ def add_default_value(args_from_url:dict, param):
             args_from_url[p]=param[p]
 
     return args_from_url
+
+
+def filter(data:pd.DataFrame,filter:str):
+    if len(filter) > 0:
+        i = 0
+        tmp = pd.DataFrame()
+        for col in filter.split(","):
+            s_col=list(data.columns.values)[int(col)]
+            tmp[s_col] = data[s_col]
+
+        return tmp
+
+    return data
+
+
+def removeNan(data:pd.DataFrame):
+    n_rows=len(data)
+    rc=data.dropna()
+    print("row remove : "+str(n_rows-len(rc)))
+    return rc
+
+
+def normalize(data:pd.DataFrame):
+    min_max_scaler = preprocessing.MinMaxScaler()
+    np_scaled = min_max_scaler.fit_transform(data)
+    return pd.DataFrame(np_scaled)
+
+
+def print_columns_name(data:pd.DataFrame):
+    print("Columns list")
+    k = 0
+    for c in list(data.columns.values):
+        print(str(k) + ":" + c)
+        k = k + 1
