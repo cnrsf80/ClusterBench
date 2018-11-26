@@ -25,7 +25,7 @@ class simulation:
         self.data = data
 
         self.col_name = self.data.columns[0]  # Le libellé des mesures est pris sur la premiere colonne
-        if not list(self.data.columns).__contains__("ref_cluster"):
+        if not "ref_cluster" in list(self.data.columns):
             self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, self.col_name)
 
         self.dimensions = len(self.data.columns) - 2  # Les composantes sont les colonnes suivantes
@@ -82,7 +82,7 @@ class simulation:
                     m.help = "https://github.com/AdrienGuille/GrowingNeuralGas"
                     self.append_modeles(m)
 
-        if name_algo.upper().__contains__("NOTREATMENT") or name_algo.upper().__contains__("NO"):
+        if "NOTREATMENT" in name_algo.upper() or "NO" in name_algo.upper():
             m=copy.deepcopy(self.ref_model)
             m.params=params
             m.setname("NOTREATMENT")

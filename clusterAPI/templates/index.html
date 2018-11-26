@@ -74,11 +74,17 @@
                         {{ list_file|safe }}&nbsp;or Upload new file&nbsp;
                         <div style="display: inline" class="image-upload">
                             <label for="file">
-                                <img style="width:15px;padding:0px;" src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
+                                <img style="width:15px;padding:0px;" 
+                                     src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
                             </label>
 
                             <input
-                                    title="Upload" type="file" id="file" name="file" onchange="postFile()">
+                                    title="Upload" 
+                                    type="file" 
+                                    id="file" 
+                                    name="file" 
+                                    onchange="postFile()"
+                            >
                         </div>
                     </td>
                 </tr>

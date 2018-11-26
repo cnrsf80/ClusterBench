@@ -205,8 +205,14 @@ def chk_integrity(data:pd.DataFrame):
 
 def tokenize(items:list):
     rc=[]
+    ref_items=[]
+
     for item in items:
-        pos=items.index(item)
+        if not " "+item+" " in ref_items:
+            ref_items.append(" "+item+" ")
+
+    for item in items:
+        pos=ref_items.index(" "+item+" ")
         rc.append(pos)
 
     return rc

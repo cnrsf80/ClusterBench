@@ -2,26 +2,26 @@
 #sudo curl -sSL get.docker.com | sh
 
 #x86
-#FROM python:3
+FROM python:3
 #docker build -t f80hub/cluster_bench_x86 . & docker push f80hub/cluster_bench_x86:latest
 #docker rm -f clusterbench && docker pull f80hub/cluster_bench_x86:latest && docker run --restart=always -v /datas:/app/datas -v /clustering:/app/clustering -p 5000:5000 --name clusterbench -d f80hub/cluster_bench_x86:latest
 
 #arm
 #FROM arm64v8/python
-FROM armhf/python
-RUN apt-get update -y
-RUN apt-get upgrade -y
-RUN apt-get dist-upgrade -y
-RUN apt-get install build-essential python-dev python-setuptools python-pip python-smbus -y
-RUN apt-get install libncursesw5-dev libgdbm-dev libc6-dev -y
-RUN apt-get install zlib1g-dev libsqlite3-dev tk-dev -y
-RUN apt-get install libssl-dev openssl -y
-RUN apt-get install libffi-dev -y
-RUN apt-get install -y python3
-RUN apt-get autoremove -y
-RUN wget https://github.com/python/cpython/archive/v3.7.1.tar.gz
-RUN tar -xvf v3.7.1.tar.gz
-RUN cd v3.7.1 & ./configure --prefix=$HOME/.local --enable-optimizations && make && make altinstall
+#FROM armhf/python
+#RUN apt-get update -y
+#RUN apt-get upgrade -y
+#RUN apt-get dist-upgrade -y
+#RUN apt-get install build-essential python-dev python-setuptools python-pip python-smbus -y
+#RUN apt-get install libncursesw5-dev libgdbm-dev libc6-dev -y
+#RUN apt-get install zlib1g-dev libsqlite3-dev tk-dev -y
+#RUN apt-get install libssl-dev openssl -y
+#RUN apt-get install libffi-dev -y
+#RUN apt-get install -y python3
+#RUN apt-get autoremove -y
+#RUN wget https://github.com/python/cpython/archive/v3.7.1.tar.gz
+#RUN tar -xvf v3.7.1.tar.gz
+#RUN cd v3.7.1 & ./configure --prefix=$HOME/.local --enable-optimizations && make && make altinstall
 
 #docker build -t f80hub/cluster_bench_arm . & docker push f80hub/cluster_bench_arm:latest
 #docker rm -f clusterbench && docker pull f80hub/cluster_bench_arm:latest

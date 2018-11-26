@@ -45,11 +45,13 @@ class model:
       self.name_col=name_col
       self.dimensions=dimensions
       self.data=data
+      self.hash=self.create_signature()
 
-      s = ""
-      for a in list(self.data.keys()): s = s + str(a)
 
-      self.hash=hashlib.md5(s.encode()).hexdigest()
+    def create_signature(self):
+        s = ""
+        for a in list(self.data.keys()): s = s + str(a)
+        return hashlib.md5(s.encode()).hexdigest()
 
 
     #Calcul de la matrice de distance
@@ -395,7 +397,8 @@ class model:
         #     j=j+1
         # return clusters
 
-        return np.asarray(self.data["ref_cluster"],np.int8)
+        rc= np.asarray(self.data["ref_cluster"],np.int8)
+        return rc
 
 
 
