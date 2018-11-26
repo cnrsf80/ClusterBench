@@ -34,6 +34,12 @@ def create_app(test_config=None):
 
         return render_template("index.html",list_file=html+"</select>")
 
+    import clusterBench.tools as tools
+    @app.route('/analyse/<string:url>', methods=['GET'])
+    def analyse(url:str):
+        data=tools.get_data_from_url(url)
+        return tools.print_columns_name(data)
+
     # @app.route('/datas/<string:label_col>/<int:dimensions>', methods=['POST'])
     # def datas(label_col: str, dimensions: int):
     #     f = request.files[0]

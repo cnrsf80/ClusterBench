@@ -253,9 +253,10 @@ def normalize(data:pd.DataFrame):
     return pd.DataFrame(np_scaled)
 
 
-def print_columns_name(data:pd.DataFrame):
-    print("Columns list")
+def print_columns_name(data:pd.DataFrame,end_line="<br>"):
+    s="Columns list"+end_line
     k = 0
     for c in list(data.columns.values):
-        print(str(k) + ":" + c)
+        s=s+str(k) + ":" + c+end_line
         k = k + 1
+    return s

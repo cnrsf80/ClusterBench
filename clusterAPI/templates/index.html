@@ -109,10 +109,13 @@
                 <tr>
                     <td>Filter</td>
                     <td>
-                        <input size="60"
+                        <input size="40"
                                value="" id="filter" type="text"
                                onchange="showlink()"
                         >
+                    </td>
+                    <td>
+                        <button id="cmdAnalyse" onclick="analyseFile()">Analyse</button>
                     </td>
                 </tr>
 
@@ -372,6 +375,10 @@
                 });
             }
         },300);
+    }
+
+    function analyseFile(){
+        window.open("/analyse/"+document.getElementById("url").value,"out");
     }
 
     function openlink(){
