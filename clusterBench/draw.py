@@ -118,9 +118,12 @@ def pca_totrace(mod:algo.model,ref_cluster,properties_dict:list,pca_offset=0):
     labels=mod.names()
     mesures=tools.normalize(mod.mesures())
 
-    pca: decomp.pca.PCA = decomp.pca.PCA(n_components=3 + pca_offset)
-    pca.fit(mesures)
-    newdata = pca.transform(mesures)
+    if mod.dimensions!=3:
+        pca: decomp.pca.PCA = decomp.pca.PCA(n_components=3 + pca_offset)
+        pca.fit(mesures)
+        newdata = pca.transform(mesures)
+    else:
+        newdata=mesures.values
 
     li_data:list = []
     facets=[]
@@ -165,7 +168,7 @@ def pca_totrace(mod:algo.model,ref_cluster,properties_dict:list,pca_offset=0):
     for i in range(0,len(li_data)):
         tools.progress(i,len(li_data),"Ajout des propriétés")
         row=li_data[i]["index"]
-        d:dict=properties_dict[row-1]
+        d:dict=properties_dict[row]
         li_data[i]=({**li_data[i], **d})
 
     return li_data,facets
@@ -181,6 +184,7 @@ def to3D(G:algo.network,positions=None):
                 row=positions[p]
 
             sp={
+                'index':p,
                 'x':float(row[0]),'y':float(row[1]),'z':float(row[2]),
                 'label':G.data[G.name_col][p],
                 'name':G.data[G.name_col][p],
@@ -243,21 +247,22 @@ def trace_artefact(G, clusters):
 
 from flask import render_template
 
-def create_dict_for_properties(data:pd.DataFrame):
+def create_dict_for_properties(data:pd.DataFrame,col_name:str):
     rc=[]
     names = data.columns.values
-    for row in range(1,len(data)):
+    for row in range(0,len(data)):
         values=data.iloc[[row]].values[0]
         d=dict(zip(names,values))
-        #d=tmp.to_dict(orient="index")[row]
+        if col_name in d.keys():del d[col_name]
         rc.append(d)
+
 
     return rc
 
 #Production du fichier à destination du tracé 3d
-def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0,autorotate="false"):
+def trace_artefact_GL(mod:algo.model,id="",title="",ref_model:algo=None,pca_offset=0,autorotate="false"):
 
-    properties_dict=create_dict_for_properties(mod.data)
+    properties_dict=create_dict_for_properties(mod.data,mod.name_col)
     li_data,facets= pca_totrace(mod,mod.data['ref_cluster'],properties_dict,pca_offset)
 
     if ref_model is None:

@@ -3,6 +3,7 @@ from flask import Response,request
 import clusterBench.tools as tools
 import clusterBench.algo as algo
 import clusterBench.draw as draw
+import base64
 
 ns_graph = Namespace('graph', description='Graph module')
 
@@ -14,6 +15,7 @@ ns_graph = Namespace('graph', description='Graph module')
 @ns_graph.param("autorotate","Autostart the rotation of the graphique")
 class graph(Resource):
     def get(self,url:str,algo_loc:str):
+        if url.startswith("b64="): url = base64.standard_b64decode(url.split("b64=")[1]).decode("utf-8")
         graph = algo.network(url=url,algo_loc=algo_loc)
         if not graph is None:
             if request.args.get("metrics", "true", str)=="true":graph.node_treatments()

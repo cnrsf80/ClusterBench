@@ -237,7 +237,7 @@
         var notif=document.getElementById("email").value;
         var format=document.getElementById("format").value;
 
-        var file=encodeURIComponent(document.getElementById("url").value)
+        var file=document.getElementById("url").value;
 
         var algo=document.getElementById("algo").value.split(":")[0];
 
@@ -251,22 +251,29 @@
         var job_name="job"+new Date().getTime();
 
         if(!multiple){
-            if(file.endsWith(".gml")){
-                url="http://"+domain+"graph/"+file+"/fr?algo_comm=gn";
+            if(file.startsWith("http"))
+                url_file="b64="+btoa(file);
+            else
+                url_file=file;
+
+            if(file.endsWith(".gml") || file.endsWith(".gexf") || file.endsWith(".gephi") || file.endsWith(".graphml")){
+                url="http://"+domain+"graph/"+url_file+"/fr?algo_comm=gn";
             } else {
-                url="http://"+domain+"job/"+file+"/"+algo+"/"+params+"?&pca="+pca;
+                url="http://"+domain+"job/"+url_file+"/"+algo+"/"+params+"?&pca="+pca;
             }
 
             //Ajout d'options supplémentaire sur l'url
             if(notif.length>0)url+="&notif="+notif;
+            for(var i=0;i<10;i++)format=format.replace("=",":").replace("&","_");
             if(format.length>0)url+="&format="+format;
+
             if(document.getElementById("notext").checked)url=url+"&notext=True";
             if(document.getElementById("nometrics").checked)url=url+"&nometrics=True";
 
             document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
             return url;
         } else {
-            //Traitement simple
+            //Traitement complexe
             urls=[];
             cutParams(params).forEach((p)=>{
                 url="http://"+domain+"job/"+file+"/"+algo+"/"+p+"?pca="+pca+"&notif="+notif;

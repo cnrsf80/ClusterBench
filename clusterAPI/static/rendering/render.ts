@@ -175,8 +175,6 @@ class Game {
                     let target:any=evt.meshUnderPointer;
                     document.getElementById("row1").innerText=target.name;
                     document.getElementById("row2").innerText=target.cluster_name;
-                    document.getElementById("row4").innerText=target.ref_cluster;
-                    document.getElementById("row6").innerText=target.index;
                     document.getElementById("row5").innerText=toString(target.params);
                     document.getElementById("row3").innerText=
                         Math.round(target.position.x*100)/100+","+
@@ -194,7 +192,8 @@ class Game {
                 (evt) => {
                     let target:any=evt.meshUnderPointer;
                     for(var i=1;i<6;i++)
-                        document.getElementById("row"+i).innerText="";
+                        if(document.getElementById("row"+i)!=null)
+                            document.getElementById("row"+i).innerText="";
 
                 }
             )
@@ -291,11 +290,13 @@ class Game {
 
         // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
         this._camera = new BABYLON.ArcRotateCamera("Camera",
-            2.2*Math.PI / 2,
-            1.5*Math.PI/2 ,
+            3.2*Math.PI / 2,
+            3.5*Math.PI/2 ,
             this.scale*1.5,
             BABYLON.Vector3.Zero(),
             this._scene);
+
+
 
         this._actionManager = new BABYLON.ActionManager(this._scene);
 
@@ -497,6 +498,7 @@ class Game {
 
     updateScale(step: number,datas:any[],edges:any[]) {
         this.clearLinks();
+        this.removeFacets();
          this.spheres.forEach((s:any)=> {
             s.position.x=s.position.x*step;
             s.position.y=s.position.y*step;

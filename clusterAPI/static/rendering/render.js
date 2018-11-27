@@ -136,8 +136,6 @@ var Game = /** @class */ (function () {
             var target = evt.meshUnderPointer;
             document.getElementById("row1").innerText = target.name;
             document.getElementById("row2").innerText = target.cluster_name;
-            document.getElementById("row4").innerText = target.ref_cluster;
-            document.getElementById("row6").innerText = target.index;
             document.getElementById("row5").innerText = toString(target.params);
             document.getElementById("row3").innerText =
                 Math.round(target.position.x * 100) / 100 + "," +
@@ -149,7 +147,8 @@ var Game = /** @class */ (function () {
         }, function (evt) {
             var target = evt.meshUnderPointer;
             for (var i = 1; i < 6; i++)
-                document.getElementById("row" + i).innerText = "";
+                if (document.getElementById("row" + i) != null)
+                    document.getElementById("row" + i).innerText = "";
         }));
     };
     Game.prototype.createMesure = function (obj) {
@@ -234,7 +233,7 @@ var Game = /** @class */ (function () {
         // }, this._scene);
         showAxis(50, this._scene);
         // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
-        this._camera = new BABYLON.ArcRotateCamera("Camera", 2.2 * Math.PI / 2, 1.5 * Math.PI / 2, this.scale * 1.5, BABYLON.Vector3.Zero(), this._scene);
+        this._camera = new BABYLON.ArcRotateCamera("Camera", 3.2 * Math.PI / 2, 3.5 * Math.PI / 2, this.scale * 1.5, BABYLON.Vector3.Zero(), this._scene);
         this._actionManager = new BABYLON.ActionManager(this._scene);
         // Target the camera to scene origin.
         this._camera.setTarget(new BABYLON.Vector3(0, 0, 0));
@@ -403,6 +402,7 @@ var Game = /** @class */ (function () {
     Game.prototype.updateScale = function (step, datas, edges) {
         var _this = this;
         this.clearLinks();
+        this.removeFacets();
         this.spheres.forEach(function (s) {
             s.position.x = s.position.x * step;
             s.position.y = s.position.y * step;

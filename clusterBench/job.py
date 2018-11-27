@@ -3,6 +3,7 @@ from flask import Response,request
 import clusterBench.tools as tools
 import clusterBench.simulation as simulation
 import time
+import base64
 
 ns_job = Namespace('job', description='Job related operations to calculation')
 
@@ -15,11 +16,11 @@ ns_job = Namespace('job', description='Job related operations to calculation')
 @ns_job.param("params","parameters of the algorithm to run")
 @ns_job.param("pca","Number of views")
 class job(Resource):
-    def get(self,url,algo,params):
-        #arguments = tools.add_default_value(request.args,{"no_text": False,"no_metric": False,"pca":1,"notif":""})
+    def get(self,url:str,algo,params):
+        if url.startswith("b64="):url=base64.standard_b64decode(url.split("b64=")[1]).decode("utf-8")
 
         tmp_data=tools.get_data_from_url(url)
-        data = tools.removeNan(tools.filter(tmp_data,request.args.get("filter","")))
+        data = tools.removeNan(tools.filter(tmp_data,request.args.get("format","")))
 
         if len(data)==0:
             return "No data after filtering",501

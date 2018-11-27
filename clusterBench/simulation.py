@@ -25,7 +25,7 @@ class simulation:
         self.data = data
 
         #Réglage des parametres
-        format=tools.string_to_dict(format)
+        format=tools.string_to_dict(format,"=",";")
         if not "name" in format:
             format["name"]=0# Le libellé des mesures est pris sur la premiere colonne
 
@@ -33,7 +33,7 @@ class simulation:
             format["measures"]=list(range(1,len(data.columns.values)))
 
         if not "properties" in format: #Par defaut les propriétées sont entre les mesures et l'index
-            if format["name"]+1<min(list(format["measures"]))-1:
+            if int(format["name"])+1<min(list(format["measures"]))-1:
                 format["properties"]=str(list(range(format["name"]+1,min(format["measures"])-1)))
 
         self.col_name = self.data.columns[int(format["name"])]

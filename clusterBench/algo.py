@@ -1,21 +1,18 @@
 import base64
 
 from scipy.spatial.qhull import ConvexHull
-import tokenize
 from clusterBench.gng import GrowingNeuralGas
 import os
 import hashlib
 import clusterBench.tools as tools
 from clusterBench import draw
 import time
-from threading import Thread
 import sklearn.metrics as metrics
 import networkx as nx
 import numpy as np
 import pandas as pd
 from networkx.algorithms import community
 from clusterBench.tools import tirage,save
-import copy
 
 #Représente un model
 #un model est une liste de cluster après application d'un algorithme de clustering
@@ -625,14 +622,23 @@ class network(model):
             self.graph = nx.read_gpickle("./clustering/"+self.url+".gpickle")
             return True
         else:
-            if url.endswith(".gml"):
+            if not url.startswith("http"): url = "./datas/" + url
+
+            if url.endswith(".gml") or url.endswith(".graphml") :
                 tools.progress(50, 100, "Chargement du fichier au format GML")
-                if not url.startswith("http"): url = "./datas/" + url
                 try:
                     self.graph =nx.read_gml(url)
                 except:
                     self.graph=nx.read_graphml(url)
-            else:
+
+            if url.endswith(".gexf") or url.endswith(".gephi"):
+                try:
+                    self.graph = nx.read_gexf(url)
+                except:
+                    print("Impossible de lire "+url)
+
+
+            if self.graph is None:
                 tools.progress(50, 100, "Chargement depuis la matrice de distance")
                 self.data: pd.DataFrame = tools.get_data_from_url(url)
                 if not self.data is None:
@@ -655,14 +661,20 @@ class network(model):
             nx.set_node_attributes(G, nx.closeness_centrality(G), "closeness")
 
         tools.progress(60, 100, "Page rank")
-        if len(nx.get_node_attributes(G, "pagerank")) == 0:
-            nx.set_node_attributes(G, nx.pagerank(G), "pagerank")
+        try:
+            if len(nx.get_node_attributes(G, "pagerank")) == 0:
+                nx.set_node_attributes(G, nx.pagerank(G), "pagerank")
+        except:
+            pass
 
         tools.progress(80, 100, "Hub and autorities")
-        if len(nx.get_node_attributes(G, "hub")) == 0:
-            hub, aut = nx.hits(G)
-            nx.set_node_attributes(G, hub, "hub")
-            nx.set_node_attributes(G, aut, "autority")
+        try:
+            if len(nx.get_node_attributes(G, "hub")) == 0:
+                hub, aut = nx.hits(G)
+                nx.set_node_attributes(G, hub, "hub")
+                nx.set_node_attributes(G, aut, "autority")
+        except:
+            pass
 
         #tools.progress(90, 100, "Excentricity")
         #nx.set_node_attributes(G, nx.eccentricity(G), "eccentricity")

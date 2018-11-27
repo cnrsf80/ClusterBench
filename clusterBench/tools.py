@@ -159,6 +159,7 @@ def sendMail(subject:str,_from:str,to:str,body:str):
 
 import urllib.request
 def AnalyseFile(url:str):
+    if url.endswith(".gexf") or url.endswith(".gml"): return "graph"
     if url.endswith(".xlsx") or url.endswith(".xls"): return "excel"
     if url.endswith(".csv"): return "csv"
     with urllib.request.urlopen(url) as response:
@@ -171,7 +172,7 @@ def AnalyseFile(url:str):
 import pandas as pd
 from simpledbf import Dbf5
 def get_data_from_url(url:str):
-    if not url.startswith("http:"):
+    if not url.startswith("http"):
         url = os.path.join("./datas", url)
 
     format = AnalyseFile(url)
@@ -180,12 +181,12 @@ def get_data_from_url(url:str):
         if format == "excel": data = pd.read_excel(url)
         if format == "dbf": data = Dbf5(url).to_dataframe()
         if format == "csv":
-            data = pd.read_csv(url, sep=";", decimal=",")
+            data = pd.read_csv(url, sep=";", decimal=".")
             if len(data.columns)<3:
-                data = pd.read_csv(url, sep=",", decimal=".")
+                data = pd.read_csv(url, sep=";", decimal=",")
 
             if len(data.columns)<3:
-                data = pd.read_csv(url, sep=";", decimal=".")
+                data = pd.read_csv(url, sep=",", decimal=".")
     except:
         data = None
 
@@ -230,6 +231,7 @@ def add_default_value(args_from_url:dict, param):
 def filter(data:pd.DataFrame,filter:str):
     if len(filter) > 0:
         i = 0
+        filter = string_to_dict(filter,":","_")["cols"]
         tmp = pd.DataFrame()
         for col in filter.split(","):
             s_col=list(data.columns.values)[int(col)]
@@ -252,20 +254,16 @@ def normalize(data:pd.DataFrame):
     return pd.DataFrame(np_scaled)
 
 
-def print_columns_name(data:pd.DataFrame,end_line="<br>"):
-    s="Columns list"+end_line
-    k = 0
-    for c in list(data.columns.values):
-        s=s+str(k) + ":" + c+end_line
-        k = k + 1
-    return s
+def print_columns_name(data:pd.DataFrame,format=""):
+    data=filter(data,format)
+    rc=pd.DataFrame({'col':list(data.columns.values),'NaN':list(100*data.isna().sum()/len(data))},index=list(range(0,len(data.columns))))
+    return rc.to_html()
 
 
-def string_to_dict(format:str):
+def string_to_dict(format:str,equal_operator="=",sep="&"):
     rc=dict()
-    format=format.replace(",",";")
-    for rel in str.split(";"):
-        if "=" in rel:
-            rc[rel.split("=")[0]]=rel.split("=")[1]
+    for rel in format.split(sep):
+        if equal_operator in rel:
+            rc[rel.split(equal_operator)[0]]=rel.split(equal_operator)[1]
 
     return rc

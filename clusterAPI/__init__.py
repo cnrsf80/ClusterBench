@@ -38,7 +38,7 @@ def create_app(test_config=None):
     @app.route('/analyse/<string:url>', methods=['GET'])
     def analyse(url:str):
         data=tools.get_data_from_url(url)
-        return tools.print_columns_name(data)
+        return tools.print_columns_name(data,request.args.get("format",""))
 
     # @app.route('/datas/<string:label_col>/<int:dimensions>', methods=['POST'])
     # def datas(label_col: str, dimensions: int):

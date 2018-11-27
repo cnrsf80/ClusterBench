@@ -88,3 +88,5 @@ Sur le serveur, les répertoires suivant contiennent :
  
 
  
+#Exemples de requetes
+- http://localhost:5000/job/lycees.csv/HDBSCAN/min_samples=5&min_cluster_size=6&alpha=0.5?&pca=0&format=cols:1,1,8,9,10,21,22,23,84,85,86,87,88,89,90,91_name:1
