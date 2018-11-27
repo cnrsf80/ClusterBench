@@ -13,3 +13,6 @@ hdbscan
 Flask
 flask_restplus
 simpledbf
+py2nb
+pydqc
+
