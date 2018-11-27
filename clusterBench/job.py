@@ -19,7 +19,6 @@ class job(Resource):
         #arguments = tools.add_default_value(request.args,{"no_text": False,"no_metric": False,"pca":1,"notif":""})
 
         tmp_data=tools.get_data_from_url(url)
-        tools.print_columns_name(tmp_data)
         data = tools.removeNan(tools.filter(tmp_data,request.args.get("filter","")))
 
         if len(data)==0:
@@ -27,11 +26,15 @@ class job(Resource):
 
         start = time.time()
 
-        sim: simulation = simulation.simulation(data=data)
+        notext=(request.args.get("notext", "False",str)=="True")
+        nometrics = (request.args.get("nometrics", "False",str)=="True")
+        sim:simulation = simulation.simulation(data=data,no_metric=nometrics,format=request.args.get("format",""))
 
         sim.run_algo(params, algo)
-        if not request.args.get("no_metric",False,bool):sim.init_metrics(False)
-        html=sim.toHTML(request.args.get("autorotate","false",str))
+        if not nometrics:
+            sim.init_metrics(showProgress=False)
+
+        html=sim.toHTML(request.args.get("autorotate","false",str),no_text=notext,no_metrics=nometrics)
 
         delay = (time.time() - start)
 

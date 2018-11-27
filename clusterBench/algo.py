@@ -37,13 +37,15 @@ class model:
     v_measure_score = 0
     data:pd.DataFrame=None
     dimensions:int=0
+    measures_col:list=[]
     clusters_distance:pd.DataFrame=None
 
 
 
-    def __init__(self, data,name_col:str=None,dimensions:int=None,positions=None):
+    def __init__(self,data,name_col:str,measures_col:list,positions=None):
       self.name_col=name_col
-      self.dimensions=dimensions
+      self.dimensions=len(measures_col)
+      self.measures_col=measures_col
       self.data=data
       self.hash=self.create_signature()
 
@@ -199,12 +201,8 @@ class model:
 
 
     def mesures(self):
-        rc=list(self.data.columns)
-        rc.remove(self.name_col)
-        assert(self.dimensions>0)
-        rc=rc[0:self.dimensions]
-        mes=self.data[rc]
-        return mes
+        rc=self.data[self.measures_col]
+        return rc
 
     def names(self):
         rc=list(self.data[self.name_col])
@@ -419,7 +417,7 @@ class model:
         for i in range(len(self.data)):
             find=False
             for c in self.clusters:
-                if c.index.__contains__(i):
+                if i in c.index:
                     find=True
                     break
             if not find:
@@ -537,7 +535,7 @@ class cluster:
         rgb:str="rgb("+str(self.color[0]*255)+","+str(self.color[1]*255)+","+str(self.color[2]*255)+")"
         s=("<td style='background-color:"+rgb+"'><strong>"+self.name+"&nbsp;&nbsp;</strong></td>")
         s = s + "<td>"+str(len(self.index))+"</td><td>"
-        s=s+self.near_cluster()+"</td><td></td>"
+        s=s+self.near_cluster()+"</td><td></td><td>"
         if len(self.index)>0:s=s+("<td>".join(data[label_col][self.index]))+"</td>"
         return s
 

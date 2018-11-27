@@ -176,6 +176,7 @@ class Game {
                     document.getElementById("row1").innerText=target.name;
                     document.getElementById("row2").innerText=target.cluster_name;
                     document.getElementById("row4").innerText=target.ref_cluster;
+                    document.getElementById("row6").innerText=target.index;
                     document.getElementById("row5").innerText=toString(target.params);
                     document.getElementById("row3").innerText=
                         Math.round(target.position.x*100)/100+","+
@@ -201,13 +202,10 @@ class Game {
     }
 
     createMesure(obj:any):void {
-
         var materialSphere = new BABYLON.StandardMaterial("texture2", this._scene);
         materialSphere.diffuseColor = new BABYLON.Color3(obj.style[0],obj.style[1],obj.style[2]);
         materialSphere.alpha = 0.9;
         obj.style=null;
-
-
 
         let sphere:any = BABYLON.MeshBuilder.CreateSphere(name,{segments: 16, diameter: obj.size}, this._scene);
         sphere.position.x = (obj.x)*this.scale;obj.x=null;
@@ -235,7 +233,7 @@ class Game {
         if(obj.hasOwnProperty("cluster_distance"))sphere.cluster_distance=JSON.parse(obj.cluster_distance);
 
         this.prepareButton(sphere);
-        this.spheres.push(sphere);
+        this.spheres[sphere.index]=sphere;
     }
 
     linkSphere(s1:any,s2:any,radius=0.04):void {
@@ -336,9 +334,13 @@ class Game {
     }
 
 
-    clearMesures() {
+    clearMesures(nMesures) {
         this.spheres.forEach((s:any)=> {s.dispose();});
         this.spheres=[];
+        while(nMesures>0){
+            this.spheres.push({});
+            nMesures--;
+        }
         this.clearLinks();
     }
 
@@ -394,7 +396,9 @@ class Game {
                 if(facet[1]==offset && (filter==null || facet[0].indexOf(filter)>-1)){
                     var positions=[];
                     facet[3].forEach(f=>{
-                        positions.push(this.spheres[f].position);
+                        var s=this.spheres[f];
+                        s.position.index=s.index;
+                        positions.push(s.position);
                     });
                     var shape = [
                             new BABYLON.Vector3(positions[0].x, positions[0].y,positions[0].z),
@@ -463,6 +467,10 @@ class Game {
 
     stopAutoRotation(){
         this._camera.useAutoRotationBehavior=false;
+    }
+
+    isRotating(){
+        return(this._camera.useAutoRotationBehavior);
     }
 
     makeMovie() {
@@ -582,14 +590,13 @@ window.addEventListener("message", (evt)=> {
 
     evt.preventDefault();
     if (datas!=null && datas.length>0) {
-        game.clearMesures();
+        game.clearMesures(datas.length);
         var i=0;
         game.message("Création de "+datas.length+" mesures",2);
         for (let p of datas){
-            p.index=i;
             game.createMesure(p);
-            i=i+1
         }
+
         if(evt.data.autorotate)game.startAutoRotation();
         facets=evt.data.facets;
         facets_ref=evt.data.facets_ref;
@@ -712,7 +719,13 @@ window.addEventListener("keypress", (evt)=> {
        game.stopMovie();
    }
 
-   if(evt.key=="a") game.startAutoRotation();
+   if(evt.key=="a"){
+       if(game.isRotating())
+           game.stopAutoRotation();
+       else
+           game.startAutoRotation();
+   }
+
    if(evt.key=="A")game.stopAutoRotation();
 
    if(evt.key=="e"){

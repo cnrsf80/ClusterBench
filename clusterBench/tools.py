@@ -236,7 +236,6 @@ def filter(data:pd.DataFrame,filter:str):
             tmp[s_col] = data[s_col]
 
         return tmp
-
     return data
 
 
@@ -260,3 +259,13 @@ def print_columns_name(data:pd.DataFrame,end_line="<br>"):
         s=s+str(k) + ":" + c+end_line
         k = k + 1
     return s
+
+
+def string_to_dict(format:str):
+    rc=dict()
+    format=format.replace(",",";")
+    for rel in str.split(";"):
+        if "=" in rel:
+            rc[rel.split("=")[0]]=rel.split("=")[1]
+
+    return rc

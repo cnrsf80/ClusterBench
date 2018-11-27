@@ -21,17 +21,30 @@ class simulation:
         return rc
 
 
-    def __init__(self,data:pd.DataFrame,no_metric=False):
+    def __init__(self,data:pd.DataFrame,no_metric=False,format=""):
         self.data = data
 
-        self.col_name = self.data.columns[0]  # Le libellé des mesures est pris sur la premiere colonne
+        #Réglage des parametres
+        format=tools.string_to_dict(format)
+        if not "name" in format:
+            format["name"]=0# Le libellé des mesures est pris sur la premiere colonne
+
+        if not "measures" in format:
+            format["measures"]=list(range(1,len(data.columns.values)))
+
+        if not "properties" in format: #Par defaut les propriétées sont entre les mesures et l'index
+            if format["name"]+1<min(list(format["measures"]))-1:
+                format["properties"]=str(list(range(format["name"]+1,min(format["measures"])-1)))
+
+        self.col_name = self.data.columns[int(format["name"])]
+        self.col_measures=list(self.data.columns.values[format["measures"]])
+
         if not "ref_cluster" in list(self.data.columns):
             self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, self.col_name)
 
-        self.dimensions = len(self.data.columns) - 2  # Les composantes sont les colonnes suivantes
+        self.dimensions = len(format["measures"])  # Les composantes sont les colonnes suivantes
 
         self.ref_model: algo.model = self.init_reference_model()
-
         if not no_metric:
             self.ref_model.init_metrics(self.ref_model.cluster_toarray())
 
@@ -91,14 +104,23 @@ class simulation:
 
 
     #Retourne une version HTML de la simulation
-    def toHTML(self,autorotate="false"):
-        code = self.print_infos() + "<br>synthese<br>"
+    def toHTML(self,autorotate="false",no_text=False,no_metrics=False):
+        if no_text:
+            code=""
+        else:
+            code = self.print_infos() + "<br>synthese<br>"
+
+
         try:
             n_pca = int(request.args["pca"])
         except:
             n_pca = 2
-        code = code + self.get3d_html(n_pca,autorotate=autorotate)
-        code = code.replace("synthese", self.synthese())
+        code = code + self.get3d_html(n_pca,autorotate=autorotate,no_text=no_text)
+
+        if no_metrics:
+            code = code.replace("synthese", "")
+        else:
+            code = code.replace("synthese", self.synthese())
         return code
 
 
@@ -109,7 +131,7 @@ class simulation:
 
         self.data["Ref"] = self.data.index
         self.data.index = range(len(self.data))
-        mod = algo.model(self.data, self.col_name, self.dimensions)
+        mod = algo.model(self.data, self.col_name, self.col_measures)
 
         # Usage d'une autre fonction de distance que la distance euclidienne
         # mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))
@@ -149,7 +171,7 @@ class simulation:
     def execute(self,algo_name,url,func,ps:dict,useCache=False):
         print("Traitement de "+algo_name+" ********************************************************************")
         for p in self.convertParams(ps):
-            m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.dimensions)
+            m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.col_measures)
             m=m.execute(algo_name,url, func,p,useCache)
             m.init_noise_cluster()
             self.models.append(copy.copy(m))

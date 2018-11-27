@@ -3,13 +3,14 @@ import ezvis3d as v3d
 import pandas as pd
 import networkx as nx
 from matplotlib import colors as mcolors
+import clusterBench.tools as tools
 
 import random
 
 
 #Palette de couleurs
 from clusterBench import algo
-import clusterBench.tools as tools
+
 
 def color_distance(c1,c2):
     s=0
@@ -113,7 +114,7 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
 #     df_data = pd.DataFrame(li_data)
 
 #Projection 3D des cluster et cluster de référence + calcul des enveloppes
-def pca_totrace(mod:algo.model,ref_cluster,pca_offset=0):
+def pca_totrace(mod:algo.model,ref_cluster,properties_dict:list,pca_offset=0):
     labels=mod.names()
     mesures=tools.normalize(mod.mesures())
 
@@ -124,7 +125,10 @@ def pca_totrace(mod:algo.model,ref_cluster,pca_offset=0):
     li_data:list = []
     facets=[]
 
+    i=0
     for c in mod.clusters:
+        i = i + 1
+        tools.progress(i,len(mod.clusters),"Préparation des clusters")
         if len(c.clusters_distances)>0:
             distances: pd.DataFrame = pd.DataFrame.from_dict(c.clusters_distances,orient="index",columns=["distance","p1","p2"])
             distances=distances.sort_values("distance")
@@ -138,25 +142,31 @@ def pca_totrace(mod:algo.model,ref_cluster,pca_offset=0):
         facets.append(c.get_3dhull(newdata,pca_offset))
 
         for k in range(len(c.index)):
-            x=newdata[c.index[k], pca_offset]
-            y=newdata[c.index[k], pca_offset + 1]
-            z=newdata[c.index[k], pca_offset + 2]
+            ind=c.index[k]
+            x=newdata[ind, pca_offset]
+            y=newdata[ind, pca_offset + 1]
+            z=newdata[ind, pca_offset + 2]
             sp={
+                'index':ind,
                 'x': x,
                 'y': y,
                 'z': z,
                 'style': c.color,
-                'label': labels[c.index[k]],
-                'name': labels[c.index[k]],
+                'label': labels[ind],
+                'name': labels[ind],
                 'size':1,
                 'form':'sphere',
                 'cluster': c.name,
-                'ref_cluster':ref_cluster[c.index[k]],
+                'ref_cluster':ref_cluster[ind],
                 'cluster_distance':ss
             }
-            tmp:pd.DataFrame=mod.data.iloc[[c.index[k]]]
-            n=tmp.to_dict(orient="index")[c.index[k]]
-            li_data.append({**sp, **n})
+            li_data.append(sp)
+
+    for i in range(0,len(li_data)):
+        tools.progress(i,len(li_data),"Ajout des propriétés")
+        row=li_data[i]["index"]
+        d:dict=properties_dict[row-1]
+        li_data[i]=({**li_data[i], **d})
 
     return li_data,facets
 
@@ -231,19 +241,29 @@ def trace_artefact(G, clusters):
     plt.show()
 
 
-
-
-
 from flask import render_template
+
+def create_dict_for_properties(data:pd.DataFrame):
+    rc=[]
+    names = data.columns.values
+    for row in range(1,len(data)):
+        values=data.iloc[[row]].values[0]
+        d=dict(zip(names,values))
+        #d=tmp.to_dict(orient="index")[row]
+        rc.append(d)
+
+    return rc
 
 #Production du fichier à destination du tracé 3d
 def trace_artefact_GL(mod:algo,id="",title="",ref_model:algo=None,pca_offset=0,autorotate="false"):
-    li_data,facets= pca_totrace(mod,mod.data['ref_cluster'],pca_offset)
+
+    properties_dict=create_dict_for_properties(mod.data)
+    li_data,facets= pca_totrace(mod,mod.data['ref_cluster'],properties_dict,pca_offset)
 
     if ref_model is None:
         facets_ref=[]
     else:
-        tmp_li_data,facets_ref=pca_totrace(ref_model,ref_model.data['ref_cluster'],pca_offset)
+        tmp_li_data,facets_ref=pca_totrace(ref_model,ref_model.data['ref_cluster'],properties_dict,pca_offset)
 
     d=pd.concat([mod.data.ix[:,0],mod.mesures()],axis=1,sort=False)
 

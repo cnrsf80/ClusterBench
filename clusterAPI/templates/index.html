@@ -46,7 +46,7 @@
                             <option value="NEURALGAS::passes=3 distance_toremove_edge=40::https://en.wikipedia.org/wiki/Neural_gas">NEURALGAS</option>
                             <option value="HAC::n_clusters=11,12,13::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html">HAC</option>
                             <option value="MEANSHIFT::bandwidth=0.1,0.3,0.2::http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html">MEANSHIFT</option>
-                            <option value="NOTREATMENT::noparameter::/help.html">NOTREATMENT</option>
+                            <option value="NOTREATMENT::noparameter::">NOTREATMENT</option>
                         </select>
                     </td>
                 </tr>
@@ -107,10 +107,10 @@
                 </tr>
 
                 <tr>
-                    <td>Filter</td>
+                    <td>Format</td>
                     <td>
                         <input size="40"
-                               value="" id="filter" type="text"
+                               value="" id="format" type="text"
                                onchange="showlink()"
                         >
                     </td>
@@ -156,6 +156,13 @@
                     <td>Only graphic</td>
                     <td>
                         <input value="3" id="notext" type="checkbox" onchange="showlink()">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>No metrics</td>
+                    <td>
+                        <input value="3" id="nometrics" type="checkbox" onchange="showlink()">
                     </td>
                 </tr>
             </table>
@@ -228,7 +235,7 @@
         if(!domain.endsWith("/"))domain=domain+"/";
 
         var notif=document.getElementById("email").value;
-        var filter=document.getElementById("filter").value;
+        var format=document.getElementById("format").value;
 
         var file=encodeURIComponent(document.getElementById("url").value)
 
@@ -250,9 +257,11 @@
                 url="http://"+domain+"job/"+file+"/"+algo+"/"+params+"?&pca="+pca;
             }
 
+            //Ajout d'options supplémentaire sur l'url
             if(notif.length>0)url+="&notif="+notif;
-            if(filter.length>0)url+="&filter="+filter;var notext=document.getElementById("notext").checked;
-            if(notext)url=url+"&notext";
+            if(format.length>0)url+="&format="+format;
+            if(document.getElementById("notext").checked)url=url+"&notext=True";
+            if(document.getElementById("nometrics").checked)url=url+"&nometrics=True";
 
             document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
             return url;
@@ -355,7 +364,7 @@
             if(n_jobs<max_jobs) {
                 n_jobs++;
                 log("On lance un nouveau job."+n_jobs+" en cours");
-                fetch(url + "&nometric").then((res) => {return res;}).then((res) => {
+                fetch(url + "&nometrics=True").then((res) => {return res;}).then((res) => {
                     i++;
                     n_jobs--;
                     log("Fin d'un job."+n_jobs+" actifs");

@@ -137,6 +137,7 @@ var Game = /** @class */ (function () {
             document.getElementById("row1").innerText = target.name;
             document.getElementById("row2").innerText = target.cluster_name;
             document.getElementById("row4").innerText = target.ref_cluster;
+            document.getElementById("row6").innerText = target.index;
             document.getElementById("row5").innerText = toString(target.params);
             document.getElementById("row3").innerText =
                 Math.round(target.position.x * 100) / 100 + "," +
@@ -188,7 +189,7 @@ var Game = /** @class */ (function () {
         if (obj.hasOwnProperty("cluster_distance"))
             sphere.cluster_distance = JSON.parse(obj.cluster_distance);
         this.prepareButton(sphere);
-        this.spheres.push(sphere);
+        this.spheres[sphere.index] = sphere;
     };
     Game.prototype.linkSphere = function (s1, s2, radius) {
         if (radius === void 0) { radius = 0.04; }
@@ -260,9 +261,13 @@ var Game = /** @class */ (function () {
             _this._engine.resize();
         });
     };
-    Game.prototype.clearMesures = function () {
+    Game.prototype.clearMesures = function (nMesures) {
         this.spheres.forEach(function (s) { s.dispose(); });
         this.spheres = [];
+        while (nMesures > 0) {
+            this.spheres.push({});
+            nMesures--;
+        }
         this.clearLinks();
     };
     Game.prototype.makeRotate = function () {
@@ -311,7 +316,9 @@ var Game = /** @class */ (function () {
                 if (facet[1] == offset && (filter == null || facet[0].indexOf(filter) > -1)) {
                     var positions = [];
                     facet[3].forEach(function (f) {
-                        positions.push(_this.spheres[f].position);
+                        var s = _this.spheres[f];
+                        s.position.index = s.index;
+                        positions.push(s.position);
                     });
                     var shape = [
                         new BABYLON.Vector3(positions[0].x, positions[0].y, positions[0].z),
@@ -371,6 +378,9 @@ var Game = /** @class */ (function () {
     };
     Game.prototype.stopAutoRotation = function () {
         this._camera.useAutoRotationBehavior = false;
+    };
+    Game.prototype.isRotating = function () {
+        return (this._camera.useAutoRotationBehavior);
     };
     Game.prototype.makeMovie = function () {
         document.getElementById("message").innerHTML = "<img style='width:20px' src='https://api.voxhub.net/api-v1/contentFileLoader?file=/website/store/recordings/df85aa22-4888-465d-8976-5739eec9f415'>";
@@ -477,14 +487,12 @@ window.addEventListener("message", function (evt) {
     data_source = evt.data.data_source;
     evt.preventDefault();
     if (datas != null && datas.length > 0) {
-        game.clearMesures();
+        game.clearMesures(datas.length);
         var i = 0;
         game.message("Création de " + datas.length + " mesures", 2);
         for (var _i = 0, datas_1 = datas; _i < datas_1.length; _i++) {
             var p = datas_1[_i];
-            p.index = i;
             game.createMesure(p);
-            i = i + 1;
         }
         if (evt.data.autorotate)
             game.startAutoRotation();
@@ -587,8 +595,12 @@ window.addEventListener("keypress", function (evt) {
     if (evt.key == "V") {
         game.stopMovie();
     }
-    if (evt.key == "a")
-        game.startAutoRotation();
+    if (evt.key == "a") {
+        if (game.isRotating())
+            game.stopAutoRotation();
+        else
+            game.startAutoRotation();
+    }
     if (evt.key == "A")
         game.stopAutoRotation();
     if (evt.key == "e") {
