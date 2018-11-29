@@ -2,11 +2,11 @@ from clusterBench import draw
 import datetime
 import pandas as pd
 import clusterBench.algo as algo
-import time
 import copy
 import clusterBench.tools as tools
 from sklearn import cluster as cl
 import hdbscan
+import stringdist
 
 from flask import request
 
@@ -21,26 +21,41 @@ class simulation:
         return rc
 
 
-    def __init__(self,data:pd.DataFrame,no_metric=False,format=""):
+    def __init__(self,data:pd.DataFrame,no_metric=False,format:dict=dict()):
+
+        if draw.colors is None or len(draw.colors) < 2: draw.colors = draw.init_colors(200)
         self.data = data
 
         #Réglage des parametres
-        format=tools.string_to_dict(format,"=",";")
         if not "name" in format:
-            format["name"]=0# Le libellé des mesures est pris sur la premiere colonne
+            format["name"]=data.columns[0]# Le libellé des mesures est pris sur la premiere colonne
 
         if not "measures" in format:
-            format["measures"]=list(range(1,len(data.columns.values)))
+            format["measures"]=data.columns[range(1,len(data.columns.values))]
 
-        if not "properties" in format: #Par defaut les propriétées sont entre les mesures et l'index
-            if int(format["name"])+1<min(list(format["measures"]))-1:
-                format["properties"]=str(list(range(format["name"]+1,min(format["measures"])-1)))
+        # if not "properties" in format:
+        #     #Par defaut les propriétées sont entre les mesures et l'index
+        #     if int(format["name"])+1<min(list(format["measures"]))-1:
+        #         format["properties"]=data.columns[list(range(format["name"]+1,min(format["measures"])-1))]
+        #     else:
+        #         format["properties"]=[]
 
-        self.col_name = self.data.columns[int(format["name"])]
-        self.col_measures=list(self.data.columns.values[format["measures"]])
+        self.col_name = format["name"][0]
+        self.col_measures=format["measures"]
 
-        if not "ref_cluster" in list(self.data.columns):
-            self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, self.col_name)
+        i = 0
+        for c in data[format["measures"]]:
+            tools.progress(i, len(data.columns), "Conversion des chaines de caractères")
+            if data[c].dtype == object and len(data[c]) > 0:
+                ref = data[c][1]
+                l = data[c].apply(lambda x: stringdist.levenshtein_norm(x, ref))
+                data[c] = l
+
+        if not "cluster" in list(self.data.columns):
+            if not "cluster" in format:
+                format["cluster"]=self.col_name
+
+            self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, format["cluster"][0])
 
         self.dimensions = len(format["measures"])  # Les composantes sont les colonnes suivantes
 
@@ -63,7 +78,7 @@ class simulation:
                             hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"],
                                             min_samples=x["min_samples"],
                                             alpha=x["alpha"]),
-                        ps=parameters)
+                        ps=parameters,colors=draw.colors)
 
         if name_algo.upper().__contains__("MEANSHIFT"):
             parameters = tools.buildDict(params, {"bandwidth": [2]})
@@ -71,7 +86,7 @@ class simulation:
                         "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html#sklearn.cluster.MeanShift",
                         lambda x:
                         cl.MeanShift(bandwidth=x["bandwidth"], bin_seeding=False, cluster_all=True),
-                        parameters)
+                        parameters,draw.colors)
 
         if name_algo.upper().__contains__("HAC"):
             parameters = tools.buildDict(params, {"n_clusters": [12]})
@@ -79,7 +94,7 @@ class simulation:
                         "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html#sklearn.cluster.AgglomerativeClustering",
                         lambda x:
                         cl.AgglomerativeClustering(n_clusters=x["n_clusters"]),
-                        parameters
+                        parameters,draw.colors
                         )
 
         if name_algo.upper().__contains__("NEURALGAS"):
@@ -110,7 +125,6 @@ class simulation:
         else:
             code = self.print_infos() + "<br>synthese<br>"
 
-
         try:
             n_pca = int(request.args["pca"])
         except:
@@ -125,7 +139,7 @@ class simulation:
 
 
     #Créé le modele de référence à partir des données
-    def init_reference_model(self):
+    def init_reference_model(self,ref_cluster:int=None):
         print(str(len(self.data)) + " mesures à traiter")
         print("Colonne de utilisé pour le nom " + self.col_name)
 
@@ -137,7 +151,7 @@ class simulation:
         # mod.init_distances(lambda i, j: scipy.spatial.distance.cityblock(i, j))
 
         true_labels = mod.ideal_matrix()  # Définition d'un clustering de référence pour les métriques
-        mod.clusters_from_labels(true_labels)
+        mod.clusters_from_labels(true_labels,draw.colors)
         return mod
 
 
@@ -168,11 +182,11 @@ class simulation:
 
 
 
-    def execute(self,algo_name,url,func,ps:dict,useCache=False):
+    def execute(self,algo_name,url,func,ps:dict,colors,useCache=False):
         print("Traitement de "+algo_name+" ********************************************************************")
         for p in self.convertParams(ps):
             m: algo.model=algo.model(self.ref_model.data,self.ref_model.name_col,self.col_measures)
-            m=m.execute(algo_name,url, func,p,useCache)
+            m=m.execute(algo_name,url, func,colors,p,useCache)
             m.init_noise_cluster()
             self.models.append(copy.copy(m))
 

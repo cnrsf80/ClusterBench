@@ -1,6 +1,6 @@
 # coding: utf-8
 import copy
-from clusterBench import draw, tools
+from clusterBench import tools
 import sklearn.decomposition as decomp
 
 import numpy as np
@@ -206,7 +206,7 @@ class GrowingNeuralGas:
                 'label':"noeud"+str(i),
             })
 
-        draw.draw_3D(li_data, for_jupyter=False,lines=li_lines)
+        #draw.draw_3D(li_data, for_jupyter=False,lines=li_lines)
 
     def number_of_clusters(self):
         return nx.number_connected_components(self.network)

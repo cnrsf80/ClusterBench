@@ -268,7 +268,7 @@ class Game {
         return rc;
     }
 
-    createScene() : void {
+    createScene(label_x="X",label_y="Y",label_z="Z") : void {
         // Create a basic BJS Scene object.
         this._scene = new BABYLON.Scene(this._engine);
         this._scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
@@ -281,17 +281,12 @@ class Game {
         });
 
         var dim=this.scale*2;
-        // var scatterPlot = new ScatterPlot([dim,dim,dim],{
-        //     x: ["", "0", "1","2"],
-        //     y: ["", "0", "1","2"],
-        //     z: ["2","1", "0", "-1"]
-        // }, this._scene);
-        showAxis(50,this._scene);
+        showAxis(50,this._scene,label_x,label_y,label_z);
 
         // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
         this._camera = new BABYLON.ArcRotateCamera("Camera",
-            3.2*Math.PI / 2,
-            3.5*Math.PI/2 ,
+            7.0,
+            1.16 ,
             this.scale*1.5,
             BABYLON.Vector3.Zero(),
             this._scene);
@@ -515,7 +510,8 @@ class Game {
         if(datas.length==0)return("");
 
         var rc="Names"+sep;
-        for(var k=0;k<datas[0].length-1;k++)rc=rc+"Mesure"+k+sep;
+        for(var k=0;k<datas[0].length-1;k++)rc=rc+Object.keys(this.spheres[0].params)[k]+sep;
+
         rc=rc.substr(0,rc.length-1)+end_line;
 
         var i=0;
@@ -569,12 +565,6 @@ let game:Game=null;
 window.addEventListener('DOMContentLoaded', () => {
     // Create the game using the 'renderCanvas'.
     game = new Game('renderCanvas');
-
-    // Create the scene.
-    game.createScene();
-
-    // Start render loop.
-    game.doRender();
 });
 
 var facets=[];
@@ -582,6 +572,7 @@ var facets_ref=[];
 var datas:any=null;
 var data_source:any=null;
 var edges=[];
+var components=[]
 
 /**
  * Affichage des points contenu dans datas
@@ -589,6 +580,17 @@ var edges=[];
 window.addEventListener("message", (evt)=> {
     datas = evt.data.datas;
     data_source=evt.data.data_source;
+    components=evt.data.components;
+
+    // Create the scene.
+    if(components.length==3){
+        game.createScene(components[0],components[1],components[2]);
+    }
+    else
+        game.createScene();
+
+    // Start render loop.
+    game.doRender();
 
     evt.preventDefault();
     if (datas!=null && datas.length>0) {
@@ -663,26 +665,29 @@ window.addEventListener("keypress", (evt)=> {
 
     if(evt.key=="h"){
         var text="" +
-            "            <h3>Commandes sur la visu 3d:</h3>>" +
-            "            - <strong>'s'</strong> et SHIFT+'s' respectivement montre et cache toutes les mesures<br>\n" +
-            "            - <strong>'m'</strong> et SHIFT+'m' opere un filtre sur les mesures pour les montrer / cacher<br>\n" +
-            "            - <strong>'c'</strong> et SHIFT+'c' opere un filtre sur les clusters pour les montrer / cacher<br>\n" +
-            "            - <strong>'a'</strong> et SHIFT+'a' engage une autorotation du graphique<br>\n" +
-            "            - <strong>'w'</strong> centre la caméra sur l'échantillon pointé par la souris<br>\n" +
-            "            - <strong>'v'</strong> et SHIFT+'v' démarre et stop un enregistrement video au format webm (lisible par vlc ou d'autres lecteurs)<br>\n" +
-            "            - <strong>'+'</strong> et '-' écarte/réduit les mesure par changement d'échelle <br>\n" +
-            "            - <strong>'e'</strong> export les données visibles au format CSV dans le presse papier<br>\n" +
-            "            - <strong>'p'</strong> et SHIFT+'p' entoure les clusters visible (patatoides) <br>\n" +
-            "            - <strong>'x'</strong> et SHIFT+'x' propagation des mesures visiblesh / cachées <br>\n" +
-            "            - <strong>'o'</strong> entoure les clusters de référence<br>\n" +
-            "            - <strong>'r'</strong> supprime définitivement le bruit (permet d'accéler la navigation)<br>\n" +
-            "            - <strong>'k'</strong> connecte entre elles les mesures du même nom<br>\n" +
+            "           <table>" +
+            "            <tr><td>s / S</td><td>respectivement montre et cache toutes les mesures</td></tr>" +
+            "            <tr><td>m / M</td><td>opere un filtre sur les mesures pour les montrer / cacher</td></tr>" +
+            "            <tr><td>c / C</td><td>opere un filtre sur les clusters pour les montrer / cacher</td></tr>" +
+            "            <tr><td>a</td><td>engage/stop une autorotation du graphique</td></tr>" +
+            "            <tr><td>w / W</td><td>centre la caméra sur l'échantillon pointé par la souris</td></tr>" +
+            "            <tr><td>v / V</td><td>démarre/stop un enregistrement video au format webm (lisible par vlc ou d'autres lecteurs)</td></tr>" +
+            "            <tr><td>e</td><td>export les données visibles au format CSV dans le presse papier</td></tr>" +
+            "            <tr><td>E</td><td>effectue le clustering sur les données visibles</td></tr>" +
+            "            <tr><td>p / P</td><td>entoure les clusters visible (patatoides) </td></tr>" +
+            "            <tr><td>x / X</td><td>propagation des mesures visibles / cachées aux voisins</td></tr>" +
+            "            <tr><td>o / O</td><td>entoure le clusters de référence</td></tr>" +
+            "            <tr><td>r</td><td>supprime définitivement le bruit (permet d'accéler la navigation)</td></tr>" +
+            "            <tr><td>+ / -</td><td>dilate / contracte les données</td></tr>" +
+            "            <tr><td>1 - 9</td><td>utlise les 9 premières propriété comme diametre des mesures</td></tr>" +
+            "            <tr><td>0</td><td>replace le diametre de toutess les mesures à 1</td></tr>" +
             "\n" +
-            "            - 'click' et 'SHIFT+click' montre / cache le cluster d'appartenance de la mesure<br>\n" +
-            "            - 'double click' permet d'étudier un cluster en particulier<br>\n" +
-            "            - 'ALT+click' permet grossis / réduit les mesures du même nom<br>\n" +
-            "            - 'click droit' permet d'enregistrer la visu en format image";
+            "            <tr><td>'click' et 'SHIFT+click'</td><td>montre / cache le cluster d'appartenance de la mesure</td></tr>" +
+            "            <tr><td>'double click'</td><td>centre la visualisation sur la mesure pointé (idem w)</td></tr>" +
+            "            <tr><td>'ALT+click'</td><td>permet grossis / réduit les mesures du même cluster de référence</td></tr>" +
+            "            <tr><td>'click droit'</td><td>permet d'enregistrer la visu en format image</td></tr>";
 
+        text=text+"</table>";
         game.message(text,10);
 
 
@@ -746,9 +751,16 @@ window.addEventListener("keypress", (evt)=> {
    }
 
     if(evt.key=="E"){
+        document.body.style.cursor = 'progress';
        var code=game.toCSV(data_source);
-       fetch("./measure/temp.csv",{method:"POST",body:code}).then(r=>{
-           debugger;
+       var now=new Date().getTime();
+       fetch("/datas/measure/temp"+now+".csv",{method:"POST",body:code}).then(r=>{
+            return r.json();
+       }).then(r=>{
+           var params=parent.location.href.split("/");
+           var param=params[params.length-1];
+           var algo=params[params.length-2];
+           parent.location.href="http://"+document.location.host+r+"/"+algo+"/"+param;
        }).catch((err=>{
            debugger;
        }))

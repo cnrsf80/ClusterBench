@@ -264,8 +264,12 @@
 
             //Ajout d'options supplémentaire sur l'url
             if(notif.length>0)url+="&notif="+notif;
-            for(var i=0;i<10;i++)format=format.replace("=",":").replace("&","_");
-            if(format.length>0)url+="&format="+format;
+            if(format!=null){
+                format=format.toLowerCase().replace("colonnes","cols").replace("col=","cols=").replace("index","name");
+                for(var i=0;i<10;i++)format=format.replace("=",":").replace("&","_");
+                if(format.length>0)url+="&format="+format;
+
+            }
 
             if(document.getElementById("notext").checked)url=url+"&notext=True";
             if(document.getElementById("nometrics").checked)url=url+"&nometrics=True";
@@ -348,6 +352,8 @@
         document.getElementById("console").innerHTML=new_s.substr(0,300);
     }
 
+
+
     function clear_log(){
         start=new Date();
         document.getElementById("console").innerHTML="";
@@ -393,8 +399,24 @@
         },300);
     }
 
+    var hLog=null;
+    function showLog(){
+        if(hLog!=null)clearInterval(hLog);
+        hLog=setInterval(()=>{
+            window.open("/log","out");
+        },10000);
+    }
+
+    function hideLog(){
+        if(hLog!=null){
+            clearInterval(hLog);
+            hLog=null;
+        }
+    }
+
     function analyseFile(){
-        window.open("/analyse/"+document.getElementById("url").value,"out");
+        var url=btoa(document.getElementById("url").value);
+        window.open("/analyse/"+url,"out");
     }
 
     function openlink(){
@@ -407,6 +429,7 @@
 
     document.getElementById("lst_files").addEventListener("change",(evt)=>{
         document.getElementById("url").value=evt.currentTarget.value;
+        analyseFile();
     });
 
     setTimeout(()=>{

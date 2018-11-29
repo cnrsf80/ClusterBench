@@ -16,10 +16,6 @@ def abort_if_file_doesnt_exist(name):
 #Représentation des fichiers à traiter
 @api.route("/measure/<string:name>")
 class Measure(Resource):
-    #def __init__(self):
-        #self.parser = reqparse.RequestParser()
-        #self.parser.add_argument('file',type=FileStorage,location='files')
-
     # Retourne Vrai si le format du fichier est accepté
     def allowed_file(self,filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in ["xlsx", "xls", "csv", "txt"]
@@ -28,9 +24,8 @@ class Measure(Resource):
     @api.doc(responses={201: 'File created'})
     @api.doc(responses={401: 'Le fichier contient des valeurs incorrectes'})
     def post(self,name):
-        file= request.files["files"];
-
-        if file and self.allowed_file(name):
+        if "files" in request.files:
+            file = request.files["files"]
             url = os.path.join("./datas", name)
             file.save(url)
             data = tools.get_data_from_url(name)
@@ -45,9 +40,10 @@ class Measure(Resource):
 
         if request.data:
             url = os.path.join("./datas", name)
-            with open(url,"w") as text_file:
-                text_file.write(request.data)
-            return "",201
+            with open(url,"w",encoding="utf-8") as text_file:
+                b:bytes=request.data
+                text_file.write(b.decode(encoding="utf-8",errors="ignore"))
+            return "/job/"+name
 
 
     @api.doc(responses={201: 'The file exist'})

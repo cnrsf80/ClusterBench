@@ -16,6 +16,11 @@
     <script src="render.js"></script>
 </head>
 <style>
+
+    body.waiting * {
+        cursor: progress;
+    }
+
     html, body {
         overflow: hidden;
         width   : 100%;
@@ -37,7 +42,7 @@
         <tr><td style="width:50px;">Message</td><td id="message"></td></tr>
         <tr><td>Nom</td><td id="row1"></td></tr>
         <tr><td>Cluster</td><td id="row2"></td></tr>
-        <tr style="visible:hidden;"><td>Position</td><td id="row3"></td></tr>
+        <tr><td></td><td style="visible:hidden;" id="row3"></td></tr>
         <tr><td>Parametres</td><td id="row5"></td></tr>
     </table>
 </div>

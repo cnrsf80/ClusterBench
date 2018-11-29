@@ -90,3 +90,5 @@ Sur le serveur, les répertoires suivant contiennent :
  
 #Exemples de requetes
 - http://localhost:5000/job/lycees.csv/HDBSCAN/min_samples=5&min_cluster_size=6&alpha=0.5?&pca=0&format=cols:1,1,8,9,10,21,22,23,84,85,86,87,88,89,90,91_name:1
+- http://localhost:5000/job/b64=aHR0cHM6Ly9vcGVuZGF0YS5wYXJpcy5mci9leHBsb3JlL2RhdGFzZXQvcmVzdWx0YXRzX2VsZWN0b3JhdXgvZG93bmxvYWQvP2Zvcm1hdD1jc3YmdGltZXpvbmU9RXVyb3BlL0JlcmxpbiZ1c2VfbGFiZWxzX2Zvcl9oZWFkZXI9dHJ1ZQ==/HDBSCAN/min_samples=2&min_cluster_size=3&alpha=0.5?&pca=1&format=cols:11,2,9,13
+- http://localhost:5000/job/resultats_electoraux.csv/HDBSCAN/min_samples=2&min_cluster_size=3&alpha=0.5?&pca=1&format=measures:7,9,13_cluster:0_name:11

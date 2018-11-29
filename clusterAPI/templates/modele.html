@@ -35,6 +35,7 @@
 
         document.getElementById("{{name_zone|safe}}").contentWindow.postMessage({
                 title:"{{title|safe}}",
+                components:{{ components|safe }},
                 datas:{{datas|safe}},
                 data_source:{{data_source|safe}},
                 facets:{{facets|safe}},

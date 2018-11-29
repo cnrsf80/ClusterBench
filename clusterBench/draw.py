@@ -1,15 +1,12 @@
+import matplotlib.pyplot as plt
 import sklearn.decomposition as decomp
 import ezvis3d as v3d
 import pandas as pd
 import networkx as nx
-from matplotlib import colors as mcolors
 import clusterBench.tools as tools
-
+from clusterBench.algo import model
 import random
-
-
-#Palette de couleurs
-from clusterBench import algo
+from clusterBench.network import network
 
 
 def color_distance(c1,c2):
@@ -19,17 +16,20 @@ def color_distance(c1,c2):
     return s
 
 
-colors=[[random.random(),random.random(),random.random()]]
-for i in range(1,250):
-    while True:
-        new_color=[random.random(),random.random(),random.random()]
-        b=True
-        for k in range(0, i):
-            if color_distance(colors[i-k-1],new_color)<0.2:b=False
+colors=[]
+def init_colors(nbColor=250):
+    colors=[]
+    for i in range(1,nbColor):
+        while True:
+            new_color=[random.random(),random.random(),random.random()]
+            b=True
+            for k in range(0, i):
+                if k>1 and color_distance(colors[i-k-1],new_color)<0.2:b=False
 
-        if b:
-            colors.append(new_color)
-            break
+            if b:
+                colors.append(new_color)
+                break
+    return colors
 
 
 #Affichage des mesures en 2D
@@ -47,25 +47,6 @@ def trace_artefact_2d(data, clusters, path,name):
 
     return name+".png"
 
-
-# def trace_spectre(model,X):
-#     reachability = model.reachability_[model.ordering_]
-#     labels = model.labels_[model.ordering_]
-#
-#     space = numpy.arange(len(X))
-#
-#     for k, c in zip(range(0, 5), colors):
-#         Xk = space[labels == k]
-#         Rk = reachability[labels == k]
-#         plt.plot(Xk, Rk, c, alpha=0.3)
-#
-#     plt.plot(space[labels == -1], reachability[labels == -1], 'k.', alpha=0.3)
-#     plt.set_ylabel('Reachability (epsilon distance)')
-#     plt.set_title('Reachability Plot')
-
-
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
 
 
 def drawOnPlot_3D(points,lines):
@@ -114,7 +95,7 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
 #     df_data = pd.DataFrame(li_data)
 
 #Projection 3D des cluster et cluster de référence + calcul des enveloppes
-def pca_totrace(mod:algo.model,ref_cluster,properties_dict:list,pca_offset=0):
+def pca_totrace(mod,ref_cluster,properties_dict:list,pca_offset=0):
     labels=mod.names()
     mesures=tools.normalize(mod.mesures())
 
@@ -174,7 +155,7 @@ def pca_totrace(mod:algo.model,ref_cluster,properties_dict:list,pca_offset=0):
     return li_data,facets
 
 #Representation 3d du graph
-def to3D(G:algo.network,positions=None):
+def to3D(G:network,positions=None):
     li_data=[]
     for c in G.clusters:
         for p in c.index:
@@ -259,41 +240,61 @@ def create_dict_for_properties(data:pd.DataFrame,col_name:str):
 
     return rc
 
-#Production du fichier à destination du tracé 3d
-def trace_artefact_GL(mod:algo.model,id="",title="",ref_model:algo=None,pca_offset=0,autorotate="false"):
+#Produit une réprésentation 3D et une représentation 2D des mesures
+#après PCA et coloration en fonction du cluster d'appartenance
+def trace(mod:model,path:str,filename,url_base=""):
+    if len(mod.clusters)>0:
+        code=trace_artefact_GL(mod,"","")
+    else:
+        code="No cluster"
 
-    properties_dict=create_dict_for_properties(mod.data,mod.name_col)
-    li_data,facets= pca_totrace(mod,mod.data['ref_cluster'],properties_dict,pca_offset)
+    tools.save(code+"<br><h2>Composition des clusters</h2>"+mod.print_cluster("<br><br>"),path + "/" + filename+mod.name+ ".html")
+
+    mod.url= url_base +"/" + tools.normalize(filename+mod.name) + ".html"
+    #self.url2d = url_base + "/" + draw.trace_artefact_2d(self.mesures(), self.clusters, path, filename)
+
+    s="<a href='"+mod.url+"'>représentation 3D</a>\n"
+    s= s + "<a href='" + mod.url2d + "'>représentation 2D</a>\n"
+    return s+"\n"
+
+
+# Production du fichier à destination du tracé 3d
+def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autorotate="false"):
+    properties_dict:dict = create_dict_for_properties(mod.data, mod.name_col)
+    li_data, facets = pca_totrace(mod, mod.data['ref_cluster'], properties_dict, pca_offset)
 
     if ref_model is None:
-        facets_ref=[]
+        facets_ref = []
     else:
-        tmp_li_data,facets_ref=pca_totrace(ref_model,ref_model.data['ref_cluster'],properties_dict,pca_offset)
+        tmp_li_data, facets_ref = pca_totrace(ref_model, ref_model.data['ref_cluster'], properties_dict, pca_offset)
 
-    d=pd.concat([mod.data.ix[:,0],mod.mesures()],axis=1,sort=False)
+    d = pd.concat([mod.data.ix[:, 0], mod.mesures()], axis=1, sort=False)
 
-    toList=[]
+    toList = []
     for line in d.values:
         toList.append(list(line))
 
-    code=render_template("modele.html",
-                         title=title,
-                         name_zone="zone"+id,
-                         datas=li_data,
-                         autorotate=autorotate,
-                         data_source=toList,
-                         facets_ref=facets_ref,
-                         facets=facets,
-                         edges=[],
-                         url_to_render="/static/rendering/render.html?offset="+str(pca_offset))
+    code = render_template("modele.html",
+                           title=title,
+                           name_zone="zone" + id,
+                           datas=li_data,
+                           components=list(mod.mesures().columns),
+                           autorotate=autorotate,
+                           data_source=toList,
+                           facets_ref=facets_ref,
+                           facets=facets,
+                           edges=[],
+                           url_to_render="/static/rendering/render.html?offset=" + str(pca_offset))
     return code
 
-def trace_graph(G:algo.network,positions=None,autorotate=False):
+
+def trace_graph(G:network,positions=None,autorotate=False):
     li_data,edges=to3D(G,positions)
     code = render_template("modele.html",
                            title="",
                            autorotate=autorotate,
                            name_zone="zone",
+                           components=[],
                            datas=li_data,
                            data_source=[],
                            facets_ref=[],

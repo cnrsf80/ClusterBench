@@ -1,5 +1,9 @@
 import os
 from flask import Flask,request,g,render_template
+import clusterBench.tools as tools
+import clusterBench.algo as algo
+import pandas as pd
+import base64
 
 
 #http://45.77.160.220:5000/algo/NEURALGAS/Pour%20clustering2%20(1).xlsx/passes=30&distance_toremove_edge=50/modele.html?pca=2&notif=hhoareau%40gmail.com
@@ -30,15 +34,36 @@ def create_app(test_config=None):
     def index():
         html="<select onmouseup='showlink()' id='lst_files'>"
         for s in os.listdir(os.path.join("./datas", "")):
-            html=html+"<option>"+s+"</option>"
+            if not s.startswith("temp"):
+                html=html+"<option>"+s+"</option>"
 
         return render_template("index.html",list_file=html+"</select>")
 
-    import clusterBench.tools as tools
+
     @app.route('/analyse/<string:url>', methods=['GET'])
     def analyse(url:str):
+        url=base64.standard_b64decode(url).decode("utf-8")
         data=tools.get_data_from_url(url)
-        return tools.print_columns_name(data,request.args.get("format",""))
+        if data is None:
+            G=algo.network(url)
+            result:pd.DataFrame=G.print_properties()
+        else:
+            result:pd.DataFrame=tools.analyse_data(data,request.args.get("format",""))
+        if request.args.get("format")=="json":
+            return result.to_json()
+        else:
+            return result.to_html()
+
+
+
+
+    @app.route('/log', methods=['GET'])
+    def getlog():
+        s=""
+        with open("log.txt", "r") as log_file:
+            s=s+log_file.read()
+
+        return s.replace("\n","<br>")
 
     # @app.route('/datas/<string:label_col>/<int:dimensions>', methods=['POST'])
     # def datas(label_col: str, dimensions: int):

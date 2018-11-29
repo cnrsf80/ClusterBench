@@ -4,6 +4,7 @@ import clusterBench.tools as tools
 import clusterBench.simulation as simulation
 import time
 import base64
+import stringdist
 
 ns_job = Namespace('job', description='Job related operations to calculation')
 
@@ -20,7 +21,9 @@ class job(Resource):
         if url.startswith("b64="):url=base64.standard_b64decode(url.split("b64=")[1]).decode("utf-8")
 
         tmp_data=tools.get_data_from_url(url)
-        data = tools.removeNan(tools.filter(tmp_data,request.args.get("format","")))
+        format=request.args.get("format","")
+        p_format:dict=tools.replace_index_by_name(tmp_data,format)
+        data = tools.removeNan(tools.filter(tmp_data,p_format))
 
         if len(data)==0:
             return "No data after filtering",501
@@ -29,7 +32,7 @@ class job(Resource):
 
         notext=(request.args.get("notext", "False",str)=="True")
         nometrics = (request.args.get("nometrics", "False",str)=="True")
-        sim:simulation = simulation.simulation(data=data,no_metric=nometrics,format=request.args.get("format",""))
+        sim:simulation = simulation.simulation(data=data,no_metric=nometrics,format=p_format)
 
         sim.run_algo(params, algo)
         if not nometrics:

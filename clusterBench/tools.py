@@ -5,6 +5,9 @@ import os
 import sys
 import pandas
 from sklearn import preprocessing
+import io
+from contextlib import redirect_stdout
+
 
 #Permet l'affichage d'un barre de progression
 def progress(count, total, suffix=''):
@@ -14,6 +17,8 @@ def progress(count, total, suffix=''):
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
     sys.stdout.write('[%s] %s%s ...%s                                          \r' % (bar, percents, '%', suffix))
     sys.stdout.flush()  # As suggested by Rom Ruben
+    with open("log.txt", "a") as log_file:
+        log_file.write('[%s] %s%s ...%s                                          \r' % (bar, percents, '%', suffix))
 
 
 #fabrique un fichier HTML sur la base du code
@@ -161,7 +166,7 @@ import urllib.request
 def AnalyseFile(url:str):
     if url.endswith(".gexf") or url.endswith(".gml"): return "graph"
     if url.endswith(".xlsx") or url.endswith(".xls"): return "excel"
-    if url.endswith(".csv"): return "csv"
+    if url.endswith(".csv") or "format=csv" in url: return "csv"
     with urllib.request.urlopen(url) as response:
         data: str = response.read()
         if data.__contains__("rels/workbook"):return "excel"
@@ -190,7 +195,8 @@ def get_data_from_url(url:str):
     except:
         data = None
 
-    if data is None: return "Erreur sur la source de donnée : " + url
+    if data is None:
+        print("Erreur sur la source de donnée : " + url)
 
     return data
 
@@ -228,17 +234,13 @@ def add_default_value(args_from_url:dict, param):
     return args_from_url
 
 
-def filter(data:pd.DataFrame,filter:str):
-    if len(filter) > 0:
-        i = 0
-        filter = string_to_dict(filter,":","_")["cols"]
-        tmp = pd.DataFrame()
-        for col in filter.split(","):
-            s_col=list(data.columns.values)[int(col)]
-            tmp[s_col] = data[s_col]
+def filter(data:pd.DataFrame,filter:dict):
+    tmp = pd.DataFrame()
+    for k in filter.keys():
+        tmp[filter[k]] = data[filter[k]]
 
-        return tmp
-    return data
+    return tmp
+
 
 
 def removeNan(data:pd.DataFrame):
@@ -254,10 +256,9 @@ def normalize(data:pd.DataFrame):
     return pd.DataFrame(np_scaled)
 
 
-def print_columns_name(data:pd.DataFrame,format=""):
+def analyse_data(data:pd.DataFrame,format=""):
     data=filter(data,format)
-    rc=pd.DataFrame({'col':list(data.columns.values),'NaN':list(100*data.isna().sum()/len(data))},index=list(range(0,len(data.columns))))
-    return rc.to_html()
+    return pd.DataFrame({'Names':list(data.columns.values),'Default(%)':list(100*data.isna().sum()/len(data))},index=list(range(0,len(data.columns))))
 
 
 def string_to_dict(format:str,equal_operator="=",sep="&"):
@@ -265,5 +266,17 @@ def string_to_dict(format:str,equal_operator="=",sep="&"):
     for rel in format.split(sep):
         if equal_operator in rel:
             rc[rel.split(equal_operator)[0]]=rel.split(equal_operator)[1]
+
+    return rc
+
+
+def replace_index_by_name(tmp_data:pd.DataFrame, format:str):
+    rc=dict()
+    p:dict=string_to_dict(format,":","_")
+    for key in p.keys():
+        l=[]
+        for col in p[key].split(","):
+            l.append(tmp_data.columns[int(col)])
+        rc[key]=l
 
     return rc

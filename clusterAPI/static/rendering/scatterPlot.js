@@ -308,14 +308,14 @@ var ScatterPlot = function (dimensions, labels, scene) {
     return this;
 }
 
-var showAxis = function(size,scene) {
+var showAxis = function(size,scene,label_x="X",label_y="Y",label_z="Z") {
 	var grey=new BABYLON.Color3(0.7, 0.7, 0.7);
 
     var makeTextPlane = function(text, color, size) {
         color="lightgrey"
           var dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", 50, scene, true);
           dynamicTexture.hasAlpha = true;
-          dynamicTexture.drawText(text, 5, 40, "bold 25px Arial", color , "transparent", true);
+          dynamicTexture.drawText(text, 5, 40, "bold 20px Arial", color , "transparent", true);
           var plane = BABYLON.Mesh.CreatePlane("TextPlane", size, scene, true);
           plane.material = new BABYLON.StandardMaterial("TextPlaneMaterial", scene);
           plane.material.backFaceCulling = false;
@@ -329,16 +329,15 @@ var showAxis = function(size,scene) {
 	    new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
 	    ], scene);
 	  axisX.color = grey;
-
-	  var xChar = makeTextPlane("X", grey, size / 10);
+	  var xChar = makeTextPlane(label_x, grey, size / 5);
 	  xChar.position = new BABYLON.Vector3(0.9 * size, -0.05 * size, 0);
+
 	  var axisY = BABYLON.Mesh.CreateLines("axisY", [
 	      BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3( -0.05 * size, size * 0.95, 0),
 	      new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3( 0.05 * size, size * 0.95, 0)
 	      ], scene);
 	  axisY.color = grey
-
-	  var yChar = makeTextPlane("Y", grey, size / 10);
+	  var yChar = makeTextPlane(label_y, grey, size / 5);
 	  yChar.position = new BABYLON.Vector3(0, 0.9 * size, -0.05 * size);
 	  var axisZ = BABYLON.Mesh.CreateLines("axisZ", [
 	      BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0 , -0.05 * size, size * 0.95),
@@ -346,6 +345,6 @@ var showAxis = function(size,scene) {
 	      ], scene);
 	  axisZ.color = grey;
 
-	  var zChar = makeTextPlane("Z", grey, size / 10);
+	  var zChar = makeTextPlane(label_z, grey, size / 5);
 	  zChar.position = new BABYLON.Vector3(0, 0.05 * size, 0.9 * size);
 	};
