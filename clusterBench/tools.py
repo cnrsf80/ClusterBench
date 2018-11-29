@@ -235,6 +235,9 @@ def add_default_value(args_from_url:dict, param):
 
 
 def filter(data:pd.DataFrame,filter:dict):
+    if len(filter.keys())==0:
+        return data
+
     tmp = pd.DataFrame()
     for k in filter.keys():
         tmp[filter[k]] = data[filter[k]]

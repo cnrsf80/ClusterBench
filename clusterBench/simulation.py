@@ -28,7 +28,7 @@ class simulation:
 
         #Réglage des parametres
         if not "name" in format:
-            format["name"]=data.columns[0]# Le libellé des mesures est pris sur la premiere colonne
+            format["name"]=[data.columns[0]]# Le libellé des mesures est pris sur la premiere colonne
 
         if not "measures" in format:
             format["measures"]=data.columns[range(1,len(data.columns.values))]
@@ -53,7 +53,7 @@ class simulation:
 
         if not "cluster" in list(self.data.columns):
             if not "cluster" in format:
-                format["cluster"]=self.col_name
+                format["cluster"]=[self.col_name]
 
             self.data["ref_cluster"] = self.create_ref_cluster_from_name(self.data, format["cluster"][0])
 
@@ -118,24 +118,7 @@ class simulation:
 
 
 
-    #Retourne une version HTML de la simulation
-    def toHTML(self,autorotate="false",no_text=False,no_metrics=False):
-        if no_text:
-            code=""
-        else:
-            code = self.print_infos() + "<br>synthese<br>"
 
-        try:
-            n_pca = int(request.args["pca"])
-        except:
-            n_pca = 2
-        code = code + self.get3d_html(n_pca,autorotate=autorotate,no_text=no_text)
-
-        if no_metrics:
-            code = code.replace("synthese", "")
-        else:
-            code = code.replace("synthese", self.synthese())
-        return code
 
 
     #Créé le modele de référence à partir des données
@@ -310,7 +293,7 @@ class simulation:
         return str(len(self.models))+" modeles calculés"
 
 
-    def get3d_html(self,n_pca=1,no_text=False,autorotate="false"):
+    def get3d_html(self,n_pca=1,no_text=False,autorotate="false",add_property=True):
         code=""
         for i in range(0, len(self.models)):
             m:algo.model=self.models[i]
@@ -322,7 +305,7 @@ class simulation:
                                                      m.id+"_pca"+str(pca_offset),
                                                      m.name+" Axe="+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2),
                                                      self.ref_model,
-                                                     pca_offset,autorotate=autorotate)
+                                                     pca_offset,autorotate=autorotate,add_property=add_property)
 
             if not no_text:code=code+"<br><br>"+m.print_perfs("<br>")
 

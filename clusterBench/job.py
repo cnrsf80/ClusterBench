@@ -38,7 +38,21 @@ class job(Resource):
         if not nometrics:
             sim.init_metrics(showProgress=False)
 
-        html=sim.toHTML(request.args.get("autorotate","false",str),no_text=notext,no_metrics=nometrics)
+        if notext:
+            html=""
+        else:
+            html = sim.print_infos() + "<br>synthese<br>"
+
+        html = html + sim.get3d_html(request.args.get("pca",2,int),
+                                     autorotate=request.args.get("autorotate","false",str),
+                                     no_text=notext,
+                                     add_property=request.args.get("property",False,bool))
+
+        if nometrics:
+            html = html.replace("synthese", "")
+        else:
+            html = html.replace("synthese", sim.synthese())
+
 
         delay = (time.time() - start)
 

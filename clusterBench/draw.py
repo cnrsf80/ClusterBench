@@ -146,12 +146,6 @@ def pca_totrace(mod,ref_cluster,properties_dict:list,pca_offset=0):
             }
             li_data.append(sp)
 
-    for i in range(0,len(li_data)):
-        tools.progress(i,len(li_data),"Ajout des propriétés")
-        row=li_data[i]["index"]
-        d:dict=properties_dict[row]
-        li_data[i]=({**li_data[i], **d})
-
     return li_data,facets
 
 #Representation 3d du graph
@@ -259,9 +253,16 @@ def trace(mod:model,path:str,filename,url_base=""):
 
 
 # Production du fichier à destination du tracé 3d
-def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autorotate="false"):
+def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autorotate="false",add_property=True):
     properties_dict:dict = create_dict_for_properties(mod.data, mod.name_col)
     li_data, facets = pca_totrace(mod, mod.data['ref_cluster'], properties_dict, pca_offset)
+
+    if add_property:
+        for i in range(0,len(li_data)):
+            tools.progress(i,len(li_data),"Ajout des propriétés")
+            row=li_data[i]["index"]
+            d:dict=properties_dict[row]
+            li_data[i]=({**li_data[i], **d})
 
     if ref_model is None:
         facets_ref = []
