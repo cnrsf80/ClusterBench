@@ -10,8 +10,51 @@
         width:0;
         height:0
     }
+
+    .nb-spinner {
+    width: 75pxx;
+    height: 75px;
+    margin: 0;
+    background: transparent;
+    border-top: 4px solid #03A9F4;
+    border-right: 4px solid transparent;
+    border-radius: 50%;
+    -webkit-animation: 1s spin linear infinite;
+    animation: 1s spin linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+    from {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+    @keyframes spin {
+    from {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
 </style>
 <body style="margin:0px;padding:2px;">
+
+<div id="hourglass" style="visibility:hidden;background-color:white;opacity:0.8;position:absolute;left:0px;top:0px;padding-top:20%;width:100%;height:100%;text-align: center;vertical-align: middle;">
+    <div style="display:inline-block;opacity: 1.0;">
+        <h1>Computing</h1>
+        <div class="nb-spinner" style="opacity:1.0;width:130px;height:130px;"></div>
+    </div>
+</div>
+
 <table width="100%" style="width:100%;vertical-align: text-top;text-align: left;">
     <tr>
         <td>
@@ -71,19 +114,45 @@
                 <tr>
                     <td>Choose files on server</td>
                     <td>
-                        {{ list_file|safe }}&nbsp;or Upload new file&nbsp;
+                        <select
+                                onmouseup='showlink()'
+                                id='lst_files'>
+                        </select>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Upload new file</td>
+                    <td>
+                        public :
                         <div style="display: inline" class="image-upload">
                             <label for="file">
-                                <img style="width:15px;padding:0px;" 
+                                <img style="width:15px;padding:0px;"
                                      src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
                             </label>
 
                             <input
-                                    title="Upload" 
-                                    type="file" 
-                                    id="file" 
-                                    name="file" 
-                                    onchange="postFile()"
+                                    title="Upload"
+                                    type="file"
+                                    id="file"
+                                    name="file"
+                                    onchange="postFile(true)"
+                            >
+                        </div>
+                    &nbsp;
+                        privé
+                        <div style="display: inline" class="image-upload">
+                            <label for="file">
+                                <img style="width:15px;padding:0px;"
+                                     src="https://cdn2.iconfinder.com/data/icons/metro-uinvert-dock/256/MS_Office_Upload_Center.png"/>
+                            </label>
+
+                            <input
+                                    title="Upload"
+                                    type="file"
+                                    id="file"
+                                    name="file"
+                                    onchange="postFile(false)"
                             >
                         </div>
                     </td>
@@ -102,7 +171,7 @@
                         >
                     </td>
                     <td>
-                        <button id="cmdVerify" onclick="testDownload()">Vérifier</button>
+                        <button id="cmdAnalyse" onclick="analyseFile()">Analyse</button>
                     </td>
                 </tr>
 
@@ -111,11 +180,11 @@
                     <td>
                         <input size="40"
                                value="" id="format" type="text"
-                               onchange="showlink()"
+                               onchange="showlink()" onkeyup="showLink()"
                         >
                     </td>
                     <td>
-                        <button id="cmdAnalyse" onclick="analyseFile()">Analyse</button>
+
                     </td>
                 </tr>
 
@@ -156,6 +225,13 @@
                     <td>Only graphic</td>
                     <td>
                         <input value="3" id="notext" type="checkbox" onchange="showlink()">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Add property</td>
+                    <td>
+                        <input value="3" id="property" type="checkbox" onchange="showlink()">
                     </td>
                 </tr>
 
@@ -238,6 +314,9 @@
         var format=document.getElementById("format").value;
 
         var file=document.getElementById("url").value;
+        if(file==null || file.length==0)
+            file=document.getElementById("lst_files").value;
+
 
         var algo=document.getElementById("algo").value.split(":")[0];
 
@@ -266,6 +345,10 @@
             if(notif.length>0)url+="&notif="+notif;
             if(format!=null){
                 format=format.toLowerCase().replace("colonnes","cols").replace("col=","cols=").replace("index","name");
+                for(var i=0;i<15;i++)
+                    format=format.replace(" ","_").replace(";","_");
+
+                format=format.replace("val=","measures=").replace("values=","measures=").replace("mesure=","measures=").replace("vals=","measures=").replace("mesures=","measures=").replace("artefact=","measures=");
                 for(var i=0;i<10;i++)format=format.replace("=",":").replace("&","_");
                 if(format.length>0)url+="&format="+format;
 
@@ -273,6 +356,7 @@
 
             if(document.getElementById("notext").checked)url=url+"&notext=True";
             if(document.getElementById("nometrics").checked)url=url+"&nometrics=True";
+            if(document.getElementById("property").checked)url=url+"&property=True";
 
             document.getElementById("result").innerHTML="<a target=_blank href='"+url+"'>"+url+"</a>";
             return url;
@@ -308,28 +392,37 @@
         window.open(file,"blank_");
     }
 
+    function hourglass(show=true){
+        if(show)
+            document.getElementById("hourglass").style.visibility="visible";
+        else
+            document.getElementById("hourglass").style.visibility="hidden";
+    }
+
 
 
     /**
      * Envoi les fichiers sur le serveur via l'api
      */
-    function postFile(){
-        document.getElementById("cmdVerify").style.visibility="hidden";
-
+    function postFile(public=false){
         file=document.getElementById("file").files[0];
         var formData = new FormData();
         formData.append('files', file);
 
-        fetch("/datas/measure/"+file.name,{
+        hourglass();
+        fetch("/datas/measure/"+file.name+"?public="+public,{
             method:"POST",
             body:formData
         })
             .then(response => {
                 return response.json();
+                hourglass(false);
             })
             .then(r => {
                 document.getElementById("url").value=file.name;
-                showlink();
+                hourglass(false);
+                refreshFiles();
+
             }).catch((r)=>{
                 alert("Pas de connexion"+r);
         });
@@ -375,6 +468,7 @@
 
         handle=setInterval(()=>{
             if(n_jobs<max_jobs) {
+                hourglass(true);
                 n_jobs++;
                 log("On lance un nouveau job."+n_jobs+" en cours");
                 fetch(url + "&nometrics=True").then((res) => {return res;}).then((res) => {
@@ -383,6 +477,7 @@
                     log("Fin d'un job."+n_jobs+" actifs");
 
                     if (i == urls.length) {
+                        hourglass(false);
                         clearInterval(handle);
                         openlink();
                         clear_log();
@@ -429,10 +524,27 @@
 
     document.getElementById("lst_files").addEventListener("change",(evt)=>{
         document.getElementById("url").value=evt.currentTarget.value;
+        document.getElementById("format").value="";
         analyseFile();
     });
 
+
+    function refreshFiles(){
+        fetch("/datas/measures").then((r)=>{return r.json();}).then((lst)=>{
+            rc=[];
+            lst.forEach(f=>{
+                if(!f.startsWith("temp"))
+                    rc.push("<option>"+f+"</option>");
+            })
+            document.getElementById("lst_files").innerHTML=rc.join(" ");
+            document.getElementById("lst_files").options.selectedIndex=0;
+            showlink();
+        });
+    }
+
     setTimeout(()=>{
+        refreshFiles();
+
         document.getElementById("url").value=document.getElementById("lst_files").value;
         showParameters();
         showlink();

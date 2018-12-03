@@ -329,7 +329,7 @@ var showAxis = function(size,scene,label_x="X",label_y="Y",label_z="Z") {
 	    new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
 	    ], scene);
 	  axisX.color = grey;
-	  var xChar = makeTextPlane(label_x, grey, size / 5);
+	  var xChar = makeTextPlane(label_x, grey, size / 10);
 	  xChar.position = new BABYLON.Vector3(0.9 * size, -0.05 * size, 0);
 
 	  var axisY = BABYLON.Mesh.CreateLines("axisY", [
@@ -337,7 +337,7 @@ var showAxis = function(size,scene,label_x="X",label_y="Y",label_z="Z") {
 	      new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3( 0.05 * size, size * 0.95, 0)
 	      ], scene);
 	  axisY.color = grey
-	  var yChar = makeTextPlane(label_y, grey, size / 5);
+	  var yChar = makeTextPlane(label_y, grey, size / 10);
 	  yChar.position = new BABYLON.Vector3(0, 0.9 * size, -0.05 * size);
 	  var axisZ = BABYLON.Mesh.CreateLines("axisZ", [
 	      BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3( 0 , -0.05 * size, size * 0.95),
@@ -345,6 +345,6 @@ var showAxis = function(size,scene,label_x="X",label_y="Y",label_z="Z") {
 	      ], scene);
 	  axisZ.color = grey;
 
-	  var zChar = makeTextPlane(label_z, grey, size / 5);
+	  var zChar = makeTextPlane(label_z, grey, size / 10);
 	  zChar.position = new BABYLON.Vector3(0, 0.05 * size, 0.9 * size);
 	};

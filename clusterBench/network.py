@@ -17,9 +17,12 @@ class network(model):
     #     self.graph.add_node(nodes)
     #     self.graph.add_edge(edges)
 
-    def __init__(self,url:str,algo_loc:str=""):
+    def __init__(self,url:str,remote_addr:str,algo_loc:str=""):
         self.clusters.clear()
+        if draw.colors is None or len(draw.colors) < 2: draw.colors = draw.init_colors(200)
+
         tools.progress(0,100,"Chargement du graphe")
+        url=tools.getUrlForFile(url,remote_addr)
         if not self.load(url,algo_loc):
             self.graph = nx.convert_node_labels_to_integers(self.graph, label_attribute="name")
 
@@ -68,8 +71,6 @@ class network(model):
             self.graph = nx.read_gpickle("./clustering/"+self.url+".gpickle")
             return True
         else:
-            if not url.startswith("http"): url = "./datas/" + url
-
             if url.endswith(".gml") or url.endswith(".graphml") :
                 tools.progress(50, 100, "Chargement du fichier au format GML")
                 try:

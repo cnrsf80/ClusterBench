@@ -4,6 +4,7 @@ from flask import request
 from flask_restplus import Namespace, Resource, abort
 import clusterBench.tools as tools
 import pandas as pd
+import base64
 
 api = Namespace('datas', description='Datas related operations to add / remove file on server')
 
@@ -24,22 +25,26 @@ class Measure(Resource):
     @api.doc(responses={201: 'File created'})
     @api.doc(responses={401: 'Le fichier contient des valeurs incorrectes'})
     def post(self,name):
+        subdir=request.remote_addr
+        if request.args.get("public")=="true":subdir="public"
+        url: str = tools.getPath(name, subdir)
         if "files" in request.files:
             file = request.files["files"]
-            url = os.path.join("./datas", name)
+
             file.save(url)
-            data = tools.get_data_from_url(name)
 
-            data = tools.filter(data,request.args.get("filter", "", str))
+            data = tools.get_data_from_url(name,subdir)
 
-            if not tools.chk_integrity(data):
+            data = tools.filter(data,request.args.get("filter", dict(), dict))
+
+            if data is None:
                 os.remove(url)
                 return "Le fichier contient des valeurs incorrectes",401
             else:
                 return "",201
 
         if request.data:
-            url = os.path.join("./datas", name)
+
             with open(url,"w",encoding="utf-8") as text_file:
                 b:bytes=request.data
                 text_file.write(b.decode(encoding="utf-8",errors="ignore"))
@@ -51,14 +56,20 @@ class Measure(Resource):
     def get(self,name):
         decorators = []
         abort_if_file_doesnt_exist(name)
-        url = os.path.join("./datas", name)
-        return name+" exist",201
+
+        url: str =tools.getPath(name,request.remote_addr)
+        if name in os.listdir(url):
+            return name+" exist",201
+        else:
+            return name + " not exist", 201
+
+
 
     @api.doc(params={'name': 'Name of the file to remove from server'})
     def delete(self,name):
         decorators = []
         abort_if_file_doesnt_exist(name)
-        url = os.path.join("./datas", name)
+        url = tools.getPath(name,request.remote_addr)
         os.remove(url)
         return '',204
 
@@ -67,5 +78,5 @@ class Measure(Resource):
 @api.route("/measures")
 class MeasureList(Resource):
     def get(self):
-        s = os.listdir(os.path.join("./datas", ""))
+        s = os.listdir(tools.getPath("",request.remote_addr))+os.listdir(tools.getPath("","public"))
         return s,201

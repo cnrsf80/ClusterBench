@@ -1,6 +1,7 @@
 import os
 from flask import Flask,request,g,render_template
 import clusterBench.tools as tools
+import clusterBench.network as network
 import clusterBench.algo as algo
 import pandas as pd
 import base64
@@ -32,28 +33,41 @@ def create_app(test_config=None):
     #Retourne la page d'acceuil du serveur d'API
     @app.route('/', methods=['GET'])
     def index():
-        html="<select onmouseup='showlink()' id='lst_files'>"
-        for s in os.listdir(os.path.join("./datas", "")):
-            if not s.startswith("temp"):
-                html=html+"<option>"+s+"</option>"
+        # html="<select onmouseup='showlink()' id='lst_files'>"
+        # for s in os.listdir(os.path.join("./datas", "")):
+        #     if not s.startswith("temp"):
+        #         html=html+"<option>"+s+"</option>"
 
-        return render_template("index.html",list_file=html+"</select>")
+        return render_template("index.html")
 
 
     @app.route('/analyse/<string:url>', methods=['GET'])
     def analyse(url:str):
         url=base64.standard_b64decode(url).decode("utf-8")
-        data=tools.get_data_from_url(url)
-        if data is None:
-            G=algo.network(url)
-            result:pd.DataFrame=G.print_properties()
+        data=tools.get_data_from_url(url,request.remote_addr)
+        if data is None:data=tools.get_data_from_url(url, "public")
+
+        if not data is None and len(data)==0:
+            G=None
+            try:
+                G=network.network(url,request.remote_addr)
+                result: pd.DataFrame = G.print_properties()
+            except:
+                pass
+            if G is None:return "Unknown format"
         else:
             result:pd.DataFrame=tools.analyse_data(data,request.args.get("format",""))
+
         if request.args.get("format")=="json":
             return result.to_json()
         else:
             return result.to_html()
 
+
+    @app.route('/show/<string:url>', methods=['GET'])
+    def showFile(url:str):
+        url=base64.standard_b64decode(url).decode("utf-8")
+        return url
 
 
 

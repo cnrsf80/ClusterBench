@@ -4,6 +4,7 @@ import clusterBench.tools as tools
 import clusterBench.algo as algo
 import clusterBench.draw as draw
 import base64
+import clusterBench.network as network
 
 ns_graph = Namespace('graph', description='Graph module')
 
@@ -16,7 +17,7 @@ ns_graph = Namespace('graph', description='Graph module')
 class graph(Resource):
     def get(self,url:str,algo_loc:str):
         if url.startswith("b64="): url = base64.standard_b64decode(url.split("b64=")[1]).decode("utf-8")
-        graph = algo.network(url=url,algo_loc=algo_loc)
+        graph = network.network(url=url,remote_addr=request.remote_addr,algo_loc=algo_loc)
         if not graph is None:
             if request.args.get("metrics", "true", str)=="true":graph.node_treatments()
 

@@ -6,7 +6,6 @@ import networkx as nx
 import clusterBench.tools as tools
 from clusterBench.algo import model
 import random
-from clusterBench.network import network
 
 
 def color_distance(c1,c2):
@@ -149,7 +148,7 @@ def pca_totrace(mod,ref_cluster,properties_dict:list,pca_offset=0):
     return li_data,facets
 
 #Representation 3d du graph
-def to3D(G:network,positions=None):
+def to3D(G,positions=None):
     li_data=[]
     for c in G.clusters:
         for p in c.index:
@@ -289,7 +288,7 @@ def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autor
     return code
 
 
-def trace_graph(G:network,positions=None,autorotate=False):
+def trace_graph(G,positions=None,autorotate=False):
     li_data,edges=to3D(G,positions)
     code = render_template("modele.html",
                            title="",

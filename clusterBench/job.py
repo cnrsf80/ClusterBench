@@ -1,10 +1,11 @@
 from flask_restplus import Namespace, Resource
-from flask import Response,request
+from flask import Response,request,send_file
 import clusterBench.tools as tools
 import clusterBench.simulation as simulation
 import time
 import base64
-import stringdist
+import pandas as pd
+import io
 
 ns_job = Namespace('job', description='Job related operations to calculation')
 
@@ -20,18 +21,22 @@ class job(Resource):
     def get(self,url:str,algo,params):
         if url.startswith("b64="):url=base64.standard_b64decode(url.split("b64=")[1]).decode("utf-8")
 
-        tmp_data=tools.get_data_from_url(url)
+        tmp_data=tools.get_data_from_url(url,request.remote_addr)
+        if tmp_data is None:tmp_data=tools.get_data_from_url(url,"public")
+
         format=request.args.get("format","")
         p_format:dict=tools.replace_index_by_name(tmp_data,format)
-        data = tools.removeNan(tools.filter(tmp_data,p_format))
+        data:pd.DataFrame = tools.removeNan(tools.filter(tmp_data,p_format))
 
         if len(data)==0:
             return "No data after filtering",501
 
+        if request.args.get("limit",0,int)>0:data=data.iloc[list(range(0,request.args.get("limit",0,int)))]
         start = time.time()
 
         notext=(request.args.get("notext", "False",str)=="True")
         nometrics = (request.args.get("nometrics", "False",str)=="True")
+
         sim:simulation = simulation.simulation(data=data,no_metric=nometrics,format=p_format)
 
         sim.run_algo(params, algo)
@@ -66,4 +71,27 @@ class job(Resource):
                            request.args.get("notif", "", str),body
                            )
 
+        #Téléchargement du fichier excel
+        if str(request.args.get("output", "")).startswith("csv"):
+            return Response(response=sim.metrics.to_csv(index=False,sep=",",decimal="."),
+                            mimetype="text/csv",
+                            )
+
+        if str(request.args.get("output", "")).startswith("csvfile"):
+            output = io.BytesIO()
+            output.write(sim.metrics.to_csv(index=False,sep=",",decimal="."))
+            return send_file(output, mimetype="text/csv",
+                             attachment_filename="synthese.csv", as_attachment=True)
+
+
+        if str(request.args.get("output", "")).startswith("xls"):
+            output = io.BytesIO()
+            writer = pd.ExcelWriter(output, engine='xlsxwriter')
+            sim.metrics.to_excel(excel_writer=writer)
+            return send_file(output,
+                             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                             attachment_filename="synthese.xlsx",as_attachment=True)
+
+        sim=None
         return Response(html,mimetype="text/html")
+

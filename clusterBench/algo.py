@@ -36,12 +36,21 @@ class model:
       self.dimensions=len(measures_col)
       self.measures_col=measures_col
       self.data=data
+      self.clusters=[]
       self.hash=self.create_signature()
 
 
     def create_signature(self):
         s = ""
-        for a in list(self.data.keys()): s = s + str(a)
+        for a in list(self.data.keys()):
+            s = s + str(a)
+
+        for c in self.data.columns:
+            try:
+                s=s+str(sum(self.data[c]))+"_"
+            except:
+                pass
+
         return hashlib.md5(s.encode()).hexdigest()
 
 
@@ -151,29 +160,33 @@ class model:
         return rc
 
     #Enregistre le clustering dans un fichier au format binaire
-    def save_cluster(self,filename=None):
-        res: np.ndarray = self.cluster_toarray()
+    def save_cluster(self,result=None,filename=None):
+        if result is None:
+            res: np.ndarray = self.cluster_toarray()
+        else:
+            res: np.ndarray = result
+
         if filename is None:
             if len(self.name)==0:return False
-            res.tofile("./clustering/"+self.hash+"_"+self.name+".array")
+            res.tofile("./clustering/"+self.hash+"_"+self.name+".array",sep=";")
         else:
-            res.tofile("./clustering/"+filename+".array")
-        return True
+            res.tofile("./clustering/"+filename+".array",sep=";")
+
+        return res
 
 
     #Charge le clustering depuis un fichier si celui-ci existe
-    def load_cluster(self,filename=None):
+    def load_cluster(self,colors,filename=None):
         try:
             if filename is None:
-                res=np.fromfile("./clustering/"+self.hash+"_"+self.name+".array",np.int,-1)
+                res=np.fromfile("./clustering/"+self.hash+"_"+self.name+".array",int,sep=";")
             else:
-                res=np.fromfile("./clustering/"+filename+".array",np.int,-1)
+                res=np.fromfile("./clustering/"+filename+".array",int,sep=";")
+            #self.init_distance_cluster()
 
-            self.clusters_from_labels(res)
-            self.init_distance_cluster()
-            return True
+            return np.array(list(res),dtype=int)
         except:
-            return False
+            return None
 
 
     def mesures(self):
@@ -192,6 +205,7 @@ class model:
             if len(self.params)<4:
                 self.params.append(None);
 
+        noise_cluster=self.clusters[len(self.clusters)-1]
         obj={
             "Algo": self.type,
             "Name":self.name,
@@ -200,14 +214,12 @@ class model:
             "Param3":str(self.params[2]),
             "Param4":str(self.params[3]),
             "Nbr Clusters":len(self.clusters),
-            "delay (secondes)":self.delay,
-            "URL":self.url,
-            "2D":self.url2d,
-            "Help":self.help,
+            "Noise cluster size":len(noise_cluster.index),
             "Score":[self.score],
             "Rand_index":[self.rand_index],
             "Silhouette":[self.silhouette_score],
-            "V-mesure":[self.v_measure_score]
+            "V-mesure":[self.v_measure_score],
+            "Treatment delay (sec)": self.delay
         }
 
         v=self.cluster_toarray()
@@ -287,11 +299,14 @@ class model:
             d[l].append(i)
             i = i + 1
 
+        i=0
         for k in d.keys():
+            i=i+1
             color=colors[i % len(colors)]
-            c:cluster=cluster(name + str(i),index=d[k], color=color,pos=i)
-            c.findBestName(self.data[self.name_col], "cl" + str(i) + "_")
-            self.clusters.append(c)
+            if k!=-1:
+                c:cluster=cluster(name + str(i),index=d[k], color=color,pos=i)
+                c.findBestName(self.data[self.name_col], "cl" + str(i) + "_")
+                self.clusters.append(c)
 
     # def init_thread(self,algo_name,url,algo_func,p:dict):
     #     self.parameters=p
@@ -322,7 +337,9 @@ class model:
         self.setname(name)
         self.id = hashlib.md5(name.encode()).hexdigest()
 
-        if not useCache or not self.load_cluster():
+        r=None
+        if useCache:r=self.load_cluster(colors)
+        if r is None:
             self.start_treatment()
             comp=None
             try:
@@ -334,11 +351,12 @@ class model:
             finally:
                 if not comp is None:
                     self.end_treatment()
-                    self.clusters_from_labels(comp.labels_, colors,algo_name)
+                    r=self.save_cluster(comp.labels_)
                     print("Exécution de " + name + " Traitement " + str(self.delay) + " sec")
-                    self.save_cluster()
         else:
             print("Chargement du cluster depuis un préenregistrement pour "+name)
+
+        self.clusters_from_labels(r, colors, algo_name)
 
         return self
 
@@ -387,11 +405,11 @@ class model:
 
 
 
-def create_cluster_from_neuralgasnetwork(model:model,a=0.5,passes=80,distance_toremove_edge=8):
+def create_cluster_from_neuralgasnetwork(model:model,colors,a=0.5,passes=80,distance_toremove_edge=8):
     data=model.mesures().values
     model.setname("NEURALGAS distance_toremove="+str(distance_toremove_edge)+" passes="+str(passes))
 
-    if not model.load_cluster():
+    if not model.load_cluster(colors):
         print(model.name)
         model.start_treatment()
         gng = GrowingNeuralGas(data)

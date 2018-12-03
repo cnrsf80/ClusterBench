@@ -1,13 +1,11 @@
 import numpy as np
 import random
 import shutil
+import base64
 import os
 import sys
 import pandas
 from sklearn import preprocessing
-import io
-from contextlib import redirect_stdout
-
 
 #Permet l'affichage d'un barre de progression
 def progress(count, total, suffix=''):
@@ -176,11 +174,14 @@ def AnalyseFile(url:str):
 #Assure l'importation des données depuis une url en acceptant plusieurs format ==> conversion en dataframe
 import pandas as pd
 from simpledbf import Dbf5
-def get_data_from_url(url:str):
+def get_data_from_url(url:str,remote_addr:str):
     if not url.startswith("http"):
-        url = os.path.join("./datas", url)
+        url = getPath(url,remote_addr)
 
     format = AnalyseFile(url)
+    if format=="graph":
+        return pd.DataFrame() #On retourne un dataframe vide mais pas None
+
     data: pd.DataFrame = None
     try:
         if format == "excel": data = pd.read_excel(url)
@@ -258,10 +259,10 @@ def normalize(data:pd.DataFrame):
     np_scaled = min_max_scaler.fit_transform(data)
     return pd.DataFrame(np_scaled)
 
-
 def analyse_data(data:pd.DataFrame,format=""):
-    data=filter(data,format)
-    return pd.DataFrame({'Names':list(data.columns.values),'Default(%)':list(100*data.isna().sum()/len(data))},index=list(range(0,len(data.columns))))
+    data=filter(data,string_to_dict(format,":","_"))
+    return pd.DataFrame({'Names':list(data.columns.values),'Empty(%)':list(100*data.isna().sum()/len(data))},index=list(range(0,len(data.columns))))
+
 
 
 def string_to_dict(format:str,equal_operator="=",sep="&"):
@@ -283,3 +284,19 @@ def replace_index_by_name(tmp_data:pd.DataFrame, format:str):
         rc[key]=l
 
     return rc
+
+
+def getUrlForFile(name,remote_addr):
+    url=getPath("",remote_addr)
+    if name in os.listdir(url):
+        return getPath(name,remote_addr)
+    else:
+        return getPath(name, "public")
+
+def getPath(name, remote_addr):
+    subdir=str(base64.b64encode(str.encode(remote_addr)),"UTF-8")
+    if not subdir in os.listdir("./datas"):os.mkdir("./datas/"+subdir)
+    if len(name)>0:
+        return os.path.join("./datas/" + subdir + "/", name)
+    else:
+        return os.path.join("./datas/" + subdir,"")

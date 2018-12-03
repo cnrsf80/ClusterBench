@@ -56,14 +56,16 @@ def exec_algos(algos: str, s: simulation):
         s.execute("DBSCAN", "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html",
                   lambda x:
                   cl.DBSCAN(eps=x["eps"], min_samples=x["min_elements"], leaf_size=x["leaf_size"], n_jobs=4),
-                  {"eps": np.arange(0.1, 0.9, 0.1), "min_elements": range(2, 6), "leaf_size": range(10, 60, 20)})
+                  {"eps": np.arange(0.1, 0.9, 0.1), "min_elements": range(2, 6), "leaf_size": range(10, 60, 20)},
+                  useCache=True)
 
     import hdbscan
     if algos.__contains__("HDBSCAN"):
         s.execute("HDBSCAN", "https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
                   lambda x:
                   hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"], leaf_size=x["leaf_size"], alpha=x["alpha"]),
-                  {"min_cluster_size":range(1,10,1), "leaf_size": range(10, 100, 5), "alpha": np.arange(0.2, 1.5, 0.1)})
+                  {"min_cluster_size":range(1,10,1), "leaf_size": range(10, 100, 5), "alpha": np.arange(0.2, 1.5, 0.1)},
+                  useCache=True)
 
     if algos.__contains__("BIRCH"):
         s.execute("BIRCH",
@@ -79,7 +81,8 @@ def exec_algos(algos: str, s: simulation):
                   "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html#sklearn.cluster.MeanShift",
                   lambda x:
                   cl.MeanShift(bandwidth=x["bandwidth"], bin_seeding=False, cluster_all=True),
-                  {"bandwidth": np.arange(1, 5, 0.5)})
+                  {"bandwidth": np.arange(1, 5, 0.5)},
+                  useCache=True)
 
     if algos.__contains__("SPECTRAL"):
         s.execute("SPECTRAL",

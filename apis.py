@@ -14,7 +14,6 @@ api=Api(
 )
 
 api.add_namespace(measure_ns)
-#api.add_namespace(jobs_ns)
 api.add_namespace(ns_job)
 api.add_namespace(ns_graphics)
 api.add_namespace(ns_graph)

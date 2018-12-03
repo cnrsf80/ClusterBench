@@ -78,7 +78,7 @@ class simulation:
                             hdbscan.HDBSCAN(min_cluster_size=x["min_cluster_size"],
                                             min_samples=x["min_samples"],
                                             alpha=x["alpha"]),
-                        ps=parameters,colors=draw.colors)
+                        ps=parameters,colors=draw.colors,useCache=True)
 
         if name_algo.upper().__contains__("MEANSHIFT"):
             parameters = tools.buildDict(params, {"bandwidth": [2]})
@@ -86,7 +86,7 @@ class simulation:
                         "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.MeanShift.html#sklearn.cluster.MeanShift",
                         lambda x:
                         cl.MeanShift(bandwidth=x["bandwidth"], bin_seeding=False, cluster_all=True),
-                        parameters,draw.colors)
+                        parameters,draw.colors,useCache=True)
 
         if name_algo.upper().__contains__("HAC"):
             parameters = tools.buildDict(params, {"n_clusters": [12]})
@@ -94,7 +94,7 @@ class simulation:
                         "http://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html#sklearn.cluster.AgglomerativeClustering",
                         lambda x:
                         cl.AgglomerativeClustering(n_clusters=x["n_clusters"]),
-                        parameters,draw.colors
+                        parameters,draw.colors,useCache=True
                         )
 
         if name_algo.upper().__contains__("NEURALGAS"):
@@ -102,7 +102,7 @@ class simulation:
             for passes in parameters.get("passes"):
                 for distance_toremove_edge in parameters.get("distance_toremove_edge"):
                     m: algo.model = algo.create_cluster_from_neuralgasnetwork(
-                        copy.deepcopy(self.ref_model).clear_clusters(),
+                        copy.deepcopy(self.ref_model).clear_clusters(),draw.colors,
                         a=0.5,
                         passes=passes,
                         distance_toremove_edge=distance_toremove_edge)
@@ -110,13 +110,11 @@ class simulation:
                     m.help = "https://github.com/AdrienGuille/GrowingNeuralGas"
                     self.append_modeles(m)
 
-        if "NOTREATMENT" in name_algo.upper() or "NO" in name_algo.upper():
+        if len(self.models)==0 or "NOTREATMENT" in name_algo.upper() or "NO" in name_algo.upper():
             m=copy.deepcopy(self.ref_model)
             m.params=params
             m.setname("NOTREATMENT")
             self.append_modeles(m)
-
-
 
 
 
