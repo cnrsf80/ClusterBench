@@ -291,7 +291,7 @@ class simulation:
         return str(len(self.models))+" modeles calculés"
 
 
-    def get3d_html(self,n_pca=1,no_text=False,autorotate="false",add_property=True):
+    def get3d_html(self,n_pca=1,no_text=False,autorotate=False,add_property=True):
         code=""
         for i in range(0, len(self.models)):
             m:algo.model=self.models[i]

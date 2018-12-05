@@ -30,7 +30,6 @@ class Measure(Resource):
         url: str = tools.getPath(name, subdir)
         if "files" in request.files:
             file = request.files["files"]
-
             file.save(url)
 
             data = tools.get_data_from_url(name,subdir)
@@ -43,10 +42,13 @@ class Measure(Resource):
             else:
                 return "",201
 
-        if request.data:
-
+        if request.data or request.form:
             with open(url,"w",encoding="utf-8") as text_file:
-                b:bytes=request.data
+                if request.data:
+                    b:bytes=request.data
+                else:
+                    b: bytes = request.form
+
                 text_file.write(b.decode(encoding="utf-8",errors="ignore"))
             return "/job/"+name
 

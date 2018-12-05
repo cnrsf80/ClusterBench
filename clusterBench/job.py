@@ -31,7 +31,8 @@ class job(Resource):
         if len(data)==0:
             return "No data after filtering",501
 
-        if request.args.get("limit",0,int)>0:data=data.iloc[list(range(0,request.args.get("limit",0,int)))]
+
+        if request.args.get("limit",0,int)>0:data=data.iloc[list(range(0,min(len(data),request.args.get("limit",0,int))))]
         start = time.time()
 
         notext=(request.args.get("notext", "False",str)=="True")
@@ -49,7 +50,7 @@ class job(Resource):
             html = sim.print_infos() + "<br>synthese<br>"
 
         html = html + sim.get3d_html(request.args.get("pca",2,int),
-                                     autorotate=request.args.get("autorotate","false",str),
+                                     autorotate=(request.args.get("autorotate","True",str)=="True"),
                                      no_text=notext,
                                      add_property=request.args.get("property",False,bool))
 

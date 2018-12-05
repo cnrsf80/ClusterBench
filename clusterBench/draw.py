@@ -252,7 +252,7 @@ def trace(mod:model,path:str,filename,url_base=""):
 
 
 # Production du fichier à destination du tracé 3d
-def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autorotate="false",add_property=True):
+def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autorotate=False,add_property=True):
     properties_dict:dict = create_dict_for_properties(mod.data, mod.name_col)
     li_data, facets = pca_totrace(mod, mod.data['ref_cluster'], properties_dict, pca_offset)
 
@@ -279,7 +279,7 @@ def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autor
                            name_zone="zone" + id,
                            datas=li_data,
                            components=list(mod.mesures().columns),
-                           autorotate=autorotate,
+                           autorotate=str(autorotate).lower(),
                            data_source=toList,
                            facets_ref=facets_ref,
                            facets=facets,
@@ -292,7 +292,7 @@ def trace_graph(G,positions=None,autorotate=False):
     li_data,edges=to3D(G,positions)
     code = render_template("modele.html",
                            title="",
-                           autorotate=autorotate,
+                           autorotate=str(autorotate).lower(),
                            name_zone="zone",
                            components=[],
                            datas=li_data,

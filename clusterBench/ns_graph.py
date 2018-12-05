@@ -31,7 +31,7 @@ class graph(Resource):
                 )
 
             html=Response(
-                draw.trace_graph(graph,pos,request.args.get("autorotate","false",str)),
+                draw.trace_graph(graph,pos,request.args.get("autorotate","False",bool)),
                 "text/html"
             )
 
