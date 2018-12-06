@@ -1,5 +1,5 @@
 import os
-
+import werkzeug
 from flask import request
 from flask_restplus import Namespace, Resource, abort
 import clusterBench.tools as tools
@@ -42,7 +42,7 @@ class Measure(Resource):
             else:
                 return "",201
 
-        if request.data or request.form:
+        if request.data:
             with open(url,"w",encoding="utf-8") as text_file:
                 if request.data:
                     b:bytes=request.data
@@ -50,7 +50,9 @@ class Measure(Resource):
                     b: bytes = request.form
 
                 text_file.write(b.decode(encoding="utf-8",errors="ignore"))
+
             return "/job/"+name
+
 
 
     @api.doc(responses={201: 'The file exist'})

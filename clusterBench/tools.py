@@ -6,6 +6,9 @@ import os
 import sys
 import pandas
 from sklearn import preprocessing
+import zipfile
+import io
+
 
 #Permet l'affichage d'un barre de progression
 def progress(count, total, suffix=''):
@@ -286,7 +289,9 @@ def replace_index_by_name(tmp_data:pd.DataFrame, format:str):
     return rc
 
 
-def getUrlForFile(name,remote_addr):
+def getUrlForFile(name:str,remote_addr:str):
+    if name.startswith("http"):return name
+
     url=getPath("",remote_addr)
     if name in os.listdir(url):
         return getPath(name,remote_addr)
@@ -294,9 +299,27 @@ def getUrlForFile(name,remote_addr):
         return getPath(name, "public")
 
 def getPath(name, remote_addr):
+    if name.startswith("http"):return name
     subdir=str(base64.b64encode(str.encode(remote_addr)),"UTF-8")
     if not subdir in os.listdir("./datas"):os.mkdir("./datas/"+subdir)
     if len(name)>0:
         return os.path.join("./datas/" + subdir + "/", name)
     else:
         return os.path.join("./datas/" + subdir,"")
+
+
+import requests
+def dezip(url:str):
+    url=url.strip()
+    if url.endswith(".zip") or url.endswith(".gz") or url.endswith(".tar"):
+        name=str(base64.b64encode(str.encode(url)),"UTF-8")
+        path=getPath(name,"zip")
+        with zipfile.ZipFile(io.BytesIO(requests.get(url).content)) as zip_ref:
+            zip_ref.extractall(path)
+
+        files=os.listdir(path)
+        return path+"/"+files[0]
+
+        return path
+    else:
+        return url

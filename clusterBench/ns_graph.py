@@ -18,7 +18,7 @@ class graph(Resource):
     def get(self,url:str,algo_loc:str):
         if url.startswith("b64="): url = base64.standard_b64decode(url.split("b64=")[1]).decode("utf-8")
         graph = network.network(url=url,remote_addr=request.remote_addr,algo_loc=algo_loc)
-        if not graph is None:
+        if not graph.graph is None:
             if request.args.get("metrics", "true", str)=="true":graph.node_treatments()
 
             graph.findClusters(
@@ -38,6 +38,8 @@ class graph(Resource):
             graph.save()
 
             return html
+        else:
+            return Response("Bad format",401)
 
 
 

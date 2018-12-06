@@ -24,14 +24,16 @@ class network(model):
         tools.progress(0,100,"Chargement du graphe")
         url=tools.getUrlForFile(url,remote_addr)
         if not self.load(url,algo_loc):
-            self.graph = nx.convert_node_labels_to_integers(self.graph, label_attribute="name")
+            if not self.graph is None:
+                self.graph = nx.convert_node_labels_to_integers(self.graph, label_attribute="name")
 
-        tools.progress(90,100,"Préparation")
-        self.data: pd.DataFrame = pd.DataFrame(index=list(range(0,len(self.graph.nodes))))
-        self.data["name"] = nx.get_node_attributes(self.graph,"name")
+        if not self.graph is None:
+            tools.progress(90,100,"Préparation")
+            self.data: pd.DataFrame = pd.DataFrame(index=list(range(0,len(self.graph.nodes))))
+            self.data["name"] = nx.get_node_attributes(self.graph,"name")
 
-        self.dimensions = 3
-        self.name_col = "name"
+            self.dimensions = 3
+            self.name_col = "name"
 
 
     # Positionnement des noeuds du graphe suivant l'algorithme gn,modularity,circular
@@ -71,14 +73,21 @@ class network(model):
             self.graph = nx.read_gpickle("./clustering/"+self.url+".gpickle")
             return True
         else:
-            if url.endswith(".gml") or url.endswith(".graphml") :
+
+            url=tools.dezip(url)
+
+            if ".gml" in url or ".graphml" in url :
                 tools.progress(50, 100, "Chargement du fichier au format GML")
                 try:
                     self.graph =nx.read_gml(url)
                 except:
-                    self.graph=nx.read_graphml(url)
+                    try:
+                        self.graph=nx.read_graphml(url)
+                    except:
+                        return False
 
-            if url.endswith(".gexf") or url.endswith(".gephi"):
+
+            if ".gexf" in url or ".gephi" in url:
                 try:
                     self.graph = nx.read_gexf(url)
                 except:
@@ -87,9 +96,14 @@ class network(model):
 
             if self.graph is None:
                 tools.progress(50, 100, "Chargement depuis la matrice de distance")
-                self.data: pd.DataFrame = tools.get_data_from_url(url)
+                try:
+                    self.data: pd.DataFrame = tools.get_data_from_url(url,"")
+                except:
+                    pass
                 if not self.data is None:
                     self.create_graph_from_dataframe()
+                    return True
+
             return False
 
 

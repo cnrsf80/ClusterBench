@@ -43,13 +43,13 @@ def create_app(test_config=None):
 
     @app.route('/analyse/<string:url>', methods=['GET'])
     def analyse(url:str):
-        url=base64.standard_b64decode(url).decode("utf-8")
         data=tools.get_data_from_url(url,request.remote_addr)
         if data is None:data=tools.get_data_from_url(url, "public")
 
         if not data is None and len(data)==0:
             G=None
             try:
+                #todo: a améliorer la gestion du getpath
                 G=network.network(url,request.remote_addr)
                 result: pd.DataFrame = G.print_properties()
             except:
