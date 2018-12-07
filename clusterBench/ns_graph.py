@@ -23,12 +23,11 @@ class graph(Resource):
 
             graph.findClusters(
                 method=request.args.get("algo_comm","",str),
-                number_of_comm=request.args.get("number_of_community",5,int)
+                k=request.args.get("k",5,int),
+                iter = request.args.get("iter", 15, int)
             )
 
-            pos=graph.relocate(
-                method=request.args.get("algo_loc","fr",str)
-                )
+            pos=graph.relocate(method=algo_loc.lower())
 
             html=Response(
                 draw.trace_graph(graph,pos,request.args.get("autorotate","False",bool)),

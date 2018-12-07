@@ -1,5 +1,6 @@
 import base64
 import os
+from math import *
 import clusterBench.tools as tools
 from clusterBench import draw
 import networkx as nx
@@ -36,18 +37,32 @@ class network(model):
             self.name_col = "name"
 
 
+    def sphere_layout(self,r=1):
+        alpha=0
+        beta=0
+        interval=4*pi/len(self.graph.nodes)
+        positions=dict()
+        for n in self.graph.nodes:
+            alpha=alpha+pi/interval
+            beta=beta+pi/interval
+            positions[n]=[r*sin(alpha)*cos(beta),r*sin(alpha)*sin(beta),r*cos(alpha)]
+
+        return positions
+        #nx.set_node_attributes(self.graph, positions, "pos")
+
+
+
     # Positionnement des noeuds du graphe suivant l'algorithme gn,modularity,circular
     def relocate(self,dim=3,scale=3,method="spectral"):
-        if method == "circular": d = nx.circular_layout(self.graph, scale=2, dim=3)
-        if method=="spectral":d=nx.spectral_layout(self.graph,dim=dim,scale=scale)
-        if method=="fr":d=nx.fruchterman_reingold_layout(self.graph,iterations=50,dim=3)
+        if "circular" in method: d = self.sphere_layout(r=1)
+        if "spectral" in method:d=nx.spectral_layout(self.graph,dim=dim,scale=scale)
+        if "fr" in method:d=nx.fruchterman_reingold_layout(self.graph,iterations=50,dim=3)
+        if "random" in method:d=nx.random_layout(self.graph,dim=3)
+
         i=1
         pos=[]
         for n in self.graph.nodes:
-            if method=="fr" or method=="circular":
-                pos.append(str(list(d.get(i-1))))
-            else:
-                pos.append(str(list(d.get(str(i)))))
+            pos.append(str(list(d.get(i-1))))
             i = i + 1
 
         nx.set_node_attributes(self.graph, pos, "location")
@@ -144,8 +159,8 @@ class network(model):
         tools.progress(100, 100, "Fin des traitements")
 
 
-    def findClusters(self,prefixe="cl_",method="gn",number_of_comm=5):
-        if not self.load_cluster(self.url+"_"+method+str(number_of_comm)):
+    def findClusters(self,prefixe="cl_",method="gn",k=5,iter=15):
+        if not self.load_cluster(self.url+"_"+method+str(k)+str(iter)):
             tools.progress(0, 100, "Recherche des communautés avec "+method)
 
             #Initialisation a un cluster unique
@@ -163,7 +178,7 @@ class network(model):
 
             if method.startswith("async"):
                 try:
-                    comm = nx.algorithms.community.asyn_fluidc(self.graph,k=number_of_comm)
+                    comm = nx.algorithms.community.asyn_fluidc(self.graph,k=k,max_iter=iter)
                 except:
                     tools.progress(100,100,"Impossible d'exécuter async_fluid")
 

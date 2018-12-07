@@ -73,6 +73,7 @@ var Game = /** @class */ (function () {
         mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction({
             trigger: BABYLON.ActionManager.OnPickTrigger
         }, function (evt) {
+            _this.stopAutoRotation();
             var target = evt.meshUnderPointer;
             if (target == null)
                 return;
@@ -120,6 +121,7 @@ var Game = /** @class */ (function () {
         mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction({
             trigger: BABYLON.ActionManager.OnDoublePickTrigger
         }, function (evt) {
+            game.stopAutoRotation();
             var target = evt.meshUnderPointer;
             _this.showCluster(null, false);
             _this.showCluster(target.cluster_name);
@@ -128,7 +130,7 @@ var Game = /** @class */ (function () {
         mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction({
             trigger: BABYLON.ActionManager.OnPickDownTrigger
         }, function (evt) {
-            game.stopAutoRotation();
+            _this.stopAutoRotation();
         }));
         mesh.actionManager.registerAction(new BABYLON.ExecuteCodeAction({
             trigger: BABYLON.ActionManager.OnPointerOverTrigger
@@ -474,83 +476,50 @@ var datas = null;
 var data_source = null;
 var edges = [];
 var components = [];
-/**
- * Affichage des points contenu dans datas
- */
-window.addEventListener("message", function (evt) {
-    datas = evt.data.datas;
-    data_source = evt.data.data_source;
-    components = evt.data.components;
-    // Create the scene.
-    if (components.length == 3) {
-        game.createScene(components[0], components[1], components[2]);
+function execCommande(key, args) {
+    if (args === void 0) { args = ""; }
+    if (key == "c") {
+        if (args == "")
+            args = prompt("Cluster name");
+        game.showCluster(args, true, false);
     }
-    else
-        game.createScene();
-    // Start render loop.
-    game.doRender();
-    evt.preventDefault();
-    if (datas != null && datas.length > 0) {
-        game.clearMesures(datas.length);
-        var i = 0;
-        game.message("Création de " + datas.length + " mesures", 2);
-        for (var _i = 0, datas_1 = datas; _i < datas_1.length; _i++) {
-            var p = datas_1[_i];
-            game.createMesure(p);
-        }
-        if (evt.data.autorotate)
-            game.startAutoRotation();
-        facets = evt.data.facets;
-        facets_ref = evt.data.facets_ref;
-        edges = evt.data.edges;
-        game.mesureConnection(edges);
+    if (key == "C") {
+        if (args == "")
+            args = prompt("Cluster name");
+        game.showCluster(args, false);
     }
-}, false);
-function download(text, name, type) {
-    var a = document.getElementById("a");
-    var file = new Blob([text], { type: type });
-    a.href = URL.createObjectURL(file);
-    a.download = name;
-}
-window.addEventListener("keypress", function (evt) {
-    if (evt.key == "c") {
-        game.showCluster(prompt("Cluster name"), true, false);
-    }
-    if (evt.key == "C") {
-        game.showCluster(prompt("Cluster name"), false);
-    }
-    if (evt.key == "N") {
+    if (key == "N") {
         game.showCluster("noise", false);
     }
-    if (evt.key == "+")
+    if (key == "+")
         game.updateScale(1.05, datas, edges);
-    if (evt.key == "-")
+    if (key == "-")
         game.updateScale(0.95, datas, edges);
-    if (evt.key == "n") {
+    if (key == "n") {
         game.showCluster("noise", true);
     }
-    if (evt.key == "S") {
+    if (key == "S") {
         //game.clearLinks();
         game.showCluster("", false);
     }
-    if (evt.key == "p") {
+    if (key == "p") {
         game.getVisibleClusters().forEach(function (c) {
             var url = location.href.split("offset=")[1];
             game.traceFacets(facets, 0, c, Number(url));
         });
     }
-    if (evt.key == "o") {
+    if (key == "o") {
         var url = location.href.split("offset=")[1];
         game.traceFacets(facets_ref, 0, null, Number(url));
     }
-    if (evt.key == "H") {
+    if (key == "H") {
         document.getElementById("message").innerHTML = "";
     }
-    if (evt.key == "x")
+    if (key == "x")
         game.propage(_VISIBLE);
-    if (evt.key == "X")
+    if (key == "X")
         game.propage(_HIDDEN);
-    if (evt.key == "h") {
+    if (key == "h") {
         var text = "" +
             "           <table>" +
             "            <tr><td>s / S</td><td>respectivement montre et cache toutes les mesures</td></tr>" +
@@ -576,41 +545,41 @@ window.addEventListener("keypress", function (evt) {
         text = text + "</table>";
         game.message(text, 10);
     }
-    if (evt.key == "P") {
+    if (key == "P") {
         game.removeFacets();
     }
-    if (evt.key == "w") {
+    if (key == "w") {
         var txt = document.getElementById("row3").innerText;
         if (txt != null && txt.length > 0) {
             var coord = txt.split(",");
             game.setCameraToTarget(coord[0], coord[1], coord[2]);
         }
     }
-    if (evt.key == "W") {
+    if (key == "W") {
         game.setCameraToTarget("0", "0", "0");
     }
-    if (evt.key == "s") {
+    if (key == "s") {
         game.showCluster("", true);
     }
-    if (evt.key == "d") {
+    if (key == "d") {
         game.clearLinks();
         game.showClosedCluster();
     }
-    if (evt.key == "v") {
+    if (key == "v") {
         game.makeMovie();
     }
-    if (evt.key == "V") {
+    if (key == "V") {
         game.stopMovie();
     }
-    if (evt.key == "a") {
+    if (key == "a") {
         if (game.isRotating())
             game.stopAutoRotation();
         else
             game.startAutoRotation();
     }
-    if (evt.key == "A")
+    if (key == "A")
         game.stopAutoRotation();
-    if (evt.key == "e") {
+    if (key == "e") {
         var code = game.toCSV(data_source);
         // @ts-ignore
         navigator.permissions.query({ name: "clipboard-write" }).then(function (result) {
@@ -625,7 +594,7 @@ window.addEventListener("keypress", function (evt) {
             }
         });
     }
-    if (evt.key == "E") {
+    if (key == "E") {
         document.body.style.cursor = 'progress';
         var code = game.toCSV(data_source);
         var now = new Date().getTime();
@@ -640,25 +609,69 @@ window.addEventListener("keypress", function (evt) {
             debugger;
         }));
     }
-    if (evt.key == "k") {
+    if (key == "k") {
         game.mesureConnection();
     }
-    if (evt.key == "m") {
+    if (key == "m") {
         game.showMesure(prompt("Measure name"), true);
     }
-    if (evt.key == "M") {
+    if (key == "M") {
         game.showMesure(prompt("Measure name"), false);
     }
-    if (evt.key == "L") {
+    if (key == "L") {
         game.clearLinks();
     }
-    if ("" + Number(evt.key) == evt.key) {
-        if (evt.key == "0")
+    if ("" + Number(key) == key) {
+        if (key == "0")
             game.setSizeTo(null);
         else
-            game.setSizeTo(Number(evt.key));
+            game.setSizeTo(Number(key));
     }
-    if (evt.key == "r") {
+    if (key == "r") {
         game.removeNoise();
     }
-});
+}
+/**
+ * Affichage des points contenu dans datas
+ */
+window.addEventListener("message", function (evt) {
+    if (evt.data.datas != null) {
+        datas = evt.data.datas;
+        data_source = evt.data.data_source;
+        components = evt.data.components;
+        // Create the scene.
+        if (components.length == 3) {
+            game.createScene(components[0], components[1], components[2]);
+        }
+        else
+            game.createScene();
+        // Start render loop.
+        game.doRender();
+        evt.preventDefault();
+        if (datas != null && datas.length > 0) {
+            game.clearMesures(datas.length);
+            var i = 0;
+            game.message("Création de " + datas.length + " mesures", 2);
+            for (var _i = 0, datas_1 = datas; _i < datas_1.length; _i++) {
+                var p = datas_1[_i];
+                game.createMesure(p);
+            }
+            if (evt.data.autorotate)
+                game.startAutoRotation();
+            facets = evt.data.facets;
+            facets_ref = evt.data.facets_ref;
+            edges = evt.data.edges;
+            game.mesureConnection(edges);
+        }
+    }
+    else {
+        execCommande(evt.data.key);
+    }
+}, false);
+function download(text, name, type) {
+    var a = document.getElementById("a");
+    var file = new Blob([text], { type: type });
+    a.href = URL.createObjectURL(file);
+    a.download = name;
+}
+window.addEventListener("keypress", function (evt) { execCommande(evt.key); });

@@ -27,6 +27,11 @@
 </iframe>
 
 <script>
+
+    window.addEventListener("message", (evt)=> {
+        document.getElementById("{{name_zone}}").contentWindow.postMessage(evt.data,"*");
+    });
+
     setTimeout(()=>{
         document.body.style.margin="0";
         document.body.style.padding="0";
