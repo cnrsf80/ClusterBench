@@ -38,7 +38,7 @@ class Measure(Resource):
 
             if data is None:
                 os.remove(url)
-                return "Le fichier contient des valeurs incorrectes",401
+                return "Le fichier contient des valeurs incorrectes",422
             else:
                 return "",201
 

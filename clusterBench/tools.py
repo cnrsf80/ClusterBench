@@ -190,12 +190,21 @@ def get_data_from_url(url:str,remote_addr:str):
         if format == "excel": data = pd.read_excel(url)
         if format == "dbf": data = Dbf5(url).to_dataframe()
         if format == "csv":
-            data = pd.read_csv(url, sep=";", decimal=".")
-            if len(data.columns)<3:
-                data = pd.read_csv(url, sep=";", decimal=",")
+            try:
+                data = pd.read_csv(url, sep=";", decimal=".")
+            except:
+                pass
 
-            if len(data.columns)<3:
-                data = pd.read_csv(url, sep=",", decimal=".")
+            try:
+                if data is None or len(data.columns)<3:data = pd.read_csv(url, sep=";", decimal=",")
+            except:
+                pass
+
+            try:
+                if data is None or len(data.columns) < 3: data = pd.read_csv(url, sep=",", decimal=".")
+            except:
+                pass
+
     except:
         data = None
 
@@ -214,18 +223,13 @@ def chk_integrity(data:pd.DataFrame):
 
     return True
 
-
+import tokenize as tk
 def tokenize(items:list):
     rc=[]
-    ref_items=[]
-
+    s=set(items)
+    ref_items=dict(zip(list(s),range(len(s))))
     for item in items:
-        if not " "+item+" " in ref_items:
-            ref_items.append(" "+item+" ")
-
-    for item in items:
-        pos=ref_items.index(" "+item+" ")
-        rc.append(pos)
+        rc.append(ref_items[item])
 
     return rc
 
@@ -249,24 +253,52 @@ def filter(data:pd.DataFrame,filter:dict):
     return tmp
 
 
-
+#Supprime les lignes ayant une valeur vide
 def removeNan(data:pd.DataFrame):
     n_rows=len(data)
     rc=data.dropna()
     print("row remove : "+str(n_rows-len(rc)))
     return rc
 
-
+#Opere une réduction-centralisation des données
 def normalize(data:pd.DataFrame):
     min_max_scaler = preprocessing.MinMaxScaler()
     np_scaled = min_max_scaler.fit_transform(data)
     return pd.DataFrame(np_scaled)
 
+#Produit une analyse qualitative des données : % de données manquantes
 def analyse_data(data:pd.DataFrame,format=""):
     data=filter(data,string_to_dict(format,":","_"))
-    return pd.DataFrame({'Names':list(data.columns.values),'Empty(%)':list(100*data.isna().sum()/len(data))},index=list(range(0,len(data.columns))))
+
+    rc:pd.DataFrame=pd.DataFrame(
+        {
+            'Names':list(data.columns.values),
+            'Empty(%)':list(round(100*data.isna().sum()/len(data))),
+            'Complexity(%)':[100] * len(data.columns),
+            'dataType':["float"] * len(data.columns),
+            'Type':["measure"] * len(data.columns),
+        }
+        ,index=list(range(0,len(data.columns))))
+
+    findIndex=False
+    for i in range(len(rc)):
+        progress(i, len(rc), "Propriétés de " + data.columns[i])
+        if rc["Empty(%)"][i]>50:
+            rc.at[i,"Type"]="exclude"
+        else:
+            if not findIndex:
+                rc.at[i,"Type"]="index"
+                findIndex=True
+
+        if data[rc["Names"][i]].dtype == object:
+            rc.at[i,"dataType"]="string"
+            rc.at[i,"Complexity(%)"] = getComplexity(data[data.columns[i]])
+
+    return rc
 
 
+def getComplexity(l:list):
+    return round(100*(len(set(l)) / len(l)))
 
 def string_to_dict(format:str,equal_operator="=",sep="&"):
     rc=dict()
@@ -283,7 +315,7 @@ def replace_index_by_name(tmp_data:pd.DataFrame, format:str):
     for key in p.keys():
         l=[]
         for col in p[key].split(","):
-            l.append(tmp_data.columns[int(col)])
+            if len(col)>0:l.append(tmp_data.columns[int(col)])
         rc[key]=l
 
     return rc
@@ -323,3 +355,5 @@ def dezip(url:str):
         return path
     else:
         return url
+
+

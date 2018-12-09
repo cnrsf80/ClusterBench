@@ -233,18 +233,29 @@ class model:
     #Initialise les metriques d'un model sur la base du clustering labels_true
     def init_metrics(self,labels_true):
         mes=self.mesures()
+        i=0
         for c in self.clusters:
+            tools.progress(i,len(self.clusters),"Initialisation des metrics des clusters")
             c.init_metrics(mes)
+            i=i+1
 
         if len(self.clusters)>2:
             labels=self.cluster_toarray()
+            tools.progress(10, 100, "Score de silhouete")
             self.silhouette_score= metrics.silhouette_score(self.mesures(), labels)
+
+            tools.progress(40, 100, "Rand Index")
             self.rand_index=metrics.adjusted_rand_score(labels_true, labels)
 
             #self.self.adjusted_mutual_info_score=metrics.self.adjusted_mutual_info_score(labels_true,labels)
 
+            tools.progress(50, 100, "Homogénéité")
             self.homogeneity_score=metrics.homogeneity_score(labels_true,labels)
+
+            tools.progress(60, 100, "Completeness")
             self.completeness_score=metrics.completeness_score(labels_true,labels)
+
+            tools.progress(70, 100, "V-mesure")
             self.v_measure_score=metrics.v_measure_score(labels_true,labels)
 
             self.score=((self.silhouette_score+1)
@@ -253,6 +264,7 @@ class model:
                         )/6
             self.score=round(self.score*20*100)/100
 
+            tools.progress(100, 100, "Calcul metriques terminé")
             if len(self.clusters)<3:
                 self.init_distance_cluster()
 
@@ -288,7 +300,7 @@ class model:
 
 
     def clusters_from_labels(self, labels:np.ndarray,colors,name="cl_"):
-        tools.progress(0,100,"Construction des clusters");
+
         #offset=min(old_labels)+10000
         #labels=[x+offset for x in old_labels]
 
@@ -302,6 +314,7 @@ class model:
         i=0
         for k in d.keys():
             i=i+1
+            tools.progress(i, len(d), "Construction des clusters");
             color=colors[i % len(colors)]
             if k!=-1:
                 c:cluster=cluster(name + str(i),index=d[k], color=color,pos=i)

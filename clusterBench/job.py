@@ -24,13 +24,12 @@ class job(Resource):
         tmp_data=tools.get_data_from_url(url,request.remote_addr)
         if tmp_data is None:tmp_data=tools.get_data_from_url(url,"public")
 
-        format=request.args.get("format","")
+        format=request.args.get("filter","")
         p_format:dict=tools.replace_index_by_name(tmp_data,format)
         data:pd.DataFrame = tools.removeNan(tools.filter(tmp_data,p_format))
 
         if len(data)==0:
             return "No data after filtering",501
-
 
         if request.args.get("limit",0,int)>0:data=data.iloc[list(range(0,min(len(data),request.args.get("limit",0,int))))]
         start = time.time()
@@ -42,7 +41,7 @@ class job(Resource):
 
         sim.run_algo(params, algo)
         if not nometrics:
-            sim.init_metrics(showProgress=False)
+            sim.init_metrics(showProgress=True)
 
         if notext:
             html=""
@@ -52,7 +51,7 @@ class job(Resource):
         html = html + sim.get3d_html(request.args.get("pca",2,int),
                                      autorotate=(request.args.get("autorotate","True",str)=="True"),
                                      no_text=notext,
-                                     add_property=request.args.get("property",False,bool))
+                                     add_property=request.args.get("add_property","False",str)=="True")
 
         if nometrics:
             html = html.replace("synthese", "")

@@ -56,10 +56,10 @@ def create_app(test_config=None):
                 pass
             if G is None:return "Unknown format"
         else:
-            result:pd.DataFrame=tools.analyse_data(data,request.args.get("format",""))
+            result:pd.DataFrame=tools.analyse_data(data,request.args.get("filter",""))
 
         if request.args.get("format")=="json":
-            return result.to_json()
+            return result.to_json(orient="records")
         else:
             return result.to_html()
 

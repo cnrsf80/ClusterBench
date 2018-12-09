@@ -6,6 +6,7 @@ import copy
 import clusterBench.tools as tools
 from sklearn import cluster as cl
 import hdbscan
+from collections import Counter
 import stringdist
 
 from flask import request
@@ -45,11 +46,30 @@ class simulation:
 
         i = 0
         for c in data[format["measures"]]:
-            tools.progress(i, len(data.columns), "Conversion des chaines de caractères")
+            tools.progress(i, len(format["measures"]), "Conversion des chaines de caractères de " + c)
+            i = i + 1
             if data[c].dtype == object and len(data[c]) > 0:
-                ref = data[c][1]
-                l = data[c].apply(lambda x: stringdist.levenshtein_norm(x, ref))
-                data[c] = l
+                l_values=set(data[c])
+                items=dict(zip(l_values,[0]*len(l_values)))
+                ref=data[c][1]
+
+                if tools.getComplexity(data[c])>90:
+                    data[c]=tools.tokenize(data[data.columns[i]])
+                else:
+                    for item in items.keys():
+                        d=stringdist.levenshtein(item, ref)
+                        items[item]=d
+
+                    if len(items)<100:
+                        data[c]=data[c].replace(items.keys(),items.values())
+                    else:
+                        l=[]
+                        for k in data[c]:
+                            l.append(items[k])
+
+                        data[c]=l
+
+
 
         if not "cluster" in list(self.data.columns):
             if not "cluster" in format:
@@ -291,7 +311,7 @@ class simulation:
         return str(len(self.models))+" modeles calculés"
 
 
-    def get3d_html(self,n_pca=1,no_text=False,autorotate=False,add_property=True):
+    def get3d_html(self,n_pca=1,no_text=False,autorotate=False,add_property=False):
         code=""
         for i in range(0, len(self.models)):
             m:algo.model=self.models[i]

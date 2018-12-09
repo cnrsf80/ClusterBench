@@ -222,14 +222,15 @@ def trace_artefact(G, clusters):
 from flask import render_template
 
 def create_dict_for_properties(data:pd.DataFrame,col_name:str):
-    rc=[]
-    names = data.columns.values
-    for row in range(0,len(data)):
-        values=data.iloc[[row]].values[0]
-        d=dict(zip(names,values))
-        if col_name in d.keys():del d[col_name]
-        rc.append(d)
+    # for row in range(0,len(data)):
+    #      tools.progress(row,len(data),"Dictionnaire pour les propriétés")
+    #      values=data.iloc[[row]].values[0]
+    #      d=dict(zip(names,values))
+    #      if col_name in d.keys():del d[col_name]
+    #      rc.append(d)
 
+
+    rc=data.drop(columns=[col_name],axis=1).to_dict(orient="index")
 
     return rc
 
