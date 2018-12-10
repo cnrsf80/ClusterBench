@@ -7,6 +7,7 @@ import sklearn.metrics as metrics
 import numpy as np
 import pandas as pd
 from clusterBench.cluster import cluster
+from scipy.spatial import distance_matrix
 
 #Représente un model
 #un model est une liste de cluster après application d'un algorithme de clustering
@@ -28,10 +29,13 @@ class model:
     v_measure_score = 0
     data:pd.DataFrame=None
     dimensions:int=0
+    distance:np.matrix=None
     measures_col:list=[]
     clusters_distance:pd.DataFrame=None
 
-    def __init__(self,data,name_col:str,measures_col:list,positions=None):
+    def __init__(self,data,name_col:str="",measures_col:list=[],positions=None):
+      if len(name_col)==0:name_col=data.columns[0]
+      if len(measures_col)==0:measures_col=list(data.columns[range(1,len(data.columns))])
       self.name_col=name_col
       self.dimensions=len(measures_col)
       self.measures_col=measures_col
@@ -56,29 +60,33 @@ class model:
 
     #Calcul de la matrice de distance
     #func_distance est la fonction de calcul de la distance entre 2 mesures
-    def init_distances(self,func_distance,force=False):
+    def init_distances(self,func_distance=None,force=False):
         print("Calcul de la matrice de distance")
         size=len(self.mesures())
         composition=self.mesures()
 
-        namefile="./saved/matrix_distance_"+self.name
+        if func_distance is None:
+            func_distance=lambda p1,p2:np.linalg.norm(p2-p1)
+
+        namefile="./saved/matrix_distance_"+self.hash+"_"+self.name
         if os.path.isfile(namefile+".npy") and force==False:
             self.distances=np.load(namefile+".npy")
         else:
-            self.distances = np.asmatrix(np.zeros((len(composition.index), len(composition.index))))
-            for i in range(size):
-                print(size-i)
-                for j in range(size):
-                    if(self.distances[i,j]==0 and i!=j):
-                        name_i=self.data[self.name_col][i]
-                        name_j=self.data[self.name_col][j]
-                        vecteur_i=composition.iloc[i].values
-                        vecteur_j=composition.iloc[j].values
-                        d=func_distance(vecteur_i,vecteur_j,name_i,name_j)
-                        self.distances[i,j]=d
-                        self.distances[j,i]=d
+            self.distances=distance_matrix(composition.values,composition.values)
+            # self.distances = np.asmatrix(np.zeros((len(composition.index), len(composition.index))))
+            # for i in range(size):
+            #     tools.progress(i,size,"Matrice de distance")
+            #     for j in range(size):
+            #         if(self.distances[i,j]==0 and i!=j):
+            #             # name_i=self.data[self.name_col][i]
+            #             # name_j=self.data[self.name_col][j]
+            #             vecteur_i=composition.iloc[i].values
+            #             vecteur_j=composition.iloc[j].values
+            #             d=func_distance(vecteur_i,vecteur_j)
+            #             self.distances[i,j]=d
+            #             self.distances[j,i]=d
 
-            np.save(namefile,self.distances)
+            #np.save(namefile,self.distances)
 
     #calcul la distance entre les clusters
     def init_distance_cluster(self):
@@ -335,7 +343,7 @@ class model:
         return self
 
     #Execution de l'algorithme passé en argument (argo) avec les paramétres (params)
-    def execute(self,algo_name,url,algo,colors,p:dict,useCache=False):
+    def execute(self,algo_name,url,algo,colors=[],p:dict=dict(),useCache=False):
         name=algo_name+" "
         self.help=url
         self.params:list=[None]*6
@@ -438,50 +446,3 @@ def create_cluster_from_neuralgasnetwork(model:model,colors,a=0.5,passes=80,dist
         print("Chargement du résultat de "+model.name+" depuis le cache")
 
     return model
-
-
-# def create_two_clusters(G:nx.Graph):
-#     clusters = []
-#     partition = community.kernighan_lin_bisection(G, None, 500, weight='weight')
-#
-#     i=0
-#     for p in partition:
-#         clusters.append(cluster("kernighan_lin - "+str(i),p))
-#         i=i+1
-#
-#     return clusters
-
-
-# def create_ncluster(G:nx.Graph,target=4):
-#     clusters =[cluster("premier",G.nodes)]
-#     print("Recherche des clusters")
-#     backup_G=G.copy()
-#     while len(clusters) < target:
-#        #on cherche le plus grand cluster
-#        print(target-len(clusters))
-#        maxlen=0
-#        k=-1
-#        for i in range(0,len(clusters)):
-#            if len(clusters[i].index)>maxlen:
-#                maxlen=len(clusters[i].index)
-#                k=i
-#         #On divise en deux le plus grand cluster et on le supprime
-#        G = backup_G.subgraph(clusters[k].index)
-#        clusters.remove(clusters[k])
-#        for c in create_two_clusters(G):clusters.append(c)
-#
-#     return clusters
-
-
-# def create_clusters_from_asyncfluid(G,n_community=50):
-#     coms = community.asyn_fluidc(G, k=n_community,max_iter=500)
-#     partition = []
-#     for c in coms:
-#         partition.append(cluster("asyncfluid",c))
-#     return partition
-
-
-# import pyclustering.cluster.optics as OPTICS
-# def create_cluster_from_optics(data, eps):
-#     cl=OPTICS.optics(data,eps).get_clusters()
-#     print(cl)

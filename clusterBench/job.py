@@ -21,24 +21,20 @@ class job(Resource):
     def get(self,url:str,algo,params):
         if url.startswith("b64="):url=base64.standard_b64decode(url.split("b64=")[1]).decode("utf-8")
 
-        tmp_data=tools.get_data_from_url(url,request.remote_addr)
-        if tmp_data is None:tmp_data=tools.get_data_from_url(url,"public")
-
-        format=request.args.get("filter","")
-        p_format:dict=tools.replace_index_by_name(tmp_data,format)
-        data:pd.DataFrame = tools.removeNan(tools.filter(tmp_data,p_format))
+        data,p_format=tools.get_data_from(url,request)
 
         if len(data)==0:
             return "No data after filtering",501
 
         if request.args.get("limit",0,int)>0:data=data.iloc[list(range(0,min(len(data),request.args.get("limit",0,int))))]
-        start = time.time()
+
 
         notext=(request.args.get("notext", "False",str)=="True")
         nometrics = (request.args.get("nometrics", "False",str)=="True")
 
         sim:simulation = simulation.simulation(data=data,no_metric=nometrics,format=p_format)
 
+        start = time.time()
         sim.run_algo(params, algo)
         if not nometrics:
             sim.init_metrics(showProgress=True)

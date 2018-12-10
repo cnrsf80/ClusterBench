@@ -1,10 +1,11 @@
 import os
-from flask import Flask,request,g,render_template
+from flask import Flask,request,g,render_template,jsonify
 import clusterBench.tools as tools
 import clusterBench.network as network
 import clusterBench.algo as algo
 import pandas as pd
 import base64
+import sklearn.cluster as cl
 
 
 #http://45.77.160.220:5000/algo/NEURALGAS/Pour%20clustering2%20(1).xlsx/passes=30&distance_toremove_edge=50/modele.html?pca=2&notif=hhoareau%40gmail.com
@@ -40,11 +41,26 @@ def create_app(test_config=None):
 
         return render_template("index.html")
 
+    #test: http://localhost:5000/tograph/Armure_Resultats.xlsx?distance=0.2
+    @app.route('/tograph/<string:name>', methods=['GET'])
+    def export_as_graph(name:str):
+        data,p_format = tools.get_data_from(name, request)
+        G:network=network.network(data)
+        if request.args.get("distance",0,float)>0:
+            G.initByDistance(request.args.get("distance",0,float))
+        else:
+            G.execute("HAC", "", lambda x:cl.AgglomerativeClustering(request.args.get("n_clusters")))
+            G.initByCluster()
+
+        url=name.split(".")[0]+".gml"
+        G.savegml(url)
+        return url
+
 
     @app.route('/analyse/<string:url>', methods=['GET'])
     def analyse(url:str):
-        data=tools.get_data_from_url(url,request.remote_addr)
-        if data is None:data=tools.get_data_from_url(url, "public")
+        type="data"
+        data,p_format=tools.get_data_from(url,request)
 
         if not data is None and len(data)==0:
             G=None
@@ -54,12 +70,16 @@ def create_app(test_config=None):
                 result: pd.DataFrame = G.print_properties()
             except:
                 pass
-            if G is None:return "Unknown format"
+            if G is None:
+                return "Unknown format"
+            else:
+                type="graph"
         else:
             result:pd.DataFrame=tools.analyse_data(data,request.args.get("filter",""))
 
         if request.args.get("format")=="json":
-            return result.to_json(orient="records")
+            d:dict={"columns":result.to_dict(orient="records"),"rows":len(data),"type":type}
+            return jsonify(d)
         else:
             return result.to_html()
 

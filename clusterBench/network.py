@@ -7,10 +7,11 @@ import networkx as nx
 import pandas as pd
 from clusterBench.cluster import cluster
 from clusterBench.algo import model
+import numpy as np
 
 #Representation d'un graphe
 class network(model):
-    graph=None
+    graph:nx.Graph=None
     positions=None
 
     # def __init__(self,nodes,edges):
@@ -18,23 +19,29 @@ class network(model):
     #     self.graph.add_node(nodes)
     #     self.graph.add_edge(edges)
 
-    def __init__(self,url:str,remote_addr:str,algo_loc:str=""):
+    def __init__(self,data=None,url:str="",remote_addr:str="",algo_loc:str=""):
         self.clusters.clear()
         if draw.colors is None or len(draw.colors) < 2: draw.colors = draw.init_colors(200)
 
-        tools.progress(0,100,"Chargement du graphe")
-        url=tools.getUrlForFile(url,remote_addr)
-        if not self.load(url,algo_loc):
+        if len(url)>0:
+            tools.progress(0,100,"Chargement du graphe")
+            url=tools.getUrlForFile(url,remote_addr)
+            if not self.load(url,algo_loc):
+                if not self.graph is None:
+                    self.graph = nx.convert_node_labels_to_integers(self.graph, label_attribute="name")
+
             if not self.graph is None:
-                self.graph = nx.convert_node_labels_to_integers(self.graph, label_attribute="name")
+                tools.progress(90,100,"Préparation")
+                self.data: pd.DataFrame = pd.DataFrame(index=list(range(0,len(self.graph.nodes))))
+                self.data["name"] = nx.get_node_attributes(self.graph,"name")
 
-        if not self.graph is None:
-            tools.progress(90,100,"Préparation")
-            self.data: pd.DataFrame = pd.DataFrame(index=list(range(0,len(self.graph.nodes))))
-            self.data["name"] = nx.get_node_attributes(self.graph,"name")
+                self.dimensions = 3
+                self.name_col = "name"
 
-            self.dimensions = 3
-            self.name_col = "name"
+        if not data is None:
+            super().__init__(data=data)
+            self.graph=nx.Graph()
+
 
 
     def sphere_layout(self,r=1):
@@ -71,10 +78,16 @@ class network(model):
         return d
 
 
-    def save(self):
-        path="./clustering/"+self.url+".gpickle"
+    def save(self,path=""):
+        if len(path)==0:path="./clustering/"+self.url+".gpickle"
+        if not path.endswith(".gpickle"):path=path+".gpickle"
         nx.write_gpickle(self.graph,path)
 
+    def savegml(self,name):
+        url=tools.getPath(name,"public")
+        if not url.endswith(".gml"):url=url+".gml"
+        nx.write_graphml(self.graph,url)
+        return url
 
     def create_graph_from_dataframe(self):
         df=self.data.apply(lambda x:(0,1)[x>self.seuil])
@@ -203,3 +216,27 @@ class network(model):
         #rc["local efficiency"]=nx.local_efficiency(self.graph)
         #rc["global efficiency"]=nx.global_efficiency(self.graph)
         return pd.DataFrame.from_dict(rc,orient="index")
+
+    def initByCluster(self):
+        for c in self.clusters:
+            self.graph.add_node(c.index,self.mesures()[c.index])
+            for n1 in c.index:
+                for n2 in c.index:
+                    self.graph.add_edge(n1,n2)
+
+    def initByDistance(self, seuil=1):
+        self.init_distances()
+        l_edges=[]
+        for i in range(0,len(self.distances)):
+            tools.progress(i,len(self.distances),"Construction du graphe")
+
+            for j in range(0, len(self.distances)):
+                if self.distances[i,j]<seuil:
+                    l_edges.append([i,j])
+
+        self.graph.add_edges_from(l_edges)
+        d:dict=dict(zip(range(0,len(self.data)),self.data[self.name_col]))
+        nx.set_node_attributes(self.graph,d , "label")
+        nx.set_node_attributes(self.graph, self.data[self.measures_col],self.measures_col)
+
+

@@ -71,11 +71,17 @@ class Measure(Resource):
 
     @api.doc(params={'name': 'Name of the file to remove from server'})
     def delete(self,name):
-        decorators = []
-        abort_if_file_doesnt_exist(name)
-        url = tools.getPath(name,request.remote_addr)
-        os.remove(url)
+        try:
+            os.remove(tools.getPath(name, request.remote_addr))
+        except:
+            try:
+                os.remove(tools.getPath(name, "public"))
+            except:
+                return "File not exist", 501
+
         return '',204
+
+
 
 
 #Retourne la liste des fichiers sur le serveur

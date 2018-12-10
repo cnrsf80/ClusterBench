@@ -8,6 +8,7 @@ import pandas
 from sklearn import preprocessing
 import zipfile
 import io
+from flask import request
 
 
 #Permet l'affichage d'un barre de progression
@@ -205,13 +206,26 @@ def get_data_from_url(url:str,remote_addr:str):
             except:
                 pass
 
-    except:
+    except OSError as err:
+        print("RuntimeError ".format(err))
         data = None
 
     if data is None:
         print("Erreur sur la source de donnée : " + url)
 
     return data
+
+
+def get_data_from(url:str,request):
+    data=get_data_from_url(url,request.remote_addr)
+    if data is None:data=get_data_from_url(url,"public")
+    p_format=""
+    if not data is None:
+        format = request.args.get("filter", "")
+        p_format: dict = replace_index_by_name(data, format)
+        data= removeNan(filter(data, p_format))
+
+    return data,p_format
 
 #Permet de vérifier que l'ensemble des mesures n'est pas null
 import math
@@ -255,6 +269,8 @@ def filter(data:pd.DataFrame,filter:dict):
 
 #Supprime les lignes ayant une valeur vide
 def removeNan(data:pd.DataFrame):
+    if data is None:return data
+
     n_rows=len(data)
     rc=data.dropna()
     print("row remove : "+str(n_rows-len(rc)))
@@ -276,7 +292,7 @@ def analyse_data(data:pd.DataFrame,format=""):
             'Empty(%)':list(round(100*data.isna().sum()/len(data))),
             'Complexity(%)':[100] * len(data.columns),
             'dataType':["float"] * len(data.columns),
-            'Type':["measure"] * len(data.columns),
+            'Type':["measure"] * len(data.columns)
         }
         ,index=list(range(0,len(data.columns))))
 
@@ -293,6 +309,7 @@ def analyse_data(data:pd.DataFrame,format=""):
         if data[rc["Names"][i]].dtype == object:
             rc.at[i,"dataType"]="string"
             rc.at[i,"Complexity(%)"] = getComplexity(data[data.columns[i]])
+
 
     return rc
 
