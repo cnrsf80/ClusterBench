@@ -61,7 +61,8 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 COPY datas /app/datas
 COPY clustering /app/clustering
-
+COPY fullchain.pem /app
+COPY privkey.pem /app
 
 RUN pip3 install --upgrade pip
 RUN pip3 install setuptools

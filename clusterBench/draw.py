@@ -94,7 +94,7 @@ def draw_3D(li_data,for_jupyter=False,lines=None,w="800px",h="800px"):
 #     df_data = pd.DataFrame(li_data)
 
 #Projection 3D des cluster et cluster de référence + calcul des enveloppes
-def pca_totrace(mod,ref_cluster,properties_dict:list,pca_offset=0):
+def pca_totrace(mod,ref_cluster,pca_offset=0):
     labels=mod.names()
     mesures=tools.normalize(mod.mesures())
 
@@ -111,7 +111,7 @@ def pca_totrace(mod,ref_cluster,properties_dict:list,pca_offset=0):
     i=0
     for c in mod.clusters:
         i = i + 1
-        tools.progress(i,len(mod.clusters),"Préparation des clusters")
+        tools.progress(i,len(mod.clusters),"Préparation des clusters pour rendu 3d")
         if len(c.clusters_distances)>0:
             distances: pd.DataFrame = pd.DataFrame.from_dict(c.clusters_distances,orient="index",columns=["distance","p1","p2"])
             distances=distances.sort_values("distance")
@@ -221,7 +221,7 @@ def trace_artefact(G, clusters):
 
 from flask import render_template
 
-def create_dict_for_properties(data:pd.DataFrame,col_name:str):
+def create_dict_for_properties(data:pd.DataFrame,col_names:list):
     # for row in range(0,len(data)):
     #      tools.progress(row,len(data),"Dictionnaire pour les propriétés")
     #      values=data.iloc[[row]].values[0]
@@ -230,8 +230,9 @@ def create_dict_for_properties(data:pd.DataFrame,col_name:str):
     #      rc.append(d)
 
 
-    rc=data.drop(columns=[col_name],axis=1).to_dict(orient="index")
+    #rc=data.drop(columns=[col_name],axis=1).to_dict(orient="index")
 
+    rc = data[col_names].to_dict(orient="index")
     return rc
 
 #Produit une réprésentation 3D et une représentation 2D des mesures
@@ -253,21 +254,21 @@ def trace(mod:model,path:str,filename,url_base=""):
 
 
 # Production du fichier à destination du tracé 3d
-def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autorotate=False,add_property=True):
-    properties_dict:dict = create_dict_for_properties(mod.data, mod.name_col)
-    li_data, facets = pca_totrace(mod, mod.data['ref_cluster'], properties_dict, pca_offset)
+def trace_artefact_GL(mod, id="", title="", ref_model= None, pca_offset=0, autorotate=False,add_property=[]):
+    properties_dict:dict = create_dict_for_properties(mod.data, add_property)
+    li_data, facets = pca_totrace(mod, mod.data['ref_cluster'], pca_offset=pca_offset)
 
-    if add_property:
+    if len(add_property)>0:
         for i in range(0,len(li_data)):
             tools.progress(i,len(li_data),"Ajout des propriétés")
             row=li_data[i]["index"]
             d:dict=properties_dict[row]
             li_data[i]=({**li_data[i], **d})
 
-    if ref_model is None:
+    if ref_model is None or ref_model.clusters==mod.clusters:
         facets_ref = []
     else:
-        tmp_li_data, facets_ref = pca_totrace(ref_model, ref_model.data['ref_cluster'], properties_dict, pca_offset)
+        tmp_li_data, facets_ref = pca_totrace(ref_model, ref_model.data['ref_cluster'], pca_offset=pca_offset)
 
     d = pd.concat([mod.data.ix[:, 0], mod.mesures()], axis=1, sort=False)
 

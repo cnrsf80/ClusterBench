@@ -57,8 +57,9 @@ def create_app(test_config=None):
         return url
 
 
-    @app.route('/analyse/<string:url>', methods=['GET'])
-    def analyse(url:str):
+    @app.route('/analyse', methods=['GET'])
+    def analyse():
+        url:str=request.args.get("url","",str)
         type="data"
         data,p_format=tools.get_data_from(url,request)
 
@@ -66,10 +67,10 @@ def create_app(test_config=None):
             G=None
             try:
                 #todo: a améliorer la gestion du getpath
-                G=network.network(url,request.remote_addr)
+                G=network.network(url=url,remote_addr=request.remote_addr)
                 result: pd.DataFrame = G.print_properties()
             except:
-                pass
+                print("Erreur de traitement")
             if G is None:
                 return "Unknown format"
             else:

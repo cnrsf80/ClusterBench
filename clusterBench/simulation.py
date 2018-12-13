@@ -34,6 +34,9 @@ class simulation:
         if not "measures" in format:
             format["measures"]=data.columns[range(1,len(data.columns.values))]
 
+        if not "properties" in format:
+            format["properties"]=[]
+
         # if not "properties" in format:
         #     #Par defaut les propriétées sont entre les mesures et l'index
         #     if int(format["name"])+1<min(list(format["measures"]))-1:
@@ -43,6 +46,7 @@ class simulation:
 
         self.col_name = format["name"][0]
         self.col_measures=format["measures"]
+        self.col_properties = format["properties"]
 
         i = 0
         for c in data[format["measures"]]:
@@ -318,12 +322,15 @@ class simulation:
 
             if not no_text:code = code+m.table();
 
+            props=[]
+            if add_property:props=self.col_properties+list(self.col_measures)
             for pca_offset in range(0, n_pca):
                 code = code + draw.trace_artefact_GL(m,
                                                      m.id+"_pca"+str(pca_offset),
                                                      m.name+" Axe="+str(pca_offset)+","+str(pca_offset+1)+","+str(pca_offset+2),
                                                      self.ref_model,
-                                                     pca_offset,autorotate=autorotate,add_property=add_property)
+                                                     pca_offset,autorotate=autorotate,
+                                                     add_property=props)
 
             if not no_text:code=code+"<br><br>"+m.print_perfs("<br>")
 

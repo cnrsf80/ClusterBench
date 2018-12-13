@@ -354,11 +354,15 @@ class Game {
 
 
 
-    getVisibleMesure(){
+    getVisibleMesure(onlyIndex=false){
         var l=[];
         this.spheres.forEach((s:any)=> {
                 if (s.material.alpha == _VISIBLE) {
-                    l.push(s);
+                    if(onlyIndex)
+                        l.push(s.index);
+                    else
+                        l.push(s);
+
                 }
             });
         return l;
@@ -710,18 +714,21 @@ function execCommande(key,args=""){
    }
 
     if(key=="E"){
-        document.body.style.cursor = 'progress';
-       var code=game.toCSV(data_source);
+        debugger
+        var params=parent.location.href.split("/");
+           var param=params[params.length-1];
+           var algo=params[params.length-2];
+            document.body.style.cursor = 'progress';
+       //var code=game.toCSV(data_source);
+       var code="from:"+params[4]+"\nextract:"+game.getVisibleMesure(true).join(";");
        var now=new Date().getTime();
        fetch("/datas/measure/temp"+now+".csv",{method:"POST",body:code}).then(r=>{
             return r.json();
        }).then(r=>{
-           var params=parent.location.href.split("/");
-           var param=params[params.length-1];
-           var algo=params[params.length-2];
-           parent.location.href="http://"+document.location.host+r+"/"+algo+"/"+param;
+           var url="http://"+document.location.host+r+"/"+algo+"/"+param;
+           console.log("ouverture de "+url);
+           parent.location.href=url;
        }).catch((err=>{
-           debugger;
        }))
    }
 

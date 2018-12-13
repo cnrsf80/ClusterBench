@@ -274,11 +274,15 @@ var Game = /** @class */ (function () {
         this._camera.rebuildAnglesAndRadius();
         this.doRender();
     };
-    Game.prototype.getVisibleMesure = function () {
+    Game.prototype.getVisibleMesure = function (onlyIndex) {
+        if (onlyIndex === void 0) { onlyIndex = false; }
         var l = [];
         this.spheres.forEach(function (s) {
             if (s.material.alpha == _VISIBLE) {
-                l.push(s);
+                if (onlyIndex)
+                    l.push(s.index);
+                else
+                    l.push(s);
             }
         });
         return l;
@@ -595,18 +599,21 @@ function execCommande(key, args) {
         });
     }
     if (key == "E") {
+        debugger;
+        var params = parent.location.href.split("/");
+        var param = params[params.length - 1];
+        var algo = params[params.length - 2];
         document.body.style.cursor = 'progress';
-        var code = game.toCSV(data_source);
+        //var code=game.toCSV(data_source);
+        var code = "from:" + params[4] + "\nextract:" + game.getVisibleMesure(true).join(";");
         var now = new Date().getTime();
         fetch("/datas/measure/temp" + now + ".csv", { method: "POST", body: code }).then(function (r) {
             return r.json();
         }).then(function (r) {
-            var params = parent.location.href.split("/");
-            var param = params[params.length - 1];
-            var algo = params[params.length - 2];
-            parent.location.href = "http://" + document.location.host + r + "/" + algo + "/" + param;
+            var url = "http://" + document.location.host + r + "/" + algo + "/" + param;
+            console.log("ouverture de " + url);
+            parent.location.href = url;
         }).catch((function (err) {
-            debugger;
         }));
     }
     if (key == "k") {

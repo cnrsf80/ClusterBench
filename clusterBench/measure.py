@@ -49,7 +49,13 @@ class Measure(Resource):
                 else:
                     b: bytes = request.form
 
-                text_file.write(b.decode(encoding="utf-8",errors="ignore"))
+                if str(b,"utf-8").startswith("from:"):
+                    url=str(b,"utf-8").split(":")[1].split("\n")[0]
+                    rows=[int(r) for r in list(str(b,"utf-8").split(":")[2].split(";"))]
+                    data,format=tools.get_data_from(url,request)
+                    text_file.write(data.iloc[rows].to_csv())
+                else:
+                    text_file.write(b.decode(encoding="utf-8",errors="ignore"))
 
             return "/job/"+name
 

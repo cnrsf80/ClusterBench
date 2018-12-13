@@ -28,13 +28,13 @@ class network(model):
             url=tools.getUrlForFile(url,remote_addr)
             if not self.load(url,algo_loc):
                 if not self.graph is None:
+                    self.save()
                     self.graph = nx.convert_node_labels_to_integers(self.graph, label_attribute="name")
 
             if not self.graph is None:
                 tools.progress(90,100,"Préparation")
                 self.data: pd.DataFrame = pd.DataFrame(index=list(range(0,len(self.graph.nodes))))
-                self.data["name"] = nx.get_node_attributes(self.graph,"name")
-
+                self.data["name"]=list(self.graph.nodes.keys())
                 self.dimensions = 3
                 self.name_col = "name"
 
@@ -79,6 +79,7 @@ class network(model):
 
 
     def save(self,path=""):
+        tools.progress(0,100,"Enregistrement du fichier dans le cache")
         if len(path)==0:path="./clustering/"+self.url+".gpickle"
         if not path.endswith(".gpickle"):path=path+".gpickle"
         nx.write_gpickle(self.graph,path)

@@ -337,7 +337,6 @@ def replace_index_by_name(tmp_data:pd.DataFrame, format:str):
 
     return rc
 
-
 def getUrlForFile(name:str,remote_addr:str):
     if name.startswith("http"):return name
 
